@@ -1,39 +1,54 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Drawer } from "expo-router/drawer";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import { TextInput, ScrollView, View } from "react-native";
+import { useState } from "react";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { Searchbar } from "@/components/searchbar/search-bar";
+import { AnimationProvider } from "@/components/searchbar/animation-provider";
+import { CancelButton } from "@/components/searchbar/cancel-button";
+import { Animations } from "@/components/drawer-content";
+import "./global.css";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
+function CustomDrawerContent(props: DrawerContentComponentProps) {
+  const { top } = useSafeAreaInsets();
+  const [query, setQuery] = useState("");
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <>
+      <View style={{ paddingHorizontal: 12, marginTop: top + 16 }}>
+        <AnimationProvider>
+          <Searchbar query={query} setQuery={setQuery} />
+        </AnimationProvider>
+      </View>
+      <ScrollView
+        style={{ backgroundColor: "white" }}
+        showsVerticalScrollIndicator={false}
+        {...props}
+      >
+        <Animations query={query} />
+      </ScrollView>
+    </>
+  );
+}
+
+export default function Layout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <Drawer
+          drawerContent={(props) => <CustomDrawerContent {...props} />}
+          screenOptions={{
+            headerShown: false,
+            drawerStyle: {
+              backgroundColor: "white",
+            },
+          }}
+        />
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }

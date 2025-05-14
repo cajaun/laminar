@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "expo-ui-components",
-    "slug": "expo-ui-components",
+    "name": "laminarcomponents",
+    "slug": "laminarcomponents",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -28,7 +28,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 160,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
