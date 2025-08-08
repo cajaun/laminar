@@ -9,14 +9,15 @@ import {
 import { Dimensions, TextInput } from "react-native";
 import { SharedValue, useSharedValue, withTiming } from "react-native-reanimated";
 
-export const SEARCHBAR_HEIGHT = 35;
+export const SEARCHBAR_HEIGHT = 33;
 export const CANCEL_CONTAINER_WIDTH = 75;
 const LEFT_PADDING = 16;
-const COMPACT_SIDE_BUTTONS_WIDTH = 130; 
+const COMPACT_SIDE_BUTTONS_WIDTH = 100;
 
 export const SEARCHBAR_END_WIDTH =
   Dimensions.get("window").width - COMPACT_SIDE_BUTTONS_WIDTH;
 
+  
 export const SEARCHBAR_INITIAL_WIDTH =
   Dimensions.get("window").width - CANCEL_CONTAINER_WIDTH - LEFT_PADDING;
 

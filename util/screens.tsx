@@ -1,8 +1,5 @@
 import { App } from "@/types/screens";
-import { Href } from "expo-router";
  
-
-
 
 export const appleInvites: App = {
   name: "Apple Invites",
@@ -93,6 +90,89 @@ export const parallaxBlur: App = {
     },
   ],
 };
+
+export const actionTray: App = {
+  name: "Action Tray",
+  animations: [
+    {
+      name: "Action Tray",
+      href: "/action-tray"
+    },
+  ],
+};
+
+export const expandableSheet: App = {
+  name: "Expandable Sheet",
+  animations: [
+    {
+      name: "Expandable Sheet",
+      href: "/expandable-sheet"
+    },
+  ],
+};
+
+export const toast: App = {
+  name: "Toast",
+  animations: [
+    {
+      name: "Toast",
+      href: "/toast"
+    },
+  ],
+};
+
+
+export const header: App = {
+  name: "Header",
+  animations: [
+    {
+      name: "Header",
+      href: "/header"
+    },
+  ],
+};
+
+export const list: App = {
+  name: "Lists",
+  animations: [
+    {
+      name: "Lists",
+      href: "/lists"
+    },
+  ],
+};
+
+export const zoomTransition: App = {
+  name: "Zoom Transition",
+  animations: [
+    {
+      name: "Zoom Transition",
+      href: "/zoom-transition"
+    },
+  ],
+};
+
+export const collapsibleHeader: App = {
+  name: "Collapsible Header",
+  animations: [
+    {
+      name: "Collapsible Header",
+      href: "/collapsible-header"
+    },
+  ],
+};
+
+export const raycast: App = {
+  name: "Raycast",
+  animations: [
+    {
+      name: "Raycast",
+      href: "/raycast"
+    },
+  ],
+};
+
+
 
 
 

@@ -7,10 +7,12 @@ import { easeGradient } from "react-native-easing-gradient";
 import { BlurView } from "expo-blur";
 import { PressableScale } from "../ui/utils/pressable-scale";
 import { SymbolView } from "expo-symbols";
+import { useToast } from "../toast/hooks/use-toast";
+import { Octicons } from "@expo/vector-icons";
 
 type MediaParallaxBlurProps = AnimatedProps<{
   onLayout?: (event: LayoutChangeEvent) => void;
-  triggerRef?: AnimatedRef<Animated.View>;
+  triggerRef?: AnimatedRef<React.Component<{}, {}, any>>
 }>;
 
 const MediaParallaxBlur = forwardRef<Animated.View, MediaParallaxBlurProps>(
@@ -30,6 +32,19 @@ const MediaParallaxBlur = forwardRef<Animated.View, MediaParallaxBlurProps>(
       { id: 10751, name: "Family" },
       { id: 14, name: "Fantasy" },
     ];
+
+    const { showToast } = useToast();
+
+    const handlePress = () => {
+      showToast({
+        title: 'Hello from Toast!',
+        iconName: 'rocket', 
+        trailing: (
+          <Octicons name="x" size={16} color="#fff" style={{ marginLeft: 10 }} />
+        ),
+      });
+    };
+
 
     return (
       <Animated.View
@@ -64,11 +79,12 @@ const MediaParallaxBlur = forwardRef<Animated.View, MediaParallaxBlurProps>(
             />
           </MaskedView>
           <View className="flex-1 justify-end px-4 gap-y-4 mb-4">
-            <Animated.View ref={triggerRef} onLayout={onLayout}>
+            <Animated.View  ref={ref as React.LegacyRef<Animated.View>} onLayout={onLayout}>
               <Text className="text-xl font-bold text-white mx-auto">Snow White</Text>
             </Animated.View>
             <PressableScale
               className="h-[50px] bg-white flex-row gap-x-[6px] justify-center items-center w-[85%] rounded-xl mx-auto"
+              onPress={handlePress}
             >
               <SymbolView name="play.fill" tintColor="black" size={18} />
               <Text

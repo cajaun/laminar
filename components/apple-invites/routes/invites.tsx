@@ -16,54 +16,54 @@ import { PressableScale } from "@/components/ui/utils/pressable-scale";
 const events = [
   {
     id: 1,
-    image: require("@/assets/images/apple-invites/1.png"),
-    title: "Sunrise Yoga",
-    description: "Thy, September 18, 06:00 South Lake Tahoe, CA",
+    image: require("@/assets/images/apple-invites/1.webp"),
+    title: "The Godfather",
+    description: "Family, loyalty, power plays, and a deal you can't refuse.",
   },
   {
     id: 2,
-    image: require("@/assets/images/apple-invites/2.png"),
-
-    title: "Tyler Turns 3!",
-    description: "Sat, January 25, 18:00 Chicago IL",
+    image: require("@/assets/images/apple-invites/2.webp"),
+    title: "The Garfield Movie",
+    description: "Lasagna, naps, Mondays, and a cat with endless attitude.",
   },
   {
     id: 3,
-    image: require("@/assets/images/apple-invites/3.png"),
-
-    title: "Reunion at the Lake",
-    description: "Sat, November 8, 09:00 Anacortes, WA",
+    image: require("@/assets/images/apple-invites/3.webp"),
+    title: "John Wick: Ballerina",
+    description:
+      "Revenge, elegance, precision, and a deadly dance of survival.",
   },
   {
     id: 4,
-    image: require("@/assets/images/apple-invites/4.png"),
-    title: "Tom and Jen's Anniversary!",
-    description: "Fri, August 22, 20:00 San Luis Obispo, CA",
+    image: require("@/assets/images/apple-invites/4.webp"),
+    title: "Pirates of the Caribbean",
+    description: "Treasure, curses, wild seas, and Jack Sparrow's wild ride.",
   },
   {
     id: 5,
-    image: require("@/assets/images/apple-invites/5.png"),
-    title: "Housewarming Party",
-    description: "Tue, September 2, 20:00 Brooklyn, NY",
+    image: require("@/assets/images/apple-invites/5.webp"),
+    title: "Venom: The Last Dance",
+    description: "One host, one alien, chaos, and a twisted partnership grows.",
   },
   {
     id: 6,
-    image: require("@/assets/images/apple-invites/6.png"),
-    title: "Watch Party",
-    description: "Sun, February 9, 13:00 Game Room",
+    image: require("@/assets/images/apple-invites/6.webp"),
+    title: "Dune",
+    description:
+      "Deserts, spice, politics, power struggles, and ancient prophecies collide.",
   },
   {
     id: 7,
-    image: require("@/assets/images/apple-invites/7.png"),
-
-    title: "Birthday Scavenger Hunt",
-    description: "Thu, February 13, 14:00 Pioneer Park, CA",
+    image: require("@/assets/images/apple-invites/7.webp"),
+    title: "Transformers",
+    description: "Robots, explosions, hidden secrets, and a battle for Earth.",
   },
   {
     id: 8,
-    image: require("@/assets/images/apple-invites/8.png"),
-    title: "Surprise Brunch for Mom",
-    description: "Sun, September 28, 11:00 At Home",
+    image: require("@/assets/images/apple-invites/8.webp"),
+    title: "Indiana Jones",
+    description:
+      "Whips, relics, villains, and nonstop adventure across ancient ruins.",
   },
 ];
 
@@ -120,27 +120,22 @@ export default function Invites() {
         </Text>
 
         <Text className="text-center text-6xl font-bold text-white">
-          Apple Invites
+          Movers
         </Text>
 
         <Text className="text-center text-lg font-medium text-white/60">
-          Create beautiful invitations for all your events. Anyone can receive
-          invitations. Sending included with iCloud+.
+          Browse your favorite movies, discover new releases, and enjoy epic
+          moments. All your favorites in one place.
         </Text>
 
-        <PressableScale
-        className="h-[50px] bg-white justify-center items-center w-[95%] rounded-full"
-          style={{
-            
-          }}
-        >
+        <PressableScale className="h-[50px] bg-white justify-center items-center w-[95%] rounded-full">
           <Text
             style={{
               fontSize: 18,
               fontWeight: "bold",
             }}
           >
-            Continue
+            Get Started
           </Text>
         </PressableScale>
       </View>

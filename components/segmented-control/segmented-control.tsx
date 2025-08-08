@@ -1,84 +1,128 @@
-import React, { FC } from "react";
-import { View, Pressable } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
 
-const _padding = 3;
+import React, {
+  Children,
+  createContext,
+  ReactNode,
+  useContext,
+  useState,
+} from "react";
+import { StyleProp, ViewStyle } from "react-native";
 
-type TabItemType = {
-  key: string;
-  label: string;
-};
+/* ----------------------------------------------------------------------------------
+ * Context
+ * ----------------------------------------------------------------------------------*/
 
-type TabItemProps = {
-  title: string;
-  active: boolean;
-  onPress: () => void;
-};
+interface SegmentsContextValue {
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+}
 
-const TabItem: FC<TabItemProps> = ({ title, active, onPress }) => {
+const SegmentsContext = createContext<SegmentsContextValue | undefined>(
+  undefined
+);
 
-  // animated style for the tab text, changing color based on active state
-  const rTextStyle = useAnimatedStyle(() => ({
-    color: withTiming(active ? "#000000" : "#000000"),
-    // transform: [{ scale: withTiming(active ? 1.05 : 0.95) }],
-  }));
+/* ----------------------------------------------------------------------------------
+ * Segments (Container)
+ * ----------------------------------------------------------------------------------*/
 
-  return (
-    <Pressable className="flex-1 items-center py-[6px] " onPress={onPress}>
-      <Animated.Text className="font-medium" style={rTextStyle}>
-        {title}
-      </Animated.Text>
-    </Pressable>
-  );
-};
+interface SegmentsProps {
+  /** The initial value for the controlled Segments */
+  defaultValue: string;
 
-type Props = {
-  tabs: TabItemType[];
-  activeIndex: number;
-  setActiveIndex: (index: number) => void;
-};
+  /** The children of the Segments component (SegmentsList, SegmentsContent, etc.) */
+  children: ReactNode;
+}
 
-export const SegmentedControl: FC<Props> = ({
-  tabs,
-  activeIndex,
-  setActiveIndex,
-}) => {
-
-   // shared value for the width of the tabs container (used for indicator calculation)
-  const tabsWidth = useSharedValue(0);
-
-  const rIndicatorStyle = useAnimatedStyle(() => {
-    const tabCount = tabs.length;
-    const tabWidth = (tabsWidth.value - _padding * 2) / tabCount;
-
-    return {
-      width: tabWidth, // set the indicator width to match the tab width
-      left: withTiming(tabWidth * activeIndex + _padding, { duration: 200 }),
-    };
-  });
+export function Segments({ defaultValue, children }: SegmentsProps) {
+  const [value, setValue] = useState(defaultValue);
 
   return (
-    <View
-      className="rounded-lg bg-[#E3E2EA]  flex-row items-center relative"
-      style={{ padding: _padding }}
-      onLayout={(e) => (tabsWidth.value = e.nativeEvent.layout.width)}
-    >
-      <Animated.View
-        className="absolute rounded-lg bg-white shadow-sm "
-        style={[rIndicatorStyle, { top: _padding, bottom: _padding }]}
-      />
-      {tabs.map((tab, index) => (
-        <TabItem
-          key={tab.key}
-          title={tab.label}
-          active={index === activeIndex}
-          onPress={() => setActiveIndex(index)}
-        />
-      ))}
-    </View>
+    <SegmentsContext.Provider value={{ value, setValue }}>
+      {children}
+    </SegmentsContext.Provider>
   );
-};
+}
+
+export function SegmentsList({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const context = useContext(SegmentsContext);
+  if (!context) {
+    throw new Error("SegmentsList must be used within a Segments");
+  }
+
+  const { value, setValue } = context;
+
+  const triggers = Children.toArray(children).filter(
+    (child: any) =>
+      React.isValidElement(child) && child.type === SegmentsTrigger
+  );
+
+  const labels = triggers.map((trigger: any) => trigger.props.children);
+  const values = triggers.map((trigger: any) => trigger.props.value);
+
+  const handleChange = (event: any) => {
+    const index = event.nativeEvent.selectedSegmentIndex;
+    setValue(values[index]);
+  };
+
+  return (
+    <SegmentedControl
+      values={labels}
+      style={style}
+      selectedIndex={values.indexOf(value)}
+      onChange={handleChange}
+    />
+  );
+}
+/* ----------------------------------------------------------------------------------
+ * SegmentsTrigger
+ * ----------------------------------------------------------------------------------*/
+
+interface SegmentsTriggerProps {
+  /** The value that this trigger represents */
+  value: string;
+  /** The label to display for this trigger in the SegmentedControl */
+  children: ReactNode;
+}
+
+export function SegmentsTrigger(_: SegmentsTriggerProps) {
+  // We don't actually render anything here. This component serves as a "marker"
+  // for the SegmentsList to know about possible segments.
+  return null;
+}
+
+SegmentsTrigger.displayName = "SegmentsTrigger";
+/* ----------------------------------------------------------------------------------
+ * SegmentsContent
+ * ----------------------------------------------------------------------------------*/
+
+interface SegmentsContentProps {
+  /** The value from the matching SegmentsTrigger */
+  value: string;
+  /** The content to be rendered when the active value matches */
+  children: ReactNode;
+}
+
+export function SegmentsContent({ value, children }: SegmentsContentProps) {
+  const context = useContext(SegmentsContext);
+  if (!context) {
+    throw new Error("SegmentsContent must be used within a Segments");
+  }
+
+  const { value: currentValue } = context;
+  if (currentValue !== value) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+Segments.List = SegmentsList;
+Segments.Trigger = SegmentsTrigger;
+Segments.Content = SegmentsContent;

@@ -1,7 +1,8 @@
-import { View, Text } from "react-native";
 import React, { useState } from "react";
-import { SegmentedControl } from "./segmented-control";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, StyleSheet } from "react-native";
+import { Segments } from "./segmented-control";
+
 
 const SegmentedTabs = () => {
   const { top } = useSafeAreaInsets();
@@ -33,28 +34,67 @@ const SegmentedTabs = () => {
     },
   ];
 
-  const [activeIndices, setActiveIndices] = useState(
-    tabGroups.map(() => 0)
-  );
+  const initialValues = tabGroups.map((group) => group.tabs[0].key);
+  const [activeValues, setActiveValues] = useState(initialValues);
 
-  const handleSetActiveIndex = (groupIndex: number, index: number) => {
-    const updated = [...activeIndices];
-    updated[groupIndex] = index;
-    setActiveIndices(updated);
+  const handleSetActiveValue = (groupIndex: number, value: string) => {
+    const updated = [...activeValues];
+    updated[groupIndex] = value;
+    setActiveValues(updated);
   };
 
   return (
-    <SafeAreaView className="flex-1 px-4 gap-y-6" style={{ paddingTop: top }}>
+    <SafeAreaView style={[styles.container, { paddingTop: top }]}>
+
+
+
       {tabGroups.map((group, idx) => (
-        <SegmentedControl
+        <Segments
           key={group.id}
-          tabs={group.tabs}
-          activeIndex={activeIndices[idx]}
-          setActiveIndex={(index) => handleSetActiveIndex(idx, index)}
-        />
+          defaultValue={group.tabs[0].key} 
+        >
+       
+          <Segments.List>
+            {group.tabs.map((tab) => (
+              <Segments.Trigger key={tab.key} value={tab.key}>
+                {tab.label}
+              </Segments.Trigger>
+            ))}
+          </Segments.List>
+
+     
+          {group.tabs.map((tab) => (
+            <Segments.Content key={tab.key} value={tab.key}>
+              <View style={styles.content}>
+                <Text style={styles.contentText}>
+                  You selected "{tab.label}" from group {group.id}.
+                </Text>
+              </View>
+            </Segments.Content>
+          ))}
+        </Segments>
       ))}
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    gap: 24,
+    backgroundColor: "#fff",
+  },
+  content: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: "#e0f7fa",
+    borderRadius: 8,
+  },
+  contentText: {
+    fontSize: 16,
+    color: "#00796b",
+  },
+});
 
 export default SegmentedTabs;

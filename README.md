@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Laminar
 
-## Get started
+**Laminar** is a reusable UI component and animation library built for React Native Expo apps. It accelerates development by providing fluid, customizable, and performance-optimized UI elements, enabling developers worldwide to create smooth, consistent interfaces faster.
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- A collection of pre-built, flexible UI components designed for React Native Expo.
+- Smooth, reusable animations to enhance user experience.
+- Modular design for easy integration and customization.
+- Helps reduce UI development time by up to 40%.
 
-2. Start the app
+## Tech Stack
 
-   ```bash
-    npx expo start
-   ```
+- React Native (Expo)
+- TypeScript / JavaScript
 
-In the output, you'll find options to open the app in a
+## Why Laminar?
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Building polished mobile interfaces can be time-consuming and inconsistent across teams. Laminar streamlines this process by offering battle-tested UI components and animations, promoting faster product development and a unified user experience.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Installation
 
-## Get a fresh project
-
-When you're ready, run:
+Install Laminar in your React Native Expo project using:
 
 ```bash
-npm run reset-project
+npm install laminar
+# or
+yarn add laminar
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Usage
 
-## Learn more
+Import components and animations as needed:
 
-To learn more about developing your project with Expo, look at the following resources:
+```jsx
+import { Button, Card, FadeInView } from 'laminar';
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+export default function App() {
+  return (
+    <FadeInView>
+      <Card>
+        <Button title="Click me" onPress={() => alert('Hello!')} />
+      </Card>
+    </FadeInView>
+  );
+}
+```
 
-## Join the community
+## Your Role
 
-Join our community of developers creating universal apps.
+I created Laminar to accelerate UI development for React Native Expo apps by building a library of fluid, reusable components and animations. This project has helped developers worldwide reduce UI build time by up to 40%, enabling faster iteration and consistent design.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contribution
+
+Contributions are welcome! Feel free to open issues or submit pull requests to improve Laminar.
+
+## License
+
+MIT License

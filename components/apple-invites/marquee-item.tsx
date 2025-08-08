@@ -96,7 +96,7 @@ const MarqueeItemComponent: FC<Props> = ({
               <View
                 style={[{position: "absolute",
                   bottom: 0,
-                  zIndex: 2,},{ width: "100%", height: "55%" }]}
+                  zIndex: 2,},{ width: "100%", height: "50%" }]}
               >
                 <MaskedView
                   maskElement={
@@ -118,7 +118,7 @@ const MarqueeItemComponent: FC<Props> = ({
                   <Text className="text-white font-bold text-center text-3xl">
                     {title}
                   </Text>
-                  <Text numberOfLines={3} className="text-center  font-semibold text-white/60 px-8">
+                  <Text numberOfLines={3} className="text-center  font-semibold text-white/60 px-6">
                   {description}
                   </Text>
                 </View>

@@ -1,5 +1,5 @@
 import { App } from "@/types/screens";
-import {  appleInvites, appleMail, charts, parallaxBlur, pillTabs, segmentedControl, swipeableLists, swiper, topTabs } from "./screens";
+import {  actionTray, appleInvites, appleMail, charts, collapsibleHeader, expandableSheet, header, list, parallaxBlur, pillTabs, raycast, segmentedControl, swipeableLists, swiper, toast, topTabs, zoomTransition } from "./screens";
 
 
 export const screens: App[] = [
@@ -12,6 +12,13 @@ export const screens: App[] = [
   charts,
   swipeableLists,
   parallaxBlur,
-  
+  actionTray,
+expandableSheet,
+  toast,
+  header,
+  list,
+  zoomTransition,
+  collapsibleHeader,
+  raycast
 
 ];

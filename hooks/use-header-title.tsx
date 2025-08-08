@@ -1,13 +1,9 @@
-import { useTargetMeasurement } from "./use-target-measurment";
-import {
-  HeaderTitle as HeaderTitleComponent,
-  HeaderTitleProps,
-  useHeaderHeight,
-} from "@react-navigation/elements";
+import { useTargetMeasurement } from "@/hooks/use-target-measurment";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "expo-router";
 import type React from "react";
 import { useEffect } from "react";
-import { Platform, View } from "react-native";
+import { Platform, View, Text } from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -39,7 +35,6 @@ export const useHeaderTitle = ({ offsetY, title }: Props) => {
     if (triggerMeasurement.value === null) {
       return { opacity: 0 };
     }
-
     const triggerHeight = triggerMeasurement.value.height;
     const triggerPageY = triggerMeasurement.value.pageY;
 
@@ -53,8 +48,8 @@ export const useHeaderTitle = ({ offsetY, title }: Props) => {
         {
           translateY: interpolate(
             offsetY.value,
-            [0, scrollDistance, scrollDistance + triggerHeight],
-            [30, 30, 0],
+            [scrollDistance, scrollDistance + triggerHeight],
+            [30, 0],
             Extrapolation.CLAMP
           ),
         },
@@ -64,11 +59,13 @@ export const useHeaderTitle = ({ offsetY, title }: Props) => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerTitle: (props: HeaderTitleProps) => {
+      // This is temporary fix for headerTitleAlign: "center" not working properly on Android
+      headerLeft: () => <View className="w-12" />,
+      headerTitle: () => {
         return (
           <View className="py-3 overflow-hidden">
             <Animated.View style={rTitleStyle}>
-              <HeaderTitleComponent {...props}>{title}</HeaderTitleComponent>
+              <Text className="text-white font-semibold text-lg text-center">{title}</Text>
             </Animated.View>
           </View>
         );
