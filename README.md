@@ -4,6 +4,10 @@ A reusable React Native animation system for morphing text and numeric values wi
 
 **Replace abrupt content swaps with fluid motion that feels natural and intentional.**
 
+##Demo
+
+https://github.com/user-attachments/assets/d77553b3-0052-4a53-981f-7a954c0a04ac
+
 ---
 
 ## Table of Contents
