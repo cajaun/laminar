@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@theme {
+  --font-sf-black: "Sf-black";
+  --font-sf-bold: "Sf-bold";
+  --font-sf-semibold: "Sf-semibold";
+  --font-sf-medium: "Sf-medium";
+  --font-sf-regular: "Sf-regular";
+  --font-sf-light: "Sf-light";
+  --font-sf-thin: "Sf-thin";
+}
