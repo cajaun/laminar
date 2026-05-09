@@ -4,6 +4,11 @@ const computeLcsPairs = (
 ): readonly [number, number][] => {
   const previousLength = previousUnits.length;
   const nextLength = nextUnits.length;
+
+  if (previousLength === 0 || nextLength === 0) {
+    return [];
+  }
+
   const dp = Array.from({ length: previousLength + 1 }, () =>
     new Array<number>(nextLength + 1).fill(0)
   );
@@ -56,14 +61,53 @@ export const reconcileTextGlyphKeys = (
   seed: number,
   namespace: string
 ): ReconciledTextGlyphState => {
-  // lcs keeps shared glyphs in place when the text changes
-  const matches = computeLcsPairs(previousUnits, nextUnits);
+  const previousLength = previousUnits.length;
+  const nextLength = nextUnits.length;
   const nextGlyphKeys = new Array<string>(nextUnits.length).fill("");
   let nextSeed = seed;
 
-  for (const [previousIndex, nextIndex] of matches) {
+  let sharedPrefixLength = 0;
+  while (
+    sharedPrefixLength < previousLength &&
+    sharedPrefixLength < nextLength &&
+    previousUnits[sharedPrefixLength] === nextUnits[sharedPrefixLength]
+  ) {
+    nextGlyphKeys[sharedPrefixLength] =
+      previousKeys[sharedPrefixLength] ?? `${namespace}:c${nextSeed++}`;
+    sharedPrefixLength += 1;
+  }
+
+  let sharedSuffixLength = 0;
+  while (
+    sharedSuffixLength < previousLength - sharedPrefixLength &&
+    sharedSuffixLength < nextLength - sharedPrefixLength &&
+    previousUnits[previousLength - 1 - sharedSuffixLength] ===
+      nextUnits[nextLength - 1 - sharedSuffixLength]
+  ) {
+    const previousIndex = previousLength - 1 - sharedSuffixLength;
+    const nextIndex = nextLength - 1 - sharedSuffixLength;
     nextGlyphKeys[nextIndex] =
       previousKeys[previousIndex] ?? `${namespace}:c${nextSeed++}`;
+    sharedSuffixLength += 1;
+  }
+
+  const previousMiddleEnd = previousLength - sharedSuffixLength;
+  const nextMiddleEnd = nextLength - sharedSuffixLength;
+  const previousMiddleUnits = previousUnits.slice(
+    sharedPrefixLength,
+    previousMiddleEnd
+  );
+  const nextMiddleUnits = nextUnits.slice(sharedPrefixLength, nextMiddleEnd);
+
+  // lcs keeps shared middle glyphs in place when the text changes
+  const matches = computeLcsPairs(previousMiddleUnits, nextMiddleUnits);
+
+  for (const [previousIndex, nextIndex] of matches) {
+    const absolutePreviousIndex = previousIndex + sharedPrefixLength;
+    const absoluteNextIndex = nextIndex + sharedPrefixLength;
+
+    nextGlyphKeys[absoluteNextIndex] =
+      previousKeys[absolutePreviousIndex] ?? `${namespace}:c${nextSeed++}`;
   }
 
   for (let nextIndex = 0; nextIndex < nextGlyphKeys.length; nextIndex += 1) {

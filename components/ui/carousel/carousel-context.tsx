@@ -14,7 +14,6 @@ export type CarouselContextValue = {
   setIsDotsPressed: (value: boolean) => void;
   onViewableItemsChanged: (info: { viewableItems: ViewToken<CarouselItem>[] }) => void;
   onScrollToIndexFailed: () => void;
-  viewableItems?: ViewToken<CarouselItem>[];
 };
 
 export const CarouselContext = createContext<CarouselContextValue | undefined>(undefined);

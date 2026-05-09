@@ -46,9 +46,13 @@ export const MorphingText = React.memo(function MorphingText({
       enabled: autoSize,
       driveToWidth: motionRecipe.driveNumber,
     });
-    const measuredValue = splitDisplayUnits(resolvedValue)
-      .map(normalizeDisplayUnit)
-      .join("");
+    const measuredValue = React.useMemo(() => {
+      if (!autoSize) {
+        return "";
+      }
+
+      return splitDisplayUnits(resolvedValue).map(normalizeDisplayUnit).join("");
+    }, [autoSize, resolvedValue]);
 
     return (
       <MorphViewport

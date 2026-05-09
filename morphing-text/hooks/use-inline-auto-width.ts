@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
@@ -9,37 +9,36 @@ type Params = {
 
 export const useInlineAutoWidth = ({ enabled, driveToWidth }: Params) => {
   const widthValue = useSharedValue(0);
-  const [observedWidth, setObservedWidth] = useState<number | null>(null);
+  const measuredWidthRef = useRef<number | null>(null);
+  const bootstrappedRef = useRef(false);
   const [hasBootstrappedWidth, setHasBootstrappedWidth] = useState(false);
 
-  const captureLayout = useCallback((event: LayoutChangeEvent) => {
-    const nextWidth = Math.max(0, Math.ceil(event.nativeEvent.layout.width));
+  const captureLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      if (!enabled) {
+        return;
+      }
 
-    setObservedWidth((currentWidth) =>
-      currentWidth === nextWidth ? currentWidth : nextWidth
-    );
-  }, []);
+      const nextWidth = Math.max(0, Math.ceil(event.nativeEvent.layout.width));
 
-  useEffect(() => {
-    if (!enabled || observedWidth === null) {
-      return;
-    }
+      if (measuredWidthRef.current === nextWidth) {
+        return;
+      }
 
-    // snap the first width so mount does not animate from zero
-    if (!hasBootstrappedWidth) {
-      widthValue.value = observedWidth;
-      setHasBootstrappedWidth(true);
-      return;
-    }
+      measuredWidthRef.current = nextWidth;
 
-    widthValue.value = driveToWidth(observedWidth);
-  }, [
-    driveToWidth,
-    enabled,
-    hasBootstrappedWidth,
-    observedWidth,
-    widthValue,
-  ]);
+      // snap the first width so mount does not animate from zero
+      if (!bootstrappedRef.current) {
+        bootstrappedRef.current = true;
+        widthValue.value = nextWidth;
+        setHasBootstrappedWidth(true);
+        return;
+      }
+
+      widthValue.value = driveToWidth(nextWidth);
+    },
+    [driveToWidth, enabled, widthValue]
+  );
 
   const animatedWidthStyle = useAnimatedStyle(
     () =>
