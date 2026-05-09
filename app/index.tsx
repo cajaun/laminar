@@ -144,21 +144,36 @@ export default function Index() {
           justifyContent: "center",
         }}
       >
-        <MorphingText
-          text={previewWord}
-          animationPreset="default"
-          fontSize={fontSize}
-          clipToBounds={false}
-          containerStyle={{
-            alignSelf: "center",
-          }}
+        {/* <PressableScale
+          onPress={morph}
           style={{
-            color: "#000000",
-            fontFamily: fontWeight.fontFamily,
-            fontSize,
-            textAlign: "center",
+            alignSelf: "center",
+            minHeight: fontSize * 1.45,
+            borderRadius: 36,
+            backgroundColor: "#000000",
+            paddingHorizontal: fontSize * 0.62,
+            paddingVertical: fontSize * 0.22,
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        > */}
+          <MorphingText
+            text={previewWord}
+            animationPreset="default"
+            fontSize={fontSize}
+            autoSize={false}
+            clipToBounds={false}
+            containerStyle={{
+              alignSelf: "center",
+            }}
+            style={{
+              color: "#000000",
+              fontFamily: fontWeight.fontFamily,
+              fontSize,
+              textAlign: "center",
+            }}
+          />
+        {/* </PressableScale> */}
       </View>
 
       <View style={{ flex: 1 }} />

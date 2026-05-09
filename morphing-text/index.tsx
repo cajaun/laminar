@@ -1,7 +1,12 @@
 import React from "react";
+import { Text } from "react-native";
 import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
+import {
+  normalizeDisplayUnit,
+  splitDisplayUnits,
+} from "./model/display-units";
 import type { MorphingTextProps } from "./types";
 import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
@@ -41,6 +46,9 @@ export const MorphingText = React.memo(function MorphingText({
       enabled: autoSize,
       driveToWidth: motionRecipe.driveNumber,
     });
+    const measuredValue = splitDisplayUnits(resolvedValue)
+      .map(normalizeDisplayUnit)
+      .join("");
 
     return (
       <MorphViewport
@@ -49,7 +57,16 @@ export const MorphingText = React.memo(function MorphingText({
         containerClassName={containerClassName}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
-        onMeasure={captureLayout}
+        measurement={
+          <Text
+            numberOfLines={1}
+            onLayout={captureLayout}
+            className={className}
+            style={textStyle}
+          >
+            {measuredValue}
+          </Text>
+        }
       >
         {variant === "number" ? (
           <NumberRun

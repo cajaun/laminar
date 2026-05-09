@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { LayoutChangeEvent, StyleProp, ViewStyle } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
@@ -13,6 +13,10 @@ const viewportStyle = {
 } as const;
 
 const measuredContentStyle: ViewStyle = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  opacity: 0,
   alignSelf: "flex-start",
   flexShrink: 0,
 };
@@ -31,7 +35,7 @@ type MorphViewportProps = {
   readonly containerClassName?: string;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
-  readonly onMeasure?: (event: LayoutChangeEvent) => void;
+  readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
 
@@ -42,7 +46,7 @@ export const MorphViewport = React.memo(
     containerClassName,
     containerStyle,
     animatedWidthStyle,
-    onMeasure,
+    measurement,
     children,
   }: MorphViewportProps) => {
     const resolvedViewportStyle = useMemo(
@@ -56,12 +60,20 @@ export const MorphViewport = React.memo(
     return (
       <View className={containerClassName} style={[shellStyle, containerStyle]}>
         {autoSize ? (
-          <Animated.View style={[resolvedViewportStyle, animatedWidthStyle]}>
-            {/* the live content measures itself; the outer view only reserves width */}
-            <View onLayout={onMeasure} style={measuredContentStyle}>
-              {children}
+          <>
+            <View
+              accessibilityElementsHidden
+              collapsable={false}
+              importantForAccessibility="no-hide-descendants"
+              pointerEvents="none"
+              style={measuredContentStyle}
+            >
+              {measurement}
             </View>
-          </Animated.View>
+            <Animated.View style={[resolvedViewportStyle, animatedWidthStyle]}>
+              {children}
+            </Animated.View>
+          </>
         ) : (
           <View style={resolvedViewportStyle}>{children}</View>
         )}
