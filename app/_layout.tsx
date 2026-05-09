@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import "../global.css";
 
@@ -21,11 +22,11 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-
+      <KeyboardProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
         </Stack>
-  
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

@@ -1,112 +1,8 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Text, useWindowDimensions, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { Text, TextInput, useWindowDimensions, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { MorphingText } from "@/morphing-text";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-
-const screenStyle = {
-  flex: 1,
-  backgroundColor: "#ffffff",
-  paddingHorizontal: 12,
-};
-
-const previewWrapStyle = {
-  position: "absolute" as const,
-  left: 12,
-  right: 12,
-};
-
-const controlsWrapStyle = {
-  position: "absolute" as const,
-  left: 12,
-  right: 12,
-};
-
-const panelStyle = {
-  width: "100%" as const,
-  maxWidth: 424,
-  alignSelf: "center" as const,
-  backgroundColor: "#f8f8f8",
-  borderRadius: 34,
-  paddingHorizontal: 28,
-  paddingVertical: 8,
-};
-
-const rowStyle = {
-  minHeight: 55,
-  flexDirection: "row" as const,
-  alignItems: "center" as const,
-  justifyContent: "space-between" as const,
-  gap: 18,
-};
-
-const dividerStyle = {
-  height: 1,
-  backgroundColor: "#dddddd",
-};
-
-const labelStyle = {
-  color: "#989898",
-  fontFamily: "Sf-regular",
-  fontSize: 20,
-};
-
-const valueStyle = {
-  color: "#007aff",
-  fontFamily: "Sf-regular",
-  fontSize: 20,
-};
-
-const textValueStyle = {
-  color: "#000000",
-  fontFamily: "Sf-regular",
-  fontSize: 20,
-};
-
-const textValueWrapStyle = {
-  minWidth: 122,
-  flexDirection: "row" as const,
-  alignItems: "center" as const,
-  justifyContent: "flex-end" as const,
-};
-
-const caretStyle = {
-  width: 2,
-  height: 30,
-  marginLeft: 1,
-  backgroundColor: "#1f54ff",
-};
-
-const actionRowStyle = {
-  width: "100%" as const,
-  maxWidth: 424,
-  alignSelf: "center" as const,
-  flexDirection: "row" as const,
-  gap: 20,
-  marginTop: 18,
-};
-
-const buttonStyle = {
-  flex: 1,
-  height: 56,
-  borderRadius: 28,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-};
-
-const reverseButtonStyle = {
-  ...buttonStyle,
-  backgroundColor: "#f5f5f5",
-};
-
-const morphButtonStyle = {
-  ...buttonStyle,
-  backgroundColor: "#000000",
-};
-
-const buttonTextStyle = {
-  fontFamily: "Sf-bold",
-  fontSize: 22,
-};
 
 const fontSizes = [32, 40, 48] as const;
 
@@ -125,38 +21,40 @@ const fontWeights = [
   },
 ] as const;
 
-const textAlignments = [
-  {
-    label: "Left",
-    alignSelf: "flex-start" as const,
-    textAlign: "left" as const,
-  },
-  {
-    label: "Center",
-    alignSelf: "center" as const,
-    textAlign: "center" as const,
-  },
-  {
-    label: "Right",
-    alignSelf: "flex-end" as const,
-    textAlign: "right" as const,
-  },
-] as const;
-
 type SettingRowProps = {
   readonly label: string;
+  readonly rowHeight: number;
+  readonly labelFontSize: number;
   readonly children: React.ReactNode;
   readonly onPress?: () => void;
 };
 
 const SettingRow = React.memo(function SettingRow({
   label,
+  rowHeight,
+  labelFontSize,
   children,
   onPress,
 }: SettingRowProps) {
   const content = (
-    <View style={rowStyle}>
-      <Text style={labelStyle}>{label}</Text>
+    <View
+      style={{
+        minHeight: rowHeight,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: rowHeight * 0.33,
+      }}
+    >
+      <Text
+        style={{
+          color: "#989898",
+          fontFamily: "Sf-regular",
+          fontSize: labelFontSize,
+        }}
+      >
+        {label}
+      </Text>
       {children}
     </View>
   );
@@ -169,35 +67,50 @@ const SettingRow = React.memo(function SettingRow({
 });
 
 export default function Index() {
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const [previewWord, setPreviewWord] = useState("Craft");
-  const [targetWord, setTargetWord] = useState("Creative");
+  const [textValue, setTextValue] = useState("Creative");
+  const [returnWord, setReturnWord] = useState("Craft");
   const [fontSizeIndex, setFontSizeIndex] = useState(1);
   const [fontWeightIndex, setFontWeightIndex] = useState(1);
-  const [alignmentIndex, setAlignmentIndex] = useState(1);
 
   const fontSize = fontSizes[fontSizeIndex];
   const fontWeight = fontWeights[fontWeightIndex];
-  const textAlignment = textAlignments[alignmentIndex];
+  const horizontalInset = Math.max(12, width * 0.027);
+  const rowHeight = Math.max(48, Math.min(58, height * 0.085));
+  const labelFontSize = Math.max(17, Math.min(20, width * 0.044));
+  const valueFontSize = Math.max(17, Math.min(20, width * 0.044));
+  const panelPaddingX = Math.max(22, width * 0.062);
+  const panelRadius = Math.max(28, Math.min(36, width * 0.075));
+  const buttonHeight = Math.max(52, Math.min(58, height * 0.086));
+  const buttonGap = Math.max(16, width * 0.044);
 
-  const previewPositionStyle = useMemo(
-    () => ({
-      top: Math.max(108, Math.round(height * 0.22)),
-    }),
-    [height]
-  );
+  const morph = useCallback(() => {
+    const targetWord = textValue.trim() || " ";
 
-  const controlsPositionStyle = useMemo(
-    () => ({
-      bottom: Math.max(20, Math.round(height * 0.03)),
-    }),
-    [height]
-  );
+    if (previewWord === targetWord) {
+      setPreviewWord(returnWord);
+      return;
+    }
 
-  const swapWords = useCallback(() => {
+    setReturnWord(previewWord);
     setPreviewWord(targetWord);
-    setTargetWord(previewWord);
-  }, [previewWord, targetWord]);
+  }, [previewWord, returnWord, textValue]);
+
+  const reverse = useCallback(() => {
+    const targetWord = textValue.trim() || " ";
+
+    if (previewWord === targetWord && returnWord !== previewWord) {
+      setPreviewWord(returnWord);
+      setTextValue(previewWord);
+      setReturnWord(previewWord);
+      return;
+    }
+
+    setPreviewWord(targetWord);
+    setTextValue(previewWord);
+    setReturnWord(targetWord);
+  }, [previewWord, returnWord, textValue]);
 
   const cycleFontSize = useCallback(() => {
     setFontSizeIndex((index) => (index + 1) % fontSizes.length);
@@ -207,78 +120,187 @@ export default function Index() {
     setFontWeightIndex((index) => (index + 1) % fontWeights.length);
   }, []);
 
-  const cycleAlignment = useCallback(() => {
-    setAlignmentIndex((index) => (index + 1) % textAlignments.length);
-  }, []);
-
-  const previewContainerStyle = useMemo(
-    () => ({
-      alignSelf: textAlignment.alignSelf,
-    }),
-    [textAlignment.alignSelf]
-  );
-
-  const previewTextStyle = useMemo(
-    () => ({
-      color: "#000000",
-      fontFamily: fontWeight.fontFamily,
-      fontSize,
-      textAlign: textAlignment.textAlign,
-    }),
-    [fontSize, fontWeight.fontFamily, textAlignment.textAlign]
-  );
-
   return (
-    <View style={screenStyle}>
-      <View style={[previewWrapStyle, previewPositionStyle]}>
+    <KeyboardAwareScrollView
+      bottomOffset={height * 0.04}
+      keyboardDismissMode="interactive"
+      keyboardShouldPersistTaps="handled"
+      style={{
+        flex: 1,
+        backgroundColor: "#ffffff",
+      }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: horizontalInset,
+        paddingTop: Math.max(height * 0.18, fontSize * 2.2),
+        paddingBottom: Math.max(height * 0.03, buttonHeight * 0.35),
+      }}
+    >
+      <View
+        style={{
+          width: "100%",
+          minHeight: fontSize * 1.7,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <MorphingText
           text={previewWord}
           animationPreset="default"
           fontSize={fontSize}
           clipToBounds={false}
-          containerStyle={previewContainerStyle}
-          style={previewTextStyle}
+          containerStyle={{
+            alignSelf: "center",
+          }}
+          style={{
+            color: "#000000",
+            fontFamily: fontWeight.fontFamily,
+            fontSize,
+            textAlign: "center",
+          }}
         />
       </View>
 
-      <View style={[controlsWrapStyle, controlsPositionStyle]}>
-        <View style={panelStyle}>
-          <SettingRow label="Text">
-            <View style={textValueWrapStyle}>
-              <Text style={textValueStyle}>{targetWord}</Text>
-              <View style={caretStyle} />
-            </View>
+      <View style={{ flex: 1 }} />
+
+      <View>
+        <View
+          style={{
+            width: "100%",
+            alignSelf: "center",
+            backgroundColor: "#f8f8f8",
+            borderRadius: panelRadius,
+            paddingHorizontal: panelPaddingX,
+            paddingVertical: rowHeight * 0.14,
+          }}
+        >
+          <SettingRow
+            label="Text"
+            rowHeight={rowHeight}
+            labelFontSize={labelFontSize}
+          >
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setTextValue}
+              placeholder="Text"
+              placeholderTextColor="#c2c2c2"
+              returnKeyType="done"
+              selectionColor="#1f54ff"
+              value={textValue}
+              style={{
+                flex: 1,
+                color: "#000000",
+                fontFamily: "Sf-regular",
+                fontSize: valueFontSize,
+                paddingVertical: 0,
+                textAlign: "right",
+              }}
+            />
           </SettingRow>
 
-          <View style={dividerStyle} />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#dddddd",
+            }}
+          />
 
-          <SettingRow label="Font Size" onPress={cycleFontSize}>
-            <Text style={valueStyle}>{fontSize}pt</Text>
+          <SettingRow
+            label="Font Size"
+            rowHeight={rowHeight}
+            labelFontSize={labelFontSize}
+            onPress={cycleFontSize}
+          >
+            <Text
+              style={{
+                color: "#007aff",
+                fontFamily: "Sf-regular",
+                fontSize: valueFontSize,
+              }}
+            >
+              {fontSize}pt
+            </Text>
           </SettingRow>
 
-          <View style={dividerStyle} />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#dddddd",
+            }}
+          />
 
-          <SettingRow label="Font Weight" onPress={cycleFontWeight}>
-            <Text style={valueStyle}>{fontWeight.label}</Text>
-          </SettingRow>
-
-          <View style={dividerStyle} />
-
-          <SettingRow label="Text Alignment" onPress={cycleAlignment}>
-            <Text style={valueStyle}>{textAlignment.label}</Text>
+          <SettingRow
+            label="Font Weight"
+            rowHeight={rowHeight}
+            labelFontSize={labelFontSize}
+            onPress={cycleFontWeight}
+          >
+            <Text
+              style={{
+                color: "#007aff",
+                fontFamily: "Sf-regular",
+                fontSize: valueFontSize,
+              }}
+            >
+              {fontWeight.label}
+            </Text>
           </SettingRow>
         </View>
 
-        <View style={actionRowStyle}>
-          <PressableScale onPress={swapWords} style={reverseButtonStyle}>
-            <Text style={[buttonTextStyle, { color: "#252525" }]}>Reverse</Text>
+        <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            gap: buttonGap,
+            marginTop: buttonHeight * 0.32,
+          }}
+        >
+          <PressableScale
+            onPress={reverse}
+            style={{
+              flex: 1,
+              height: buttonHeight,
+              borderRadius: buttonHeight / 2,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#f5f5f5",
+            }}
+          >
+            <Text
+              style={{
+                color: "#252525",
+                fontFamily: "Sf-bold",
+                fontSize: Math.max(20, buttonHeight * 0.38),
+              }}
+            >
+              Reverse
+            </Text>
           </PressableScale>
 
-          <PressableScale onPress={swapWords} style={morphButtonStyle}>
-            <Text style={[buttonTextStyle, { color: "#ffffff" }]}>Morph</Text>
+          <PressableScale
+            onPress={morph}
+            style={{
+              flex: 1,
+              height: buttonHeight,
+              borderRadius: buttonHeight / 2,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#000000",
+            }}
+          >
+            <Text
+              style={{
+                color: "#ffffff",
+                fontFamily: "Sf-bold",
+                fontSize: Math.max(20, buttonHeight * 0.38),
+              }}
+            >
+              Morph
+            </Text>
           </PressableScale>
         </View>
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }

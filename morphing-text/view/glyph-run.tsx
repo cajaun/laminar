@@ -24,8 +24,8 @@ export const GlyphRun = React.memo(
   }: Readonly<{
     glyphs: readonly GlyphToken[];
     layoutTransition: ComplexAnimationBuilder;
-    enterTransition: EntryExitAnimationFunction;
-    exitTransition: EntryExitAnimationFunction;
+    enterTransition?: EntryExitAnimationFunction;
+    exitTransition?: EntryExitAnimationFunction;
     className?: string;
     textStyle?: StyleProp<TextStyle>;
   }>) => (

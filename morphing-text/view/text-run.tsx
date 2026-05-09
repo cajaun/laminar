@@ -1,4 +1,4 @@
-import React, { useId } from "react";
+import React, { useId, useRef } from "react";
 import type { StyleProp, TextStyle } from "react-native";
 import { useTextGlyphs } from "../hooks/use-text-glyphs";
 import type { MotionRecipe } from "../types";
@@ -16,12 +16,21 @@ export const TextRun = React.memo(
     // namespace ids per instance so repeated strings do not collide
     const scopeId = useId();
     const glyphs = useTextGlyphs(value, scopeId);
+    const lastValueRef = useRef(value);
+    const hasAnimatedRef = useRef(false);
+
+    if (value !== lastValueRef.current) {
+      hasAnimatedRef.current = true;
+      lastValueRef.current = value;
+    }
 
     return (
       <GlyphRun
         glyphs={glyphs}
         layoutTransition={motionRecipe.layoutTransition}
-        enterTransition={motionRecipe.enterTransition}
+        enterTransition={
+          hasAnimatedRef.current ? motionRecipe.enterTransition : undefined
+        }
         exitTransition={motionRecipe.exitTransition}
         className={className}
         textStyle={textStyle}
