@@ -158,6 +158,7 @@ export default function Index() {
           }}
         > */}
           <MorphingText
+          
             text={previewWord}
             animationPreset="default"
             fontSize={fontSize}

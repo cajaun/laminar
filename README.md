@@ -1,8 +1,10 @@
 # Laminar
 
-A reusable React Native animation system for morphing text and numeric values with smooth, continuous visual transformations. Instead of unmounting and remounting UI, Laminar preserves visual continuity so labels, counters, and prices feel like they evolve into their next state.
+Laminar is a React Native animation system for morphing text and numeric strings. It is built around one exported component, `MorphingText`, which can animate ordinary text or digit-aware numeric values.
 
-**Replace abrupt content swaps with fluid motion that feels natural and intentional.**
+The goal is simple: when a value changes, the user should be able to understand the change without seeing a hard swap, a layout jump, or a clipped intermediate state.
+
+**Replace abrupt content swaps with motion that explains what changed.**
 
 ## Demo
 
@@ -17,6 +19,7 @@ https://github.com/user-attachments/assets/d77553b3-0052-4a53-981f-7a954c0a04ac
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Architecture & How It Works](#architecture--how-it-works)
+  - [First Principles](#first-principles)
   - [Grapheme-Safe Segmentation](#grapheme-safe-segmentation)
   - [LCS-Based Reconciliation](#lcs-based-reconciliation)
   - [Digit Lane System](#digit-lane-system)
@@ -25,7 +28,6 @@ https://github.com/user-attachments/assets/d77553b3-0052-4a53-981f-7a954c0a04ac
   - [UI Thread Performance](#ui-thread-performance)
 - [API Reference](#api-reference)
   - [MorphingText](#morphingtext)
-  - [MorphingNumber](#morphingnumber)
   - [Animation Presets](#animation-presets)
   - [Customization Options](#customization-options)
 - [Core Concepts](#core-concepts)
@@ -36,9 +38,9 @@ https://github.com/user-attachments/assets/d77553b3-0052-4a53-981f-7a954c0a04ac
 - [Usage Examples](#usage-examples)
   - [Basic Text Animation](#basic-text-animation)
   - [Numeric Counter](#numeric-counter)
-  - [Price Display with Auto-Sizing](#price-display-with-auto-sizing)
+  - [Auto-Sizing Inside a Button](#auto-sizing-inside-a-button)
+  - [Standalone Text Without Auto-Sizing](#standalone-text-without-auto-sizing)
   - [Custom Motion Controls](#custom-motion-controls)
-  - [Directional Transitions](#directional-transitions)
 - [Advanced Topics](#advanced-topics)
   - [Performance Optimization](#performance-optimization)
   - [Measuring & Layout Computation](#measuring--layout-computation)
@@ -52,22 +54,36 @@ https://github.com/user-attachments/assets/d77553b3-0052-4a53-981f-7a954c0a04ac
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
+- [Resources](#resources)
 
 ---
 
 ## Overview
 
-Laminar solves the problem of jarring UI updates by animating transitions at the character and digit level. When content changes—whether it's a label, price, or counter—Laminar intelligently tracks what changed and animates each piece individually, creating a unified, continuous visual experience.
+Every changing label has two jobs:
+
+1. Show the next value.
+2. Preserve enough visual continuity that the user can understand how the old value became the new one.
+
+A normal React render only solves the first job. If the string changes from `Craft` to `Creative`, React can render `Creative`, but it does not know that `C`, `r`, `a`, `t` should feel stable while `i`, `v`, and `e` enter.
+
+Laminar adds the missing layer:
+
+1. Split the value into visible units.
+2. Decide which units are the same across renders.
+3. Give stable units stable keys.
+4. Animate entering, exiting, and repositioning units.
+5. Optionally animate the width reserved by the component.
 
 ### What Makes Laminar Different
 
-- **Character-level precision**: Animate individual characters and digits independently while maintaining layout stability
-- **Grapheme-aware**: Correctly handles emoji, accents, diacritics, and combined characters that represent single visual units
-- **Identity preservation**: Uses LCS (Longest Common Subsequence) reconciliation to identify unchanged glyphs and keep them stable during transitions
-- **Numeric intelligence**: Understands digit place values and can drive animations based on directionality (up/down movements)
-- **Layout-aware**: Smoothly adapts container dimensions while animating content, with optional clipping to keep transitions contained
-- **Performance-first**: Runs animations on the UI thread via Reanimated, ensuring 60fps motion without blocking JavaScript
-- **Composable**: Modular architecture separates APIs, hooks, models, and rendering layers for easy extension
+- **One component, two modes**: `MorphingText` handles both `variant="text"` and `variant="number"`.
+- **Grapheme-aware text**: emoji, accents, and combined Unicode characters are treated as visible units, not raw code units.
+- **Stable identity**: unchanged glyphs keep their keys through LCS reconciliation.
+- **Digit-aware numbers**: numeric strings are aligned by lanes so place values stay understandable.
+- **Auto-size by measurement**: layout width is driven by a hidden final-text probe, not by the live animated glyph row.
+- **UI-thread animation**: Reanimated drives layout, opacity, transforms, and width animation.
+- **Composable styling**: text styles, container styles, class names, presets, and clipping are exposed through props.
 
 ---
 
@@ -75,56 +91,61 @@ Laminar solves the problem of jarring UI updates by animating transitions at the
 
 ### Text Morphing
 
-Animates text transitions character by character, preserving visual continuity and identity:
+Text morphing answers a first-principles question:
 
-- Smooth character substitutions and insertions
-- Grapheme-safe segmentation for emoji and accent marks
-- No jarring font remeasurements or layout shifts
-- Optional fade transitions for entering/exiting characters
+> Which visual pieces are still the same, and which pieces need to enter or leave?
+
+Laminar uses this answer to:
+
+- keep matching letters mounted;
+- fade new letters in;
+- fade removed letters out;
+- animate kept letters into their new positions;
+- avoid animating the whole string as one opaque block.
 
 ### Numeric Morphing
 
-Specialized support for numbers with digit-aware animation:
+Numeric morphing starts from a different constraint:
 
-- Animates individual digits within their place-value columns
-- Infers directionality (upward/downward motion) from value changes
-- Keeps decimal points and separators stable
-- Reconciles values like 148.21 → 43.21 with logical digit transitions
+> A digit is not just a character. Its position in the number gives it meaning.
+
+For example, in `148.21`, the `4` means forty. In `43.21`, the `4` means forty too, even though the string is shorter. The number renderer therefore aligns the right side of the numeric body so matching place-value lanes can stay stable.
 
 ### Layout Stability
 
-Ensures animations don't cause layout thrashing:
+Changing text can change width. Width changes are dangerous if they are measured from animated content, because animated content can report intermediate sizes.
 
-- Character identity tracking prevents full remounts
-- Place value alignment for numeric columns
-- Optional auto-sizing to smoothly transition container dimensions
-- Clipping by default to contain animated content
+Laminar separates the jobs:
+
+- the hidden measurement text reports the final width;
+- the visible glyph row performs the morph animation;
+- the outer viewport animates to the measured width.
+
+This prevents the autosize system from chasing its own animated children.
 
 ### Motion Customization
 
-Fine-grained controls over animation behavior:
+Motion is controlled through presets and duration overrides:
 
-- Configurable duration, easing, and stagger timing
-- Font styling and color transitions
-- Entry/exit animation presets
-- Custom motion builders for specialized sequences
+- `default`
+- `smooth`
+- `snappy`
+- `bouncy`
+
+The component also accepts `animationDuration` and `stagger`.
 
 ### Performance
 
-Animation runs on the UI thread for consistent, smooth motion:
+Laminar uses React Native Reanimated so animation work can run on the UI thread.
 
-- Leverages React Native Reanimated for high-fidelity animation
-- Avoids unnecessary component remounts
-- Minimal JavaScript execution during animation
-- Suitable for frequent updates (counters, live data, etc.)
+The JavaScript side decides the next glyph model. The UI side animates layout, opacity, transforms, and width.
 
 ### Clip Management
 
-By default, animations are clipped to their container:
+`clipToBounds` controls whether the animated viewport hides overflow.
 
-- Ideal for pills, badges, buttons, and other constrained UI
-- Optional overflow for specialized layouts
-- Smooth visual containment without overflow artifacts
+- Use `clipToBounds={true}` when a pill, badge, or compact surface should contain the animation.
+- Use `clipToBounds={false}` when entering or exiting glyphs should be allowed to breathe outside the current bounds.
 
 ---
 
@@ -132,29 +153,40 @@ By default, animations are clipped to their container:
 
 ### Prerequisites
 
-- React Native 0.70+
-- React Native Reanimated 3.0+
-- React 18+
+This repository is an Expo / React Native project. The morphing component relies on:
 
-### Add to Your Project
+- React Native
+- React Native Reanimated
+- React
 
-```bash
-npm install laminar
-# or
-yarn add laminar
-# or
-pnpm add laminar
-```
+The current app also uses Expo Router, Gesture Handler, Keyboard Controller, and Uniwind, but the morphing text component itself is centered on React Native and Reanimated.
 
-### Peer Dependencies
-
-Ensure you have Reanimated configured in your project:
+### Project Setup
 
 ```bash
-npm install react-native-reanimated
+npm install
 ```
 
-Then follow the [Reanimated installation guide](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/) for your platform.
+For iOS native builds, install pods after dependencies if your workflow requires it:
+
+```bash
+cd ios
+pod install
+```
+
+### Import Path In This Repository
+
+```tsx
+import { MorphingText } from "@/morphing-text";
+```
+
+If you extract `morphing-text` into a package, export the same `MorphingText` component from your package entrypoint and import from that package name instead.
+
+### Reanimated Setup
+
+Reanimated must be configured for the app. In a normal React Native project, follow the Reanimated installation guide for your platform:
+
+https://docs.swmansion.com/react-native-reanimated/
 
 ---
 
@@ -162,217 +194,392 @@ Then follow the [Reanimated installation guide](https://docs.swmansion.com/react
 
 ### Basic Text Animation
 
-```typescript
-import { MorphingText } from 'laminar';
+```tsx
+import React, { useState } from "react";
+import { Button, View } from "react-native";
+import { MorphingText } from "@/morphing-text";
 
-export default function App() {
-  const [label, setLabel] = useState('Hello');
+export default function Example() {
+  const [word, setWord] = useState("Craft");
 
   return (
-    <MorphingText
-      value={label}
-      duration={500}
-      easing="ease-out"
-    />
+    <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+      <MorphingText
+        text={word}
+        fontSize={40}
+        style={{ color: "#000000", fontWeight: "600" }}
+      />
+
+      <Button
+        title="Morph"
+        onPress={() => setWord((value) => value === "Craft" ? "Creative" : "Craft")}
+      />
+    </View>
   );
 }
 ```
 
 ### Numeric Counter
 
-```typescript
-import { MorphingNumber } from 'laminar';
+```tsx
+import React, { useState } from "react";
+import { Button, View } from "react-native";
+import { MorphingText } from "@/morphing-text";
 
-export default function PriceDisplay() {
-  const [price, setPrice] = useState(29.99);
+export default function Counter() {
+  const [count, setCount] = useState(148.21);
 
   return (
-    <MorphingNumber
-      value={price}
-      duration={600}
-      decimalPlaces={2}
-    />
+    <View style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+      <MorphingText
+        text={count.toLocaleString()}
+        variant="number"
+        fontSize={40}
+        animationPreset="snappy"
+        style={{ color: "#000000", fontVariant: ["tabular-nums"] }}
+      />
+
+      <Button title="Change" onPress={() => setCount(43.21)} />
+    </View>
   );
 }
 ```
 
 ### With Auto-Sizing
 
-```typescript
+```tsx
 <MorphingText
-  value={label}
-  duration={500}
-  autoSize={true}
-  maxWidth={300}
+  text={word}
+  autoSize
+  fontSize={40}
+  style={{ color: "#ffffff", fontWeight: "600" }}
 />
 ```
+
+`autoSize` defaults to `true`. It is written explicitly above because it is an important layout decision.
 
 ---
 
 ## Architecture & How It Works
 
-Laminar's architecture is built on several interconnected systems that work together to create smooth, intelligent animations:
+Laminar is easiest to understand if each topic starts from the same first-principles pattern:
+
+1. What is the physical UI problem?
+2. What information is needed to solve it?
+3. What can be inferred from the previous and next values?
+4. What must be animated, and what must stay stable?
+5. What does the implementation do with that answer?
+
+### First Principles
+
+#### 1. A text string is not the same thing as visible text
+
+JavaScript strings are sequences of code units. Users see glyphs and grapheme clusters. Those are not always the same thing.
+
+Deduction:
+
+- If animation uses raw string indexes, complex characters can split incorrectly.
+- Therefore, Laminar must split by visible display units before it assigns animation identity.
+
+Implementation:
+
+```ts
+const units = splitDisplayUnits(value);
+```
+
+#### 2. A changing value has old identity and new layout
+
+React can tell that props changed. It cannot automatically tell which glyphs should keep their identity.
+
+Deduction:
+
+- If every glyph gets a new key, everything remounts.
+- If matching glyphs keep their keys, unchanged pieces can stay visually stable.
+- Therefore, Laminar reconciles old units against new units before rendering.
+
+#### 3. Measurement and animation should not be the same job
+
+A live animated row can have unstable intermediate sizes.
+
+Deduction:
+
+- If autosize measures the live animated row, width can feed back into layout.
+- Feedback loops create jitter.
+- Therefore, autosize should measure a stable final representation and animate the outer width toward that value.
 
 ### Grapheme-Safe Segmentation
 
-**Problem**: Text isn't just characters. Some symbols like family emoji are actually multiple Unicode code points combined into a single visual unit. Accents like é are stored as e + combining accent mark. Simple character-level animation breaks these down incorrectly.
+Problem:
 
-**Solution**: Laminar uses grapheme-aware segmentation to identify true visual units:
+Text is not always one visible glyph per JavaScript character.
 
-```typescript
-// Input: "[FAMILY EMOJI] Hi"
-// Most naive approach splits into code points: ["[MAN]", "\u200d", "[WOMAN]", "\u200d", "[GIRL]", "\u200d", "[BOY]", " ", "H", "i"]
-// Laminar segments into graphemes: ["[FAMILY EMOJI]", " ", "H", "i"]
+Example:
+
+```ts
+"Cafe\u0301" // visually "Cafe" with an accent on e
 ```
 
-**How it works**:
+The final accented character may be represented by multiple code points. Emoji sequences can be even more complex.
 
-- Uses Unicode grapheme cluster breaking rules to identify boundaries
-- Preserves combined characters (emoji sequences, accented letters, etc.)
-- Treats each visual unit atomically during animation
-- Prevents splitting skin-tone modifiers, zero-width joiners, and diacritical marks
+Implementation:
 
-This ensures emoji render crisply and accented characters animate as unified visual units.
+```ts
+const graphemeSegmenter =
+  typeof Intl !== "undefined" && typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
+```
+
+Breakdown:
+
+- `Intl.Segmenter` is used when available.
+- The granularity is `grapheme`, which means visible text units.
+- If `Intl.Segmenter` is unavailable, the fallback is `Array.from(input)`.
+- Plain spaces are normalized to non-breaking spaces when measuring/rendering units so they keep width.
+
+Practical result:
+
+```tsx
+<MorphingText text="Café" />
+```
+
+The accented character is treated as one display unit during reconciliation and animation.
 
 ### LCS-Based Reconciliation
 
-**Problem**: When text changes from "Hello" to "Help", naively animating every character creates unnecessary motion. The "Hel" is unchanged—only the "lo" → "p" transition matters.
+Problem:
 
-**Solution**: Laminar uses Longest Common Subsequence (LCS) reconciliation to identify stable glyphs:
+When `Craft` becomes `Creative`, not every letter is new. The animation should preserve what the user can recognize.
 
-```typescript
-// Old text: "Hello"
-// New text: "Help"
-// LCS identifies: "Hel" are shared
-// Animations only needed for: "lo" → "p"
+Inductive observation:
+
+Across many text transitions, the best-looking morphs usually keep the longest shared sequence stable.
+
+Deduction:
+
+- The longest shared ordered sequence is the Longest Common Subsequence.
+- If those shared units keep their keys, React and Reanimated can animate only the actual differences.
+
+Example:
+
+```txt
+previous: Craft
+next:     Creative
+
+shared units: C r a t
+new units:        e i v e
+removed units:      f
 ```
 
-**Algorithm outline**:
+Implementation shape:
 
-1. Segment both old and new text into graphemes
-2. Compute LCS to find the longest sequence of unchanged glyphs
-3. Identify insertions, deletions, and substitutions needed
-4. Animate only the necessary transitions, keeping matched characters stable
+```ts
+const matches = computeLcsPairs(previousUnits, nextUnits);
+```
 
-**Visual impact**: Less motion noise, faster visual updates, improved comprehension.
+Render consequence:
+
+- shared units reuse previous keys;
+- new units receive new keys;
+- removed units exit because their previous keys disappear from the next render.
+
+Visual consequence:
+
+- stable letters feel anchored;
+- new letters fade in;
+- removed letters fade out;
+- kept letters move through layout transitions instead of blinking.
 
 ### Digit Lane System
 
-**Problem**: When animating numbers like 148.21 → 43.21, individual digits move at different "speeds" because they represent different place values. A naive digit-by-digit animation would be visually chaotic.
+Problem:
 
-**Solution**: Laminar uses a **lane-based system** where each digit occupies a column:
+Numbers carry meaning through place value.
 
+`148.21 -> 43.21` is not only a text change. The rightmost digits, decimal point, and fractional values should remain understandable.
+
+Deduction:
+
+- Prefix text before the first digit should be treated separately.
+- The numeric body should align from the right so place values keep stable lanes.
+- The direction of the numeric change can be inferred by parsing the numeric magnitude.
+
+Implementation:
+
+```ts
+const direction = Math.sign(nextNumber - previousNumber);
 ```
-Before:     After:
-1 4 8 . 2 1     4 3 . 2 1
-| | | | | |     | | | | |
-↓ ↓ ↓ ↓ ↓ ↓     (lanes align)
+
+Lane model:
+
+```txt
+previous: 1 4 8 . 2 1
+next:       4 3 . 2 1
+
+right side aligns so decimal/fractional lanes can remain stable
 ```
 
-**How it works**:
+Rendering:
 
-1. Parse numeric values into lanes for each position (hundreds, tens, ones, tenths, etc.)
-2. Detect which lanes have changes and animate within each lane
-3. Preserve decimal points and separators as anchors
-4. Infer directionality: if a digit increases, animate upward; if it decreases, animate downward
-5. Optional stagger timing between lanes for cascading effect
+- `NumberRun` splits the value into units.
+- `useNumericLanes` returns lane keys, direction, and prefix length.
+- `NumberLane` renders a hidden probe for lane layout and an animated token on top.
+- Digit tokens shift vertically according to direction.
 
-**Result**: Numbers feel like they "transform" into their next state while maintaining column alignment, making the values easier to read during transition.
+Practical result:
+
+```tsx
+<MorphingText
+  text="$148.21"
+  variant="number"
+  animationPreset="snappy"
+/>
+```
+
+The string may include currency symbols and separators. Direction is inferred by stripping non-numeric characters and comparing the parsed values.
 
 ### Auto-Sizing
 
-**Problem**: After animating text from "Welcome!" to "Goodbye beautiful world", the container needs to resize. Hard-switching dimensions causes layout thrashing; animating with fixed sizes causes clipping or text overflow.
+Problem:
 
-**Solution**: Laminar implements a **hidden measurement layer** that computes upcoming dimensions and animates the viewport:
+Sometimes the text sits inside a container that should size to the word, such as a button, badge, or pill.
 
-```typescript
-// Phase 1: Render hidden version of "Goodbye beautiful world"
-// Measure its dimensions: width = 280, height = 24
+If the word changes from `Craft` to `Creative`, the reserved width must change too.
 
-// Phase 2: Animate container from old dimensions to new dimensions
-// During animation, clip and overflow-manage the animated content
+Naive implementation:
 
-// Phase 3: Once animation completes, finalize layout
+```tsx
+<Animated.View style={{ width }}>
+  <View onLayout={measureLiveAnimatedGlyphRow}>
+    <TextRun />
+  </View>
+</Animated.View>
 ```
 
-**How it works**:
+Why that can jitter:
 
-1. When text changes, render a hidden copy of the new content off-screen
-2. Measure its dimensions without affecting layout
-3. Animate the container's width/height from current to target
-4. Clip animated glyphs to prevent overflow during transition
-5. Optional padding/margin adjustments to reflow surrounding UI
+1. The glyph row is animating.
+2. Entering letters and exiting letters can affect measured layout.
+3. The parent width animates based on that measurement.
+4. The parent width can affect child layout.
+5. The child layout reports another intermediate measurement.
 
-**Configuration**:
+That is a feedback loop:
 
-- `autoSize={true}`: Enable auto-sizing
-- `maxWidth`: Constrain measured width
-- `clipDuringResize={true}`: Clip content while resizing (default)
+```txt
+animated glyph row -> measured width -> animated parent width -> child layout -> measured width
+```
+
+Current implementation:
+
+```tsx
+<View style={hiddenMeasurementStyle}>
+  <Text onLayout={captureLayout}>{finalText}</Text>
+</View>
+
+<Animated.View style={animatedWidthStyle}>
+  <TextRun />
+</Animated.View>
+```
+
+Breakdown:
+
+- The hidden `Text` is plain final text.
+- It is absolute, transparent, ignored by pointer events, and hidden from accessibility.
+- It reports the final width through `onLayout`.
+- `useInlineAutoWidth` animates the outer width to that measured value.
+- The visible glyph row is no longer the measurement source.
+
+Why it does not jitter anymore:
+
+- The autosize target is stable.
+- The target comes from final text, not intermediate animated glyphs.
+- Width animation no longer chases the live row while the live row is changing.
+
+Practical rule:
+
+```tsx
+// A button, badge, chip, or pill should usually autosize.
+<MorphingText text={label} autoSize />
+
+// Standalone text can disable autosize for the purest glyph flow.
+<MorphingText text={label} autoSize={false} />
+```
+
+Important distinction:
+
+`autoSize=true` and `autoSize=false` do not have to feel identical. They solve different layout problems.
+
+- `autoSize=true` is layout-aware. The outside surface can grow and shrink with the value.
+- `autoSize=false` is pure text morphing. The text does not reserve animated width for a parent.
 
 ### Motion Control & Presets
 
-Motion behavior is abstracted into reusable builders:
+Problem:
 
-**Animation Presets**:
+Different UI moments need different motion.
 
-```typescript
-interface AnimationPreset {
-  duration: number;
-  easing: EasingFunction;
-  staggerDelay?: number;
-  entryStyle?: StyleProps;
-  exitStyle?: StyleProps;
-}
+Deduction:
+
+- A counter should usually feel quick.
+- A label morph can feel smoother.
+- A playful surface may tolerate bounce.
+- The component should expose named presets instead of forcing every callsite to define timing.
+
+Available presets:
+
+| Preset | Meaning | Default Duration |
+| --- | --- | --- |
+| `default` | Smooth cubic-bezier timing for text | `380ms` |
+| `smooth` | Spring with no bounce | `400ms` |
+| `snappy` | Spring with light bounce | `350ms` |
+| `bouncy` | Spring with more bounce | `500ms` |
+
+Usage:
+
+```tsx
+<MorphingText text={word} animationPreset="smooth" />
+<MorphingText text={count} variant="number" animationPreset="snappy" />
 ```
 
-**Available presets**:
+Override duration:
 
-- `quick`: 300ms, ease-out (instant feedback)
-- `smooth`: 500ms, ease-in-out (standard transitions)
-- `elegant`: 800ms, cubic-bezier (premium feel)
-- `snappy`: 400ms, ease-out with stagger (lists/multiple items)
-
-**Custom builders**:
-
-```typescript
-const customMotion = {
-  duration: 600,
-  easing: "cubic-bezier(0.17, 0.67, 0.83, 0.67)",
-  staggerDelay: 50, // 50ms between character animations
-  entryStyle: { opacity: 0, scale: 0.8 },
-  exitStyle: { opacity: 0.5, scale: 1.2 },
-};
+```tsx
+<MorphingText
+  text={word}
+  animationPreset="default"
+  animationDuration={520}
+/>
 ```
+
+`animationDuration` is in milliseconds.
 
 ### UI Thread Performance
 
-Laminar leverages React Native Reanimated to keep animations off the JavaScript thread:
+Problem:
 
-**Architecture**:
+React renders on the JavaScript thread, but animation should not pause every time JavaScript is busy.
 
+Deduction:
+
+- JavaScript should decide what changed.
+- The UI thread should drive the animation frames.
+
+Laminar uses Reanimated for:
+
+- layout transitions;
+- entering and exiting transitions;
+- width animation;
+- opacity and transform animation.
+
+Flow:
+
+```txt
+React state changes
+-> Laminar reconciles glyph identity
+-> Reanimated receives layout/enter/exit work
+-> UI thread animates frames
 ```
-┌─────────────────────────────────────┐
-│   JavaScript Thread                  │
-│   ├─ State: text = "Hello" → "Help"  │
-│   └─ Trigger animation               │
-└────────────┬────────────────────────┘
-             │
-      (UI Thread)
-             ↓
-┌─────────────────────────────────────┐
-│   UI Thread (60fps)                  │
-│   ├─ Shared Animation Values         │
-│   ├─ Transforms & Opacity            │
-│   └─ Character Position Updates      │
-└─────────────────────────────────────┘
-```
-
-**Benefits**:
-
-- Animations aren't blocked by JavaScript work
-- No frame drops from garbage collection or other JS tasks
-- Smooth motion even under load (network requests, timers, etc.)
-- Suitable for rapid updates (stock prices, live counters, etc.)
 
 ---
 
@@ -380,175 +587,128 @@ Laminar leverages React Native Reanimated to keep animations off the JavaScript 
 
 ### MorphingText
 
-Component for animating text transitions.
+`MorphingText` is the exported component.
+
+```tsx
+import { MorphingText } from "@/morphing-text";
+```
 
 #### Props
 
-```typescript
-interface MorphingTextProps {
-  // Content
-  value: string;
-
-  // Animation timing
-  duration?: number;           // Default: 500ms
-  easing?: EasingFunction;     // Default: 'ease-out'
-  delay?: number;              // Delay before animation starts
-  staggerDelay?: number;       // Stagger between characters
-
-  // Auto-sizing
-  autoSize?: boolean;          // Default: true
-  maxWidth?: number;           // Maximum measured width
-  onSizeChange?: (width: number, height: number) => void;
-
-  // Styling
-  style?: StyleProp<TextStyle>;
+```ts
+type MorphingTextProps = {
+  text: string | number;
+  variant?: "text" | "number";
   fontSize?: number;
-  fontWeight?: 'normal' | 'bold' | '100' | ... | '900';
-  fontFamily?: string;
-  color?: string | Animated.Node<number>;
-
-  // Entry/Exit animations
-  entry?: {
-    style?: StyleProps;        // Initial style before animation
-    duration?: number;
-    easing?: EasingFunction;
-  };
-  exit?: {
-    style?: StyleProps;        // Final style after animation
-    duration?: number;
-    easing?: EasingFunction;
-  };
-
-  // Clipping
-  clip?: boolean;              // Default: true
-  overflow?: 'hidden' | 'visible';
-
-  // Callbacks
-  onAnimationStart?: () => void;
-  onAnimationEnd?: () => void;
-}
+  color?: string;
+  className?: string;
+  style?: StyleProp<TextStyle>;
+  containerClassName?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+  fontStyle?: StyleProp<TextStyle>;
+  animationDuration?: number;
+  animationPreset?: "default" | "smooth" | "snappy" | "bouncy";
+  stagger?: number;
+  autoSize?: boolean;
+  clipToBounds?: boolean;
+};
 ```
 
-#### Example
+#### Prop Breakdown
 
-```typescript
+| Prop | Default | Meaning |
+| --- | --- | --- |
+| `text` | Required | The value to render and animate. Numbers are converted to strings. |
+| `variant` | `"text"` | Use `"text"` for LCS glyph morphing and `"number"` for digit lanes. |
+| `fontSize` | Undefined | Convenience text size merged into the text style. |
+| `color` | Undefined | Convenience color merged into the text style. |
+| `className` | Undefined | Class name passed to rendered text nodes. |
+| `style` | Undefined | Text style applied after base `fontSize` and `color`. |
+| `containerClassName` | Undefined | Class name for the outer viewport shell. |
+| `containerStyle` | Undefined | Style for the outer viewport shell. |
+| `fontStyle` | Undefined | Additional text style merged before `style`. |
+| `animationDuration` | Preset duration | Duration override in milliseconds. |
+| `animationPreset` | `"default"` for text, `"snappy"` for number | Named motion recipe. |
+| `stagger` | `0.02` | Seconds between numeric lane delays. Currently used by number rendering. |
+| `autoSize` | `true` | Animate reserved width to the measured final text width. |
+| `clipToBounds` | `false` | Hide overflow from the animated viewport when true. |
+
+#### Text Example
+
+```tsx
 <MorphingText
-  value={status}
-  duration={400}
-  easing="ease-in-out"
-  fontSize={16}
-  fontWeight="600"
-  color="#333"
-  autoSize={true}
-  maxWidth={200}
+  text="Creative"
+  fontSize={40}
+  animationPreset="default"
+  style={{
+    color: "#000000",
+    fontFamily: "Sf-semibold",
+  }}
 />
 ```
 
-### MorphingNumber
+#### Number Example
 
-Component for animating numeric transitions with digit lane awareness.
-
-#### Props
-
-```typescript
-interface MorphingNumberProps {
-  // Content
-  value: number;
-
-  // Number formatting
-  decimalPlaces?: number; // Default: 0
-  thousandsSeparator?: string; // Default: ','
-  decimalSeparator?: string; // Default: '.'
-  prefix?: string; // e.g., '$'
-  suffix?: string; // e.g., '%'
-
-  // Animation timing
-  duration?: number; // Default: 600ms
-  easing?: EasingFunction;
-  staggerDelay?: number; // Between digit lanes
-
-  // Directionality
-  inferDirection?: boolean; // Default: true
-  forceDirection?: "up" | "down" | "none";
-
-  // Styling
-  style?: StyleProp<TextStyle>;
-  fontSize?: number;
-  fontWeight?: string;
-  fontFamily?: string;
-  color?: string | Animated.Node<number>;
-
-  // Auto-sizing
-  autoSize?: boolean;
-  maxWidth?: number;
-
-  // Callbacks
-  onAnimationStart?: () => void;
-  onAnimationEnd?: () => void;
-}
-```
-
-#### Example
-
-```typescript
-<MorphingNumber
-  value={cartTotal}
-  prefix="$"
-  decimalPlaces={2}
-  duration={500}
-  fontSize={24}
-  fontWeight="bold"
-  color="#2ecc71"
-  inferDirection={true}
+```tsx
+<MorphingText
+  text="$148.21"
+  variant="number"
+  fontSize={32}
+  animationPreset="snappy"
+  style={{
+    color: "#000000",
+    fontVariant: ["tabular-nums"],
+  }}
 />
 ```
 
 ### Animation Presets
 
-Pre-configured animation settings for common use cases.
+The preset decides three related things:
 
-```typescript
-import { AnimationPresets } from 'laminar';
+1. the default duration;
+2. the easing or spring behavior;
+3. how `driveNumber` animates measured widths.
 
-// Quick feedback (300ms, ease-out)
-<MorphingText value={label} {...AnimationPresets.quick} />
-
-// Smooth, standard (500ms, ease-in-out)
-<MorphingText value={label} {...AnimationPresets.smooth} />
-
-// Elegant, premium (800ms, cubic-bezier)
-<MorphingText value={label} {...AnimationPresets.elegant} />
-
-// Snappy with stagger (400ms, staggered)
-<MorphingText value={label} {...AnimationPresets.snappy} />
+```tsx
+<MorphingText text={word} animationPreset="default" />
+<MorphingText text={word} animationPreset="smooth" />
+<MorphingText text={word} animationPreset="snappy" />
+<MorphingText text={word} animationPreset="bouncy" />
 ```
 
 ### Customization Options
 
-#### Easing Functions
+#### Text Styling
 
-```typescript
-type EasingFunction =
-  | "linear"
-  | "ease"
-  | "ease-in"
-  | "ease-out"
-  | "ease-in-out"
-  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
-  | Animated.EasingFunction;
+```tsx
+<MorphingText
+  text={label}
+  fontSize={28}
+  color="#111111"
+  fontStyle={{ fontFamily: "Sf-semibold" }}
+  style={{ letterSpacing: 0 }}
+/>
 ```
 
-#### Entry/Exit Styles
+Style merge order:
 
-```typescript
-interface AnimationStyle {
-  opacity?: number;
-  scale?: number;
-  translateX?: number;
-  translateY?: number;
-  rotate?: number;
-}
+1. internal base style, including `includeFontPadding: false`;
+2. `fontSize` and `color`;
+3. `fontStyle`;
+4. `style`.
+
+#### Container Styling
+
+```tsx
+<MorphingText
+  text={label}
+  containerStyle={{ alignSelf: "center" }}
+  style={{ color: "#ffffff", fontSize: 24 }}
+/>
 ```
+
+Use `containerStyle` for placement. Use `style` for text appearance.
 
 ---
 
@@ -556,60 +716,95 @@ interface AnimationStyle {
 
 ### Text Morphing
 
-Text morphing reconciles old and new content, identifying which characters are shared and which need animation.
+First principle:
 
-**Process**:
+> A morph is understandable when stable visual units stay stable.
 
-1. **Segmentation**: Break text into graphemes (visual units)
-2. **Reconciliation**: Find longest common subsequence to identify unchanged characters
-3. **Mapping**: Create one-to-one mapping between old and new character positions
-4. **Animation**: Animate characters to their new positions, with entry/exit for new/deleted characters
+Breakdown:
 
-**Visual result**: Characters smoothly transition, substitutions feel natural, new characters fade in, deleted characters fade out.
+1. The incoming `text` is converted to a string.
+2. The string is split into display units.
+3. The new units are reconciled with the previous units.
+4. Shared units reuse keys.
+5. New units receive new keys and enter.
+6. Missing old units exit.
+7. Reanimated layout transitions move kept units into place.
+
+Example:
+
+```txt
+Craft -> Creative
+
+C stays
+r stays
+a stays
+f exits
+t stays but moves
+e enters
+i enters
+v enters
+e enters
+```
 
 ### Numeric Morphing
 
-Numeric morphing extends text morphing with digit-aware logic.
+First principle:
 
-**Process**:
+> A number should preserve place-value meaning while it changes.
 
-1. **Parsing**: Extract digits and separators into a lane structure
-2. **Lane alignment**: Align old and new digits by place value (ones, tens, hundreds, etc.)
-3. **Directionality inference**: Compare old and new values to determine animation direction
-4. **Individual animation**: Animate each digit lane independently
-5. **Separator stability**: Keep decimal points and thousand separators anchored
+Breakdown:
 
-**Visual result**: Numbers feel like they "evolve" into new values, with upward/downward motion reinforcing increase/decrease.
+1. The value is converted to a string.
+2. The first digit is found.
+3. Prefix content before the first digit is handled as lead content.
+4. The remaining numeric body is right-aligned against the previous body.
+5. Matching lanes keep their keys.
+6. Changed lanes get new token keys.
+7. Direction is inferred from numeric magnitude.
+8. Digit tokens enter and exit vertically.
+
+Example:
+
+```txt
+$148.21 -> $43.21
+
+prefix: "$"
+numeric body aligns from the right
+direction: down, because 43.21 < 148.21
+```
 
 ### Layout Stability
 
-Layout stability ensures animations don't cause layout thrashing or surprising reflows.
+First principle:
 
-**Mechanisms**:
+> Layout should be driven by stable information, not by animated intermediates.
 
-- **Identity preservation**: Characters maintain their identity across transitions, preventing full remounts
-- **Container sizing**: Optional animation of container dimensions to accommodate new content
-- **Clipping**: By default, animated content is clipped to prevent overflow
-- **Stagger control**: Animate characters sequentially to smooth out simultaneous layout changes
+Laminar uses:
 
-**Result**: Smooth, predictable visual transitions without layout "jumpiness".
+- stable glyph keys for text;
+- stable lane keys for numbers;
+- hidden measurement text for autosize;
+- an animated viewport width for layout reservation.
+
+This means the visible animation can be expressive while the parent layout receives predictable width updates.
 
 ### Clipping & Containment
 
-Clipping keeps animated content within its container, ideal for constrained UI like buttons and badges.
+First principle:
 
-**Behavior**:
+> Overflow is either part of the visual design or a bug.
 
-- `clip={true}` (default): Characters fade out visually if they'd overflow
-- `clip={false}`: Allows overflow, useful for list items or full-width content
-- Can be extended with overflow management for specialized layouts
+Use clipping when the surface should contain the animation:
 
-**Use cases**:
+```tsx
+<MorphingText text={label} clipToBounds />
+```
 
-- Pills and badges with constrained width
-- Button labels that might truncate
-- Counter displays with fixed spacing
-- Price displays in compact layouts
+Allow overflow when the animation should be visible outside the current measured width:
+
+```tsx
+<MorphingText text={label} clipToBounds={false} />
+```
 
 ---
 
@@ -617,27 +812,27 @@ Clipping keeps animated content within its container, ideal for constrained UI l
 
 ### Basic Text Animation
 
-```typescript
-import React, { useState } from 'react';
-import { View, Button } from 'react-native';
-import { MorphingText } from 'laminar';
+```tsx
+import React, { useState } from "react";
+import { Button, View } from "react-native";
+import { MorphingText } from "@/morphing-text";
 
-export default function BasicExample() {
-  const [label, setLabel] = useState('Welcome');
+export default function BasicTextAnimation() {
+  const [word, setWord] = useState("Craft");
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <MorphingText
-        value={label}
-        duration={500}
-        fontSize={24}
-        fontWeight="600"
-        color="#333"
+        text={word}
+        fontSize={40}
+        style={{ color: "#000000", fontFamily: "Sf-semibold" }}
       />
 
       <Button
-        title="Change Text"
-        onPress={() => setLabel(label === 'Welcome' ? 'Goodbye' : 'Welcome')}
+        title="Morph"
+        onPress={() => {
+          setWord((current) => current === "Craft" ? "Creative" : "Craft");
+        }}
       />
     </View>
   );
@@ -646,153 +841,101 @@ export default function BasicExample() {
 
 ### Numeric Counter
 
-```typescript
-import React, { useState, useEffect } from 'react';
-import { View } from 'react-native';
-import { MorphingNumber } from 'laminar';
+```tsx
+import React, { useState } from "react";
+import { Button, View } from "react-native";
+import { MorphingText } from "@/morphing-text";
 
-export default function CounterExample() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCount(prev => prev + Math.floor(Math.random() * 100) + 1);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+export default function NumericCounter() {
+  const [value, setValue] = useState(148.21);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <MorphingNumber
-        value={count}
-        duration={600}
-        fontSize={32}
-        fontWeight="bold"
-        color="#2ecc71"
-        inferDirection={true}
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <MorphingText
+        text={value.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}
+        variant="number"
+        fontSize={40}
+        animationPreset="snappy"
+        style={{ color: "#000000", fontVariant: ["tabular-nums"] }}
       />
+
+      <Button title="Change" onPress={() => setValue(43.21)} />
     </View>
   );
 }
 ```
 
-### Price Display with Auto-Sizing
+### Auto-Sizing Inside a Button
 
-```typescript
-import React, { useState } from 'react';
-import { View, Button, StyleSheet } from 'react-native';
-import { MorphingNumber } from 'laminar';
+Use this when the button should grow and shrink with the text.
 
-export default function PriceExample() {
-  const [price, setPrice] = useState(29.99);
+```tsx
+import React, { useState } from "react";
+import { Pressable, View } from "react-native";
+import { MorphingText } from "@/morphing-text";
+
+export default function MorphButton() {
+  const [word, setWord] = useState("Craft");
 
   return (
-    <View style={styles.container}>
-      <View style={styles.priceBox}>
-        <MorphingNumber
-          value={price}
-          prefix="$"
-          decimalPlaces={2}
-          duration={500}
-          fontSize={28}
-          fontWeight="bold"
-          color="#e74c3c"
-          autoSize={true}
-          maxWidth={150}
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Pressable
+        onPress={() => setWord((value) => value === "Craft" ? "Creative" : "Craft")}
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#000000",
+          borderRadius: 36,
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+        }}
+      >
+        <MorphingText
+          text={word}
+          autoSize
+          fontSize={40}
+          style={{ color: "#ffffff", fontFamily: "Sf-semibold" }}
         />
-      </View>
-
-      <Button
-        title="Apply 50% Discount"
-        onPress={() => setPrice(price * 0.5)}
-      />
+      </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  priceBox: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    marginBottom: 20
-  }
-});
 ```
+
+### Standalone Text Without Auto-Sizing
+
+Use this when the word is not responsible for sizing a parent surface.
+
+```tsx
+<MorphingText
+  text={word}
+  autoSize={false}
+  fontSize={40}
+  style={{ color: "#000000", fontFamily: "Sf-semibold" }}
+/>
+```
+
+Practical difference:
+
+- `autoSize=true`: the component reserves animated width for its parent.
+- `autoSize=false`: the glyph animation runs without an animated width wrapper.
 
 ### Custom Motion Controls
 
-```typescript
-import React, { useState } from 'react';
-import { View, Button } from 'react-native';
-import { MorphingText } from 'laminar';
-
-export default function CustomMotionExample() {
-  const [status, setStatus] = useState('Active');
-  const statuses = ['Active', 'Paused', 'Completed', 'Archived'];
-  const statusIndex = statuses.indexOf(status);
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <MorphingText
-        value={status}
-        duration={700}
-        easing="cubic-bezier(0.34, 1.56, 0.64, 1)" // bouncy
-        fontSize={18}
-        fontWeight="600"
-        color="#3498db"
-        entry={{
-          style: { opacity: 0, scale: 0.5 },
-          duration: 200
-        }}
-        exit={{
-          style: { opacity: 0, scale: 1.5 },
-          duration: 300
-        }}
-      />
-
-      <Button
-        title="Next Status"
-        onPress={() => setStatus(statuses[(statusIndex + 1) % statuses.length])}
-      />
-    </View>
-  );
-}
-```
-
-### Directional Transitions
-
-```typescript
-import React, { useState } from 'react';
-import { View, Button } from 'react-native';
-import { MorphingNumber } from 'laminar';
-
-export default function DirectionalExample() {
-  const [value, setValue] = useState(100);
-
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <MorphingNumber
-        value={value}
-        duration={600}
-        fontSize={32}
-        fontWeight="bold"
-        // Upward motion for increases
-        inferDirection={true}
-        color={value > 100 ? '#2ecc71' : '#e74c3c'}
-      />
-
-      <Button title="Increase" onPress={() => setValue(prev => prev + 50)} />
-      <Button title="Decrease" onPress={() => setValue(prev => prev - 50)} />
-    </View>
-  );
-}
+```tsx
+<MorphingText
+  text={status}
+  animationPreset="bouncy"
+  animationDuration={520}
+  fontSize={24}
+  style={{
+    color: "#007aff",
+    fontFamily: "Sf-semibold",
+  }}
+/>
 ```
 
 ---
@@ -801,126 +944,105 @@ export default function DirectionalExample() {
 
 ### Performance Optimization
 
-**Avoid premature optimization**: Laminar is designed to handle frequent updates smoothly. Profile before optimizing.
+First principle:
 
-**When optimization is needed**:
+> Optimize the thing that is actually repeated.
 
-1. **Reduce stagger delays**: Longer stagger means longer animation times
+Laminar already keeps animation work on the UI thread. Most performance issues come from too many React state updates, too many simultaneous morphing components, or values changing faster than the animation can be understood.
 
-   ```typescript
-   staggerDelay={10}  // Shorter delays = faster overall animation
-   ```
+Use shorter durations for rapid values:
 
-2. **Lower duration for rapid updates**: If updates happen multiple times per second, use shorter animations
-
-   ```typescript
-   duration={200}  // Fast feedback for frequent changes
-   ```
-
-3. **Limit auto-sizing**: Disable auto-sizing for fixed-width containers
-
-   ```typescript
-   autoSize={false}
-   ```
-
-4. **Batch updates**: Debounce rapid value changes
-   ```typescript
-   const debouncedValue = useDebounce(value, 100);
-   <MorphingNumber value={debouncedValue} />
-   ```
-
-### Measuring & Layout Computation
-
-Auto-sizing uses a hidden measurement layer. Understand how it works:
-
-```typescript
-// Phase 1: Hidden render
-// Laminar renders new text off-screen to measure dimensions
-// Dimensions: { width: 245, height: 24 }
-
-// Phase 2: Animate viewport
-// Container animates from old to new dimensions
-// Content is clipped during transition
-
-// Phase 3: Layout finalization
-// Hide measurement layer, finalize layout
-```
-
-**Configuration**:
-
-```typescript
+```tsx
 <MorphingText
-  value={text}
-  autoSize={true}
-  maxWidth={300}  // Constrain measurement width
-  onSizeChange={(width, height) => {
-    console.log(`New dimensions: ${width}x${height}`);
-  }}
-  clipDuringResize={true}  // Clip animated content
+  text={liveValue}
+  variant="number"
+  animationDuration={220}
 />
 ```
 
+Disable autosize when a parent already has fixed width:
+
+```tsx
+<View style={{ width: 120 }}>
+  <MorphingText text={price} variant="number" autoSize={false} />
+</View>
+```
+
+Memoize expensive formatting:
+
+```tsx
+const label = React.useMemo(
+  () => value.toLocaleString("en-US"),
+  [value]
+);
+
+<MorphingText text={label} variant="number" />
+```
+
+### Measuring & Layout Computation
+
+Autosize has two independent layers.
+
+Measurement layer:
+
+```txt
+hidden final Text -> onLayout -> measured width
+```
+
+Visible layer:
+
+```txt
+TextRun or NumberRun -> animated glyphs
+```
+
+Reservation layer:
+
+```txt
+Animated.View width -> parent layout can grow or shrink
+```
+
+The hidden layer exists because the visible layer is not a stable measuring instrument while it animates.
+
 ### Handling Rapid Updates
 
-When values update frequently (stock prices, live data, etc.):
+First principle:
 
-1. **Use debouncing**:
+> If updates arrive faster than users can perceive the transition, animation becomes noise.
 
-   ```typescript
-   import { useCallback } from 'react';
-   import { useDebouncedValue } from 'laminar/hooks';
+For frequent updates:
 
-   const price = useDebouncedValue(livePrice, 200);
-   <MorphingNumber value={price} duration={300} />
-   ```
+- reduce `animationDuration`;
+- reduce numeric `stagger`;
+- debounce the displayed value;
+- disable autosize when width changes are not important.
 
-2. **Stagger timing**:
+Example:
 
-   ```typescript
-   // Ensure animation completes before next update
-   <MorphingNumber
-     value={counter}
-     duration={500}
-     staggerDelay={30}
-   />
-   ```
-
-3. **Queue animations**:
-   ```typescript
-   // If updates are faster than animations, queue them
-   const [queue, setQueue] = useState([]);
-   useEffect(() => {
-     if (queue.length === 0) return;
-     const timer = setTimeout(() => {
-       setCurrentValue(queue[0]);
-       setQueue((q) => q.slice(1));
-     }, 500);
-     return () => clearTimeout(timer);
-   }, [queue]);
-   ```
+```tsx
+<MorphingText
+  text={quote}
+  variant="number"
+  animationPreset="snappy"
+  animationDuration={180}
+  stagger={0.01}
+/>
+```
 
 ### Emoji & Complex Characters
 
-Laminar's grapheme-safe segmentation handles emoji and accents correctly:
+Laminar segments by grapheme when possible:
 
-```typescript
-// Single emoji
-<MorphingText value="[WAVE] Hello" />  // Renders: ["[WAVE]", " ", "H", "e", "l", "l", "o"]
-
-// Emoji sequences (family)
-<MorphingText value="[FAMILY EMOJI]" />  // Renders: ["[FAMILY EMOJI]"] (single unit)
-
-// Skin tone modifiers
-<MorphingText value="[WAVE_LIGHT_SKIN_TONE]" />  // Renders: ["[WAVE_LIGHT_SKIN_TONE]"] (single unit)
-
-// Accented characters
-<MorphingText value="Café" />  // Renders: ["C", "a", "f", "é"] (é is single unit)
-
-// Zero-width joiners
-<MorphingText value="[WOMAN_TECHNOLOGIST]" />  // Renders: ["[WOMAN_TECHNOLOGIST]"] (woman technologist, single unit)
+```tsx
+<MorphingText text="Café" />
+<MorphingText text="👋 Hello" />
+<MorphingText text="👩‍💻" />
 ```
 
-**Result**: All complex characters animate as unified visual units, no split rendering.
+Breakdown:
+
+- accented letters should move as one visible unit;
+- emoji modifiers should stay attached to their base emoji;
+- zero-width-joiner sequences should not be split into broken pieces.
 
 ---
 
@@ -928,100 +1050,92 @@ Laminar's grapheme-safe segmentation handles emoji and accents correctly:
 
 ### When to Use Laminar
 
-**Good use cases**:
+Good use cases:
 
-- Status indicators that change frequently
-- Price displays with promotions or live updates
-- Counters tracking metrics or inventory
-- Labels with dynamic content
-- Badge values or score displays
-- Time displays (HH:MM:SS format)
-- Percentage indicators
-- Form validation messages
+- button labels that morph between actions;
+- badge text;
+- status labels;
+- counters;
+- prices;
+- compact metrics;
+- short strings where continuity helps comprehension.
 
-**Not ideal for**:
+Poor use cases:
 
-- One-time static text render
-- Extremely long documents (performance concern)
-- Content that never changes
-- Cases where instant feedback is critical (should use instant updates + animation)
+- long paragraphs;
+- static copy that does not change;
+- text that must update instantly with no motion;
+- values changing so quickly that animation hides the current state.
 
 ### Container Sizing
 
-Size containers to accommodate all expected content:
+Use `autoSize=true` when the text is responsible for sizing its parent.
 
-```typescript
-// Bad: Container is too small
-<View style={{ width: 60 }}>
-  <MorphingNumber value={price} prefix="$" decimalPlaces={2} />
-</View>
+```tsx
+<Pressable style={buttonStyle}>
+  <MorphingText text={label} autoSize />
+</Pressable>
+```
 
-// Good: Container has enough space
-<View style={{ width: 120 }}>
-  <MorphingNumber value={price} prefix="$" decimalPlaces={2} />
-</View>
+Use `autoSize=false` when the parent already defines the space.
 
-// Better: Use auto-sizing
-<View>
-  <MorphingNumber
-    value={price}
-    prefix="$"
-    decimalPlaces={2}
-    autoSize={true}
-    maxWidth={120}
-  />
+```tsx
+<View style={{ width: 220, alignItems: "center" }}>
+  <MorphingText text={label} autoSize={false} />
 </View>
 ```
+
+Practical rule:
+
+- Buttons, chips, badges: start with `autoSize=true`.
+- Standalone centered words: consider `autoSize=false`.
+- Fixed-width counters: use `autoSize=false`.
+- Dynamic inline labels: use `autoSize=true`.
 
 ### Animation Timing
 
-Use appropriate duration for context:
+Use timing based on the user's task:
 
-```
-300ms - Quick feedback (button states, switches)
-500ms - Standard transitions (status changes, counters)
-700ms - Attention-grabbing (price changes, alerts)
-1000ms+ - Premium, cinematic (special events, celebrations)
-```
+| Duration | Best For |
+| --- | --- |
+| `180ms - 260ms` | rapid counters or live data |
+| `300ms - 450ms` | normal labels and buttons |
+| `500ms - 700ms` | expressive UI moments |
 
-**With stagger**:
+Examples:
 
-```typescript
-// Character animation completes in: duration + (charCount * staggerDelay)
-// 8 characters, 500ms duration, 50ms stagger = 500 + (8 * 50) = 900ms total
-<MorphingText
-  value={longText}
-  duration={500}
-  staggerDelay={50}
-/>
+```tsx
+<MorphingText text={label} animationDuration={380} />
+<MorphingText text={price} variant="number" animationDuration={220} />
 ```
 
 ### Memory Efficiency
 
-- **Avoid unnecessary re-renders**: Wrap components in `React.memo` if props are stable
+Keep inputs stable and small.
 
-  ```typescript
-  const MemoizedMorphing = React.memo(MorphingText);
-  ```
+Good:
 
-- **Use stable string values**: Don't create new string objects every render
+```tsx
+const formattedPrice = React.useMemo(
+  () => `$${price.toFixed(2)}`,
+  [price]
+);
 
-  ```typescript
-  // Bad
-  <MorphingText value={status.toUpperCase()} />
+<MorphingText text={formattedPrice} variant="number" />
+```
 
-  // Good
-  const displayText = useMemo(() => status.toUpperCase(), [status]);
-  <MorphingText value={displayText} />
-  ```
+Avoid using a changing `key` on `MorphingText`:
 
-- **Limit animation duration during rapid updates**: Long animations with frequent updates consume more memory
-  ```typescript
-  <MorphingNumber
-    value={price}
-    duration={debouncedUpdates ? 500 : 200}
-  />
-  ```
+```tsx
+// Avoid this. It forces a remount and loses previous glyph identity.
+<MorphingText key={label} text={label} />
+```
+
+Use this instead:
+
+```tsx
+<MorphingText text={label} />
+```
 
 ---
 
@@ -1029,121 +1143,119 @@ Use appropriate duration for context:
 
 ### Animations Not Playing
 
-**Symptom**: Content changes instantly without animation
+Symptom:
 
-**Causes & solutions**:
+The text changes instantly.
 
-1. Reanimated not configured: Follow [Reanimated setup](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/)
-2. Component re-mounts: Ensure Laminar component has consistent `key` or parent component doesn't unmount
-3. Rapid successive updates: Updates faster than animation duration cause perceived "skipping"
-   - Solution: Debounce rapid updates or disable animation for very fast changes
+Check:
+
+1. Reanimated is installed and configured.
+2. The component is not being remounted with a changing `key`.
+3. The parent is not conditionally unmounting `MorphingText`.
+4. Updates are not arriving so quickly that each animation is interrupted.
 
 ### Content Clipping
 
-**Symptom**: Animated text is cut off at edges
+Symptom:
 
-**Causes & solutions**:
+Entering or exiting glyphs are cut off.
 
-1. Container too small: Increase parent `View` width
-2. `clip={true}` hiding content: Set `clip={false}` to allow overflow (if acceptable for your UI)
-3. Auto-sizing disabled: Enable with `autoSize={true}`
+Check:
+
+1. If overflow should be visible, set `clipToBounds={false}`.
+2. If the parent has fixed width, make sure the expected text can fit.
+3. If the text sits inside a pill or button, decide whether clipping is part of the design.
 
 ### Numbers Misaligned
 
-**Symptom**: Digits jump between columns instead of rotating in lane
+Symptom:
 
-**Causes & solutions**:
+Digits feel jumpy or hard to read.
 
-1. Monospace font not used: Use `fontFamily` that's genuinely monospace
-   ```typescript
-   fontFamily = "Courier New"; // or 'Monaco', 'Menlo'
+Check:
+
+1. Use `variant="number"`.
+2. Keep formatting consistent between renders.
+3. Prefer tabular numbers when your font supports them:
+
+   ```tsx
+   <MorphingText
+     text={value}
+     variant="number"
+     style={{ fontVariant: ["tabular-nums"] }}
+   />
    ```
-2. Thousand separators interfering: Ensure format is consistent (e.g., always include separators)
-3. Variable character widths: Some fonts aren't truly monospace; test with system fonts
 
 ### Performance Drops
 
-**Symptom**: Animations stutter or drop frames
+Symptom:
 
-**Causes & solutions**:
+Animations stutter or feel delayed.
 
-1. Too many Laminar components animating simultaneously: Stagger their update timing
-2. Long animation durations with stagger: Reduce stagger delay or duration
-3. JavaScript blockage: Profile with React DevTools to identify blocking work
-4. Reanimated not on UI thread: Ensure Reanimated is properly installed and configured
+Check:
+
+1. Too many morphing components may be updating at once.
+2. The JavaScript thread may be doing expensive formatting each render.
+3. Animation duration may be too long for the update frequency.
+4. Reanimated may not be configured correctly.
 
 ### Auto-Sizing Not Working
 
-**Symptom**: Container doesn't resize when content changes
+Symptom:
 
-**Causes & solutions**:
+The parent does not resize with the text.
 
-1. `autoSize={false}`: Change to `autoSize={true}`
-2. `maxWidth` too restrictive: Increase or remove `maxWidth` constraint
-3. Parent container has fixed size: Parent must allow resizing
+Check:
 
-   ```typescript
-   // Parent has fixed width
-   <View style={{ width: 200 }}>
-     <MorphingText autoSize={true} value={text} />
-   </View>
+1. `autoSize` is not set to `false`.
+2. The parent allows its child to define width.
+3. The parent does not force a fixed width that hides the autosize effect.
 
-   // Parent allows resizing
-   <View>
-     <MorphingText autoSize={true} value={text} maxWidth={200} />
-   </View>
-   ```
+Example:
+
+```tsx
+// The button can grow because the child controls width.
+<Pressable style={{ paddingHorizontal: 24 }}>
+  <MorphingText text={label} autoSize />
+</Pressable>
+```
 
 ---
 
 ## Contributing
 
-We welcome contributions! Here's how to get involved:
-
 ### Development Setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/yourusername/laminar.git
 cd laminar
-
-# Install dependencies
 npm install
+```
 
-# Start the dev environment
+### Running The App
+
+```bash
 npm start
 ```
 
-### Testing
+### Type Checking
 
 ```bash
-# Run tests
-npm test
-
-# Watch mode
-npm test -- --watch
+npx tsc --noEmit
 ```
-
-### Submitting Changes
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request with a clear description
 
 ### Code Quality
 
-- Follow the existing code style
-- Add tests for new features
-- Update documentation for API changes
-- Ensure all tests pass before submitting PR
+- Keep docs aligned with the actual public props.
+- Preserve glyph identity when changing rendering code.
+- Avoid measuring live animated rows for autosize.
+- Add examples when changing behavior that affects layout or motion.
 
 ---
 
 ## License
 
-Laminar is released under the [MIT License](LICENSE).
+No license file is currently present in this workspace. Add a license file before distributing or publishing the package.
 
 ---
 
@@ -1152,8 +1264,8 @@ Laminar is released under the [MIT License](LICENSE).
 - **Reanimated Docs**: https://docs.swmansion.com/react-native-reanimated/
 - **React Native Performance**: https://reactnative.dev/docs/performance
 - **Unicode Grapheme Clusters**: https://www.unicode.org/reports/tr29/
-- **LCS Algorithm**: https://en.wikipedia.org/wiki/Longest_common_subsequence
+- **Longest Common Subsequence**: https://en.wikipedia.org/wiki/Longest_common_subsequence
 
 ---
 
-**Built with care for smooth, delightful animations**
+**Built with care for smooth, understandable animation.**
