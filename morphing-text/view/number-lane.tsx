@@ -46,7 +46,6 @@ export const NumberLane = React.memo(
     className,
     textStyle,
   }: NumberLaneProps) => {
-    const shouldAnimate = hasAnimated && !isLead;
     const usesDigitTravel = isAsciiDigit(unit);
     const verticalOffset =
       direction > 0
@@ -99,7 +98,7 @@ export const NumberLane = React.memo(
       ]
     );
 
-    if (!shouldAnimate) {
+    if (isLead) {
       return (
         <Text className={className} style={textStyle}>
           {unit}
@@ -110,7 +109,7 @@ export const NumberLane = React.memo(
     return (
       <Animated.View
         layout={motionRecipe.layoutTransition}
-        entering={motionRecipe.enterTransition}
+        entering={hasAnimated ? motionRecipe.enterTransition : undefined}
         exiting={motionRecipe.exitTransition}
         style={laneStyle}
       >
@@ -121,7 +120,7 @@ export const NumberLane = React.memo(
 
         <Animated.Text
           key={`token:${tokenKey}`}
-          entering={enterTransition}
+          entering={hasAnimated ? enterTransition : undefined}
           exiting={exitTransition}
           className={className}
           style={[textStyle, laneTokenStyle]}

@@ -1,8 +1,20 @@
 import React, { useCallback, useState } from "react";
-import { Text, TextInput, useWindowDimensions, View } from "react-native";
+import {
+  type ListRenderItem,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { MorphingText } from "@/morphing-text";
 import { PressableScale } from "@/shared/ui/pressable-scale";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselPagination,
+  type CarouselItem,
+  useCarousel,
+} from "@/components/ui/carousel";
 
 const fontSizes = [32, 40, 48] as const;
 
@@ -20,6 +32,24 @@ const fontWeights = [
     fontFamily: "Sf-bold",
   },
 ] as const;
+
+const editorWords = ["Craft", "Creative"] as const;
+const standaloneWords = ["Calligraph", "Craft", "Creative", "Create"] as const;
+const buttonWords = ["Back Up Now", "Backing Up", "Backed Up!"] as const;
+const numericValues = ["$35.99", "$24.89", "$17.38", "$3.15"] as const;
+
+const examplePages = [
+  { id: "editor", label: "Editor" },
+  { id: "words", label: "Words" },
+  { id: "button", label: "Button" },
+  { id: "numbers", label: "Numbers" },
+] as const;
+
+const carouselItems: CarouselItem[] = examplePages.map((_, i) => i);
+
+const stepForward = (index: number, length: number) => (index + 1) % length;
+const stepBackward = (index: number, length: number) =>
+  (index - 1 + length) % length;
 
 type SettingRowProps = {
   readonly label: string;
@@ -66,13 +96,21 @@ const SettingRow = React.memo(function SettingRow({
   return content;
 });
 
-export default function Index() {
-  const { height, width } = useWindowDimensions();
-  const [previewWord, setPreviewWord] = useState("Craft");
-  const [textValue, setTextValue] = useState("Creative");
-  const [returnWord, setReturnWord] = useState("Craft");
+type IndexInnerProps = {
+  height: number;
+  width: number;
+};
+
+function IndexInner({ height, width }: IndexInnerProps) {
+  const { currentIndex } = useCarousel();
+  const activePageIndex = currentIndex;
+
+  const [editorWordIndex, setEditorWordIndex] = useState(0);
   const [fontSizeIndex, setFontSizeIndex] = useState(1);
   const [fontWeightIndex, setFontWeightIndex] = useState(1);
+  const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
+  const [buttonWordIndex, setButtonWordIndex] = useState(0);
+  const [numberIndex, setNumberIndex] = useState(0);
 
   const fontSize = fontSizes[fontSizeIndex];
   const fontWeight = fontWeights[fontWeightIndex];
@@ -84,85 +122,119 @@ export default function Index() {
   const panelRadius = Math.max(28, Math.min(36, width * 0.075));
   const buttonHeight = Math.max(52, Math.min(58, height * 0.086));
   const buttonGap = Math.max(16, width * 0.044);
-
-  const morph = useCallback(() => {
-    const targetWord = textValue.trim() || " ";
-
-    if (previewWord === targetWord) {
-      setPreviewWord(returnWord);
-      return;
-    }
-
-    setReturnWord(previewWord);
-    setPreviewWord(targetWord);
-  }, [previewWord, returnWord, textValue]);
-
-  const reverse = useCallback(() => {
-    const targetWord = textValue.trim() || " ";
-
-    if (previewWord === targetWord && returnWord !== previewWord) {
-      setPreviewWord(returnWord);
-      setTextValue(previewWord);
-      setReturnWord(previewWord);
-      return;
-    }
-
-    setPreviewWord(targetWord);
-    setTextValue(previewWord);
-    setReturnWord(targetWord);
-  }, [previewWord, returnWord, textValue]);
+  const footerPaddingBottom = Math.max(16, height * 0.026);
+  const pageTopPadding = Math.max(height * 0.14, fontSize * 2);
+  const previewMinHeight = Math.max(height * 0.24, fontSize * 2.1);
 
   const cycleFontSize = useCallback(() => {
-    setFontSizeIndex((index) => (index + 1) % fontSizes.length);
+    setFontSizeIndex((index) => stepForward(index, fontSizes.length));
   }, []);
 
   const cycleFontWeight = useCallback(() => {
-    setFontWeightIndex((index) => (index + 1) % fontWeights.length);
+    setFontWeightIndex((index) => stepForward(index, fontWeights.length));
   }, []);
 
-  return (
-    <KeyboardAwareScrollView
-      bottomOffset={height * 0.04}
-      keyboardDismissMode="interactive"
-      keyboardShouldPersistTaps="handled"
+  const morph = useCallback(() => {
+    const page = examplePages[activePageIndex]?.id;
+
+    if (page === "editor") {
+      setEditorWordIndex((index) => stepForward(index, editorWords.length));
+      return;
+    }
+
+    if (page === "words") {
+      setStandaloneWordIndex((index) =>
+        stepForward(index, standaloneWords.length)
+      );
+      return;
+    }
+
+    if (page === "button") {
+      setButtonWordIndex((index) => stepForward(index, buttonWords.length));
+      return;
+    }
+
+    setNumberIndex((index) => stepForward(index, numericValues.length));
+  }, [activePageIndex]);
+
+  const reverse = useCallback(() => {
+    const page = examplePages[activePageIndex]?.id;
+
+    if (page === "editor") {
+      setEditorWordIndex((index) => stepBackward(index, editorWords.length));
+      return;
+    }
+
+    if (page === "words") {
+      setStandaloneWordIndex((index) =>
+        stepBackward(index, standaloneWords.length)
+      );
+      return;
+    }
+
+    if (page === "button") {
+      setButtonWordIndex((index) => stepBackward(index, buttonWords.length));
+      return;
+    }
+
+    setNumberIndex((index) => stepBackward(index, numericValues.length));
+  }, [activePageIndex]);
+
+  const renderDivider = () => (
+    <View
       style={{
-        flex: 1,
-        backgroundColor: "#ffffff",
+        height: 1,
+        backgroundColor: "#dddddd",
       }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        paddingHorizontal: horizontalInset,
-        paddingTop: Math.max(height * 0.18, fontSize * 2.2),
-        paddingBottom: Math.max(height * 0.03, buttonHeight * 0.35),
+    />
+  );
+
+  const renderValueText = (value: string) => (
+    <Text
+      style={{
+        color: "#007aff",
+        fontFamily: "Sf-regular",
+        fontSize: valueFontSize,
+        textAlign: "right",
       }}
     >
-      <View
-        style={{
-          width: "100%",
-          minHeight: fontSize * 1.7,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* <PressableScale
-          onPress={morph}
+      {value}
+    </Text>
+  );
+
+  const renderPanel = (children: React.ReactNode) => (
+    <View
+      style={{
+        width: "100%",
+        alignSelf: "center",
+        backgroundColor: "#f8f8f8",
+        borderRadius: panelRadius,
+        paddingHorizontal: panelPaddingX,
+        paddingVertical: rowHeight * 0.14,
+      }}
+    >
+      {children}
+    </View>
+  );
+
+  const renderEditorPage = () => {
+    const word = editorWords[editorWordIndex];
+
+    return (
+      <>
+        <View
           style={{
-            alignSelf: "center",
-            minHeight: fontSize * 1.45,
-            borderRadius: 36,
-            backgroundColor: "#000000",
-            paddingHorizontal: fontSize * 0.62,
-            paddingVertical: fontSize * 0.22,
+            width: "100%",
+            minHeight: previewMinHeight,
             alignItems: "center",
             justifyContent: "center",
           }}
-        > */}
+        >
           <MorphingText
-          
-            text={previewWord}
+            text={word}
+            autoSize={false}
             animationPreset="default"
             fontSize={fontSize}
-            autoSize={false}
             clipToBounds={false}
             containerStyle={{
               alignSelf: "center",
@@ -174,94 +246,336 @@ export default function Index() {
               textAlign: "center",
             }}
           />
-        {/* </PressableScale> */}
-      </View>
+        </View>
 
-      <View style={{ flex: 1 }} />
+        <View style={{ flex: 1 }} />
 
-      <View>
+        {renderPanel(
+          <>
+            <SettingRow
+              label="Word"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={() =>
+                setEditorWordIndex((index) =>
+                  stepForward(index, editorWords.length)
+                )
+              }
+            >
+              {renderValueText(word)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Font Size"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={cycleFontSize}
+            >
+              {renderValueText(`${fontSize}pt`)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Font Weight"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={cycleFontWeight}
+            >
+              {renderValueText(fontWeight.label)}
+            </SettingRow>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const renderWordsPage = () => {
+    const word = standaloneWords[standaloneWordIndex];
+
+    return (
+      <>
         <View
           style={{
             width: "100%",
-            alignSelf: "center",
-            backgroundColor: "#f8f8f8",
-            borderRadius: panelRadius,
-            paddingHorizontal: panelPaddingX,
-            paddingVertical: rowHeight * 0.14,
+            minHeight: previewMinHeight,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <SettingRow
-            label="Text"
-            rowHeight={rowHeight}
-            labelFontSize={labelFontSize}
+          <MorphingText
+            text={word}
+            autoSize={false}
+            animationPreset="smooth"
+            fontSize={fontSize}
+            clipToBounds={false}
+            containerStyle={{
+              alignSelf: "center",
+            }}
+            style={{
+              color: "#000000",
+              fontFamily: fontWeight.fontFamily,
+              fontSize,
+              textAlign: "center",
+            }}
+          />
+        </View>
+
+        <View style={{ flex: 1 }} />
+
+        {renderPanel(
+          <>
+            <SettingRow
+              label="Word"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={() =>
+                setStandaloneWordIndex((index) =>
+                  stepForward(index, standaloneWords.length)
+                )
+              }
+            >
+              {renderValueText(word)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Variant"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText("Text")}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Auto Size"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText("Off")}
+            </SettingRow>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const renderButtonPage = () => {
+    const word = buttonWords[buttonWordIndex];
+
+    return (
+      <>
+        <View
+          style={{
+            width: "100%",
+            minHeight: previewMinHeight,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <PressableScale
+            onPress={() =>
+              setButtonWordIndex((index) =>
+                stepForward(index, buttonWords.length)
+              )
+            }
+            style={{
+              alignSelf: "center",
+              minHeight: fontSize * 1.42,
+              borderRadius: 36,
+              backgroundColor: "#7ce2fe",
+              paddingHorizontal: fontSize * 0.72,
+              paddingVertical: fontSize * 0.22,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
-            <TextInput
-              autoCapitalize="none"
-              autoCorrect={false}
-              onChangeText={setTextValue}
-              placeholder="Text"
-              placeholderTextColor="#c2c2c2"
-              returnKeyType="done"
-              selectionColor="#1f54ff"
-              value={textValue}
+            <MorphingText
+              text={word}
+              autoSize
+              animationPreset="default"
+              fontSize={fontSize}
+              clipToBounds={false}
+              containerStyle={{
+                alignSelf: "center",
+              }}
               style={{
-                flex: 1,
-                color: "#000000",
-                fontFamily: "Sf-regular",
-                fontSize: valueFontSize,
-                paddingVertical: 0,
-                textAlign: "right",
+                color: "#ffffff",
+                fontFamily: "Sf-semibold",
+                fontSize,
+                textAlign: "center",
               }}
             />
-          </SettingRow>
+          </PressableScale>
+        </View>
 
-          <View
+        <View style={{ flex: 1 }} />
+
+        {renderPanel(
+          <>
+            <SettingRow
+              label="Button Text"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={() =>
+                setButtonWordIndex((index) =>
+                  stepForward(index, buttonWords.length)
+                )
+              }
+            >
+              {renderValueText(word)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Surface"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText("Pressable")}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Auto Size"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText("On")}
+            </SettingRow>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const renderNumbersPage = () => {
+    const value = numericValues[numberIndex];
+    const previousValue =
+      numericValues[stepBackward(numberIndex, numericValues.length)];
+    const nextValue = numericValues[stepForward(numberIndex, numericValues.length)];
+
+    return (
+      <>
+        <View
+          style={{
+            width: "100%",
+            minHeight: previewMinHeight,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <MorphingText
+            text={value}
+            variant="number"
+            animationPreset="snappy"
+            fontSize={fontSize}
+            clipToBounds={false}
+            containerStyle={{
+              alignSelf: "center",
+            }}
             style={{
-              height: 1,
-              backgroundColor: "#dddddd",
+              color: "#000000",
+              fontFamily: "Sf-semibold",
+              fontSize,
+              fontVariant: ["tabular-nums"],
+              textAlign: "center",
             }}
           />
+        </View>
 
-          <SettingRow
-            label="Font Size"
-            rowHeight={rowHeight}
-            labelFontSize={labelFontSize}
-            onPress={cycleFontSize}
-          >
-            <Text
-              style={{
-                color: "#007aff",
-                fontFamily: "Sf-regular",
-                fontSize: valueFontSize,
-              }}
+        <View style={{ flex: 1 }} />
+
+        {renderPanel(
+          <>
+            <SettingRow
+              label="Number"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+              onPress={() =>
+                setNumberIndex((index) => stepForward(index, numericValues.length))
+              }
             >
-              {fontSize}pt
-            </Text>
-          </SettingRow>
+              {renderValueText(value)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Reverse"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText(previousValue)}
+            </SettingRow>
+            {renderDivider()}
+            <SettingRow
+              label="Morph"
+              rowHeight={rowHeight}
+              labelFontSize={labelFontSize}
+            >
+              {renderValueText(nextValue)}
+            </SettingRow>
+          </>
+        )}
+      </>
+    );
+  };
 
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "#dddddd",
-            }}
+  const renderExamplePage: ListRenderItem<CarouselItem> = ({ item }) => {
+    const page = examplePages[item];
+    const content =
+      page?.id === "editor"
+        ? renderEditorPage()
+        : page?.id === "words"
+          ? renderWordsPage()
+          : page?.id === "button"
+            ? renderButtonPage()
+            : renderNumbersPage();
+
+    return (
+      <KeyboardAwareScrollView
+        bottomOffset={height * 0.04}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        style={{
+          width,
+          flex: 1,
+        }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: horizontalInset,
+          paddingTop: pageTopPadding,
+          paddingBottom: Math.max(height * 0.025, buttonHeight * 0.4),
+        }}
+      >
+        {content}
+      </KeyboardAwareScrollView>
+    );
+  };
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#ffffff",
+      }}
+    >
+      <CarouselContent renderItem={renderExamplePage} width={width} />
+
+      <View
+        style={{
+          width: "100%",
+          paddingHorizontal: horizontalInset,
+          paddingTop: buttonHeight * 0.08,
+          paddingBottom: footerPaddingBottom,
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: buttonHeight * 0.14,
+          }}
+        >
+          <CarouselPagination
+            defaultDotColor="#d7d7d7"
+            activeDotColor="#000000"
           />
-
-          <SettingRow
-            label="Font Weight"
-            rowHeight={rowHeight}
-            labelFontSize={labelFontSize}
-            onPress={cycleFontWeight}
-          >
-            <Text
-              style={{
-                color: "#007aff",
-                fontFamily: "Sf-regular",
-                fontSize: valueFontSize,
-              }}
-            >
-              {fontWeight.label}
-            </Text>
-          </SettingRow>
         </View>
 
         <View
@@ -269,7 +583,6 @@ export default function Index() {
             width: "100%",
             flexDirection: "row",
             gap: buttonGap,
-            marginTop: buttonHeight * 0.32,
           }}
         >
           <PressableScale
@@ -317,6 +630,16 @@ export default function Index() {
           </PressableScale>
         </View>
       </View>
-    </KeyboardAwareScrollView>
+    </View>
+  );
+}
+
+export default function Index() {
+  const { width, height } = useWindowDimensions();
+
+  return (
+    <Carousel items={carouselItems} style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <IndexInner width={width} height={height} />
+    </Carousel>
   );
 }
