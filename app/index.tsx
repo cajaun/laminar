@@ -3,7 +3,7 @@ import { Button, ScrollView, Text, View } from "react-native";
 import { MorphingText } from "@/morphing-text";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 
-const words = ["Calligraph", "Craft", "Creative", "Create"] as const;
+const words = ["Craft", "Creative"] as const;
 const statusLines = [
   "Waiting for sync",
   "Streaming updates",
@@ -35,13 +35,7 @@ const exampleStackStyle = {
 };
 
 const pillStyle = {
-  backgroundColor: "#111111",
-  minHeight: 52,
-  borderRadius: 999,
-  borderCurve: "continuous" as const,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-  paddingHorizontal: 24,
+  textColor: "#000",
 };
 
 const ExamplePanel = React.memo(function ExamplePanel({
@@ -78,15 +72,15 @@ const ExamplePanel = React.memo(function ExamplePanel({
       >
         {caption}
       </Text>
-      <PressableScale onPress={onPress} style={pillStyle}>
+      {/* <PressableScale onPress={onPress} > */}
         <MorphingText
           text={text}
           variant={variant}
-          className="font-sf-bold text-white"
+          className="font-sf-bold text-black"
           fontSize={fontSize}
           animationPreset={animationPreset}
         />
-      </PressableScale>
+      {/* </PressableScale> */}
       <Button title={buttonTitle} onPress={onPress} />
     </View>
   );
