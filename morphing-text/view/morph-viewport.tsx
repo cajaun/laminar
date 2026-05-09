@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import type { LayoutChangeEvent, StyleProp, TextStyle, ViewStyle } from "react-native";
-import { Text, View } from "react-native";
+import type { LayoutChangeEvent, StyleProp, ViewStyle } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
 const shellStyle = {
@@ -8,18 +8,14 @@ const shellStyle = {
   alignSelf: "flex-start",
 } as const;
 
-const probeStripStyle = {
-  position: "absolute",
-  left: 0,
-  top: 0,
-  opacity: 0,
-  flexDirection: "row",
-  alignItems: "center",
-} as const;
-
 const viewportStyle = {
   alignSelf: "flex-start",
 } as const;
+
+const measuredContentStyle: ViewStyle = {
+  alignSelf: "flex-start",
+  flexShrink: 0,
+};
 
 const clippedViewportStyle: ViewStyle = {
   overflow: "hidden",
@@ -32,9 +28,6 @@ const unclippedViewportStyle: ViewStyle = {
 type MorphViewportProps = {
   readonly autoSize: boolean;
   readonly clipToBounds: boolean;
-  readonly probeUnits: readonly string[];
-  readonly textClassName?: string;
-  readonly probeTextStyle?: StyleProp<TextStyle>;
   readonly containerClassName?: string;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
@@ -46,9 +39,6 @@ export const MorphViewport = React.memo(
   ({
     autoSize,
     clipToBounds,
-    probeUnits,
-    textClassName,
-    probeTextStyle,
     containerClassName,
     containerStyle,
     animatedWidthStyle,
@@ -66,27 +56,11 @@ export const MorphViewport = React.memo(
     return (
       <View className={containerClassName} style={[shellStyle, containerStyle]}>
         {autoSize ? (
-          <View
-            pointerEvents="none"
-            onLayout={onMeasure}
-            style={probeStripStyle}
-          >
-            {/* this hidden row measures the next value before the width animates */}
-            {probeUnits.map((unit, index) => (
-              <Text
-                className={textClassName}
-                key={`probe:${index}:${unit}`}
-                style={probeTextStyle}
-              >
-                {unit}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        {autoSize ? (
           <Animated.View style={[resolvedViewportStyle, animatedWidthStyle]}>
-            {children}
+            {/* the live content measures itself; the outer view only reserves width */}
+            <View onLayout={onMeasure} style={measuredContentStyle}>
+              {children}
+            </View>
           </Animated.View>
         ) : (
           <View style={resolvedViewportStyle}>{children}</View>

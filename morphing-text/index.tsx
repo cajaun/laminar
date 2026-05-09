@@ -1,5 +1,4 @@
 import React from "react";
-import { useDisplayUnits } from "./hooks/use-display-units";
 import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
@@ -22,18 +21,16 @@ export const MorphingText = React.memo(function MorphingText({
     animationPreset,
     stagger = 0.02,
     autoSize = true,
-    clipToBounds = true,
+    clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
-    // keep the entry thin, hooks decide motion and styling
-    const probeUnits = useDisplayUnits(resolvedValue, autoSize);
     const { motionRecipe, staggerMs } = useMorphMotion({
       variant,
       animationPreset,
       animationDuration,
       stagger,
     });
-    const { textStyle, measurementTextStyle } = useMorphTextStyle({
+    const { textStyle } = useMorphTextStyle({
       fontSize,
       color,
       fontStyle,
@@ -49,9 +46,6 @@ export const MorphingText = React.memo(function MorphingText({
       <MorphViewport
         autoSize={autoSize}
         clipToBounds={clipToBounds}
-        probeUnits={probeUnits}
-        textClassName={className}
-        probeTextStyle={measurementTextStyle}
         containerClassName={containerClassName}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}

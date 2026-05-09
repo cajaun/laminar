@@ -1,198 +1,284 @@
-import React, { useCallback, useState } from "react";
-import { Button, ScrollView, Text, View } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Text, useWindowDimensions, View } from "react-native";
 import { MorphingText } from "@/morphing-text";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 
-const words = ["Craft", "Creative"] as const;
-const statusLines = [
-  "Waiting for sync",
-  "Streaming updates",
-  "Ready to publish",
-  "Cajaun",
-] as const;
-const balances = ["$35.99", "$24.89", "$17.38", "$3.15"] as const;
-const shrinkBalances = ["$148.21", "$43.21", "$987.21", "$18.21"] as const;
-const growthRates = ["+1.2%", "-0.4%", "+18.9%", "+3.1%"] as const;
-const latencies = ["1,281 ms", "943 ms", "12 ms", "87 ms"] as const;
-
-const contentContainerStyle = {
-  flexGrow: 1,
-  alignItems: "center" as const,
-  gap: 22,
-  paddingHorizontal: 24,
-  paddingVertical: 48,
+const screenStyle = {
+  flex: 1,
+  backgroundColor: "#ffffff",
+  paddingHorizontal: 12,
 };
 
-const headerStackStyle = {
-  alignItems: "center" as const,
-  gap: 6,
+const previewWrapStyle = {
+  position: "absolute" as const,
+  left: 12,
+  right: 12,
 };
 
-const exampleStackStyle = {
+const controlsWrapStyle = {
+  position: "absolute" as const,
+  left: 12,
+  right: 12,
+};
+
+const panelStyle = {
   width: "100%" as const,
+  maxWidth: 424,
+  alignSelf: "center" as const,
+  backgroundColor: "#f8f8f8",
+  borderRadius: 34,
+  paddingHorizontal: 28,
+  paddingVertical: 8,
+};
+
+const rowStyle = {
+  minHeight: 55,
+  flexDirection: "row" as const,
   alignItems: "center" as const,
-  gap: 10,
+  justifyContent: "space-between" as const,
+  gap: 18,
 };
 
-const pillStyle = {
-  textColor: "#000",
+const dividerStyle = {
+  height: 1,
+  backgroundColor: "#dddddd",
 };
 
-const ExamplePanel = React.memo(function ExamplePanel({
+const labelStyle = {
+  color: "#989898",
+  fontFamily: "Sf-regular",
+  fontSize: 20,
+};
+
+const valueStyle = {
+  color: "#007aff",
+  fontFamily: "Sf-regular",
+  fontSize: 20,
+};
+
+const textValueStyle = {
+  color: "#000000",
+  fontFamily: "Sf-regular",
+  fontSize: 20,
+};
+
+const textValueWrapStyle = {
+  minWidth: 122,
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  justifyContent: "flex-end" as const,
+};
+
+const caretStyle = {
+  width: 2,
+  height: 30,
+  marginLeft: 1,
+  backgroundColor: "#1f54ff",
+};
+
+const actionRowStyle = {
+  width: "100%" as const,
+  maxWidth: 424,
+  alignSelf: "center" as const,
+  flexDirection: "row" as const,
+  gap: 20,
+  marginTop: 18,
+};
+
+const buttonStyle = {
+  flex: 1,
+  height: 56,
+  borderRadius: 28,
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+};
+
+const reverseButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: "#f5f5f5",
+};
+
+const morphButtonStyle = {
+  ...buttonStyle,
+  backgroundColor: "#000000",
+};
+
+const buttonTextStyle = {
+  fontFamily: "Sf-bold",
+  fontSize: 22,
+};
+
+const fontSizes = [32, 40, 48] as const;
+
+const fontWeights = [
+  {
+    label: "Regular",
+    fontFamily: "Sf-regular",
+  },
+  {
+    label: "Semibold",
+    fontFamily: "Sf-semibold",
+  },
+  {
+    label: "Bold",
+    fontFamily: "Sf-bold",
+  },
+] as const;
+
+const textAlignments = [
+  {
+    label: "Left",
+    alignSelf: "flex-start" as const,
+    textAlign: "left" as const,
+  },
+  {
+    label: "Center",
+    alignSelf: "center" as const,
+    textAlign: "center" as const,
+  },
+  {
+    label: "Right",
+    alignSelf: "flex-end" as const,
+    textAlign: "right" as const,
+  },
+] as const;
+
+type SettingRowProps = {
+  readonly label: string;
+  readonly children: React.ReactNode;
+  readonly onPress?: () => void;
+};
+
+const SettingRow = React.memo(function SettingRow({
   label,
-  caption,
-  text,
+  children,
   onPress,
-  buttonTitle,
-  variant,
-  animationPreset = "snappy",
-  fontSize = 28,
-}: {
-  label: string;
-  caption: string;
-  text: string;
-  onPress: () => void;
-  buttonTitle: string;
-  variant?: "text" | "number";
-  animationPreset?: "default" | "smooth" | "snappy" | "bouncy";
-  fontSize?: number;
-}) {
-  return (
-    <View style={exampleStackStyle}>
-      <Text style={{ fontSize: 13, letterSpacing: 0.3, color: "#666666" }}>
-        {label}
-      </Text>
-      <Text
-        style={{
-          fontSize: 11,
-          letterSpacing: 0.2,
-          color: "#9a9a9a",
-          textAlign: "center",
-        }}
-      >
-        {caption}
-      </Text>
-      {/* <PressableScale onPress={onPress} > */}
-        <MorphingText
-          text={text}
-          variant={variant}
-          className="font-sf-bold text-black"
-          fontSize={fontSize}
-          animationPreset={animationPreset}
-        />
-      {/* </PressableScale> */}
-      <Button title={buttonTitle} onPress={onPress} />
+}: SettingRowProps) {
+  const content = (
+    <View style={rowStyle}>
+      <Text style={labelStyle}>{label}</Text>
+      {children}
     </View>
   );
+
+  if (onPress) {
+    return <PressableScale onPress={onPress}>{content}</PressableScale>;
+  }
+
+  return content;
 });
 
-ExamplePanel.displayName = "ExamplePanel";
-
 export default function Index() {
-  const [wordIndex, setWordIndex] = useState(0);
-  const [statusIndex, setStatusIndex] = useState(0);
-  const [balanceIndex, setBalanceIndex] = useState(0);
-  const [shrinkBalanceIndex, setShrinkBalanceIndex] = useState(0);
-  const [growthIndex, setGrowthIndex] = useState(0);
-  const [latencyIndex, setLatencyIndex] = useState(0);
+  const { height } = useWindowDimensions();
+  const [previewWord, setPreviewWord] = useState("Craft");
+  const [targetWord, setTargetWord] = useState("Creative");
+  const [fontSizeIndex, setFontSizeIndex] = useState(1);
+  const [fontWeightIndex, setFontWeightIndex] = useState(1);
+  const [alignmentIndex, setAlignmentIndex] = useState(1);
 
-  const cycleWord = useCallback(
-    () => setWordIndex((index) => (index + 1) % words.length),
-    []
+  const fontSize = fontSizes[fontSizeIndex];
+  const fontWeight = fontWeights[fontWeightIndex];
+  const textAlignment = textAlignments[alignmentIndex];
+
+  const previewPositionStyle = useMemo(
+    () => ({
+      top: Math.max(108, Math.round(height * 0.22)),
+    }),
+    [height]
   );
-  const cycleStatus = useCallback(
-    () => setStatusIndex((index) => (index + 1) % statusLines.length),
-    []
+
+  const controlsPositionStyle = useMemo(
+    () => ({
+      bottom: Math.max(20, Math.round(height * 0.03)),
+    }),
+    [height]
   );
-  const cycleBalance = useCallback(
-    () => setBalanceIndex((index) => (index + 1) % balances.length),
-    []
+
+  const swapWords = useCallback(() => {
+    setPreviewWord(targetWord);
+    setTargetWord(previewWord);
+  }, [previewWord, targetWord]);
+
+  const cycleFontSize = useCallback(() => {
+    setFontSizeIndex((index) => (index + 1) % fontSizes.length);
+  }, []);
+
+  const cycleFontWeight = useCallback(() => {
+    setFontWeightIndex((index) => (index + 1) % fontWeights.length);
+  }, []);
+
+  const cycleAlignment = useCallback(() => {
+    setAlignmentIndex((index) => (index + 1) % textAlignments.length);
+  }, []);
+
+  const previewContainerStyle = useMemo(
+    () => ({
+      alignSelf: textAlignment.alignSelf,
+    }),
+    [textAlignment.alignSelf]
   );
-  const cycleShrinkBalance = useCallback(
-    () =>
-      setShrinkBalanceIndex((index) => (index + 1) % shrinkBalances.length),
-    []
-  );
-  const cycleGrowth = useCallback(
-    () => setGrowthIndex((index) => (index + 1) % growthRates.length),
-    []
-  );
-  const cycleLatency = useCallback(
-    () => setLatencyIndex((index) => (index + 1) % latencies.length),
-    []
+
+  const previewTextStyle = useMemo(
+    () => ({
+      color: "#000000",
+      fontFamily: fontWeight.fontFamily,
+      fontSize,
+      textAlign: textAlignment.textAlign,
+    }),
+    [fontSize, fontWeight.fontFamily, textAlignment.textAlign]
   );
 
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={contentContainerStyle}
-    >
-      <View style={headerStackStyle}>
-        <Text style={{ fontSize: 28, fontWeight: "700", color: "#1b1b1b" }}>
-          MorphingText
-        </Text>
-        <Text style={{ fontSize: 14, color: "#7d7d7d", textAlign: "center" }}>
-          Tap any example or use its button to cycle values.
-        </Text>
+    <View style={screenStyle}>
+      <View style={[previewWrapStyle, previewPositionStyle]}>
+        <MorphingText
+          text={previewWord}
+          animationPreset="default"
+          fontSize={fontSize}
+          clipToBounds={false}
+          containerStyle={previewContainerStyle}
+          style={previewTextStyle}
+        />
       </View>
 
-      <ExamplePanel
-        label="Text / Snappy"
-        caption="Short brand words with the faster preset."
-        text={words[wordIndex]}
-        onPress={cycleWord}
-        buttonTitle="Next Word"
-        animationPreset="snappy"
-      />
+      <View style={[controlsWrapStyle, controlsPositionStyle]}>
+        <View style={panelStyle}>
+          <SettingRow label="Text">
+            <View style={textValueWrapStyle}>
+              <Text style={textValueStyle}>{targetWord}</Text>
+              <View style={caretStyle} />
+            </View>
+          </SettingRow>
 
-      <ExamplePanel
-        label="Text / Smooth"
-        caption="Longer phrases to check auto-sizing and calmer motion."
-        text={statusLines[statusIndex]}
-        onPress={cycleStatus}
-        buttonTitle="Next Status"
-        animationPreset="smooth"
-      />
+          <View style={dividerStyle} />
 
-      <ExamplePanel
-        label="Number / Balance"
-        caption="Mixed growth and shrink transitions on a currency value."
-        text={balances[balanceIndex]}
-        onPress={cycleBalance}
-        buttonTitle="Next Balance"
-        variant="number"
-        animationPreset="snappy"
-      />
+          <SettingRow label="Font Size" onPress={cycleFontSize}>
+            <Text style={valueStyle}>{fontSize}pt</Text>
+          </SettingRow>
 
-      <ExamplePanel
-        label="Number / Shrink Case"
-        caption="Focused on the large-to-small reflow case we just tuned."
-        text={shrinkBalances[shrinkBalanceIndex]}
-        onPress={cycleShrinkBalance}
-        buttonTitle="Next Shrink Case"
-        variant="number"
-        animationPreset="snappy"
-      />
+          <View style={dividerStyle} />
 
-      <ExamplePanel
-        label="Number / Percent"
-        caption="Prefix and suffix characters around a changing numeric core."
-        text={growthRates[growthIndex]}
-        onPress={cycleGrowth}
-        buttonTitle="Next Percent"
-        variant="number"
-        animationPreset="smooth"
-      />
+          <SettingRow label="Font Weight" onPress={cycleFontWeight}>
+            <Text style={valueStyle}>{fontWeight.label}</Text>
+          </SettingRow>
 
-      <ExamplePanel
-        label="Number / Latency"
-        caption="Comma grouping and unit suffixes with the bouncy preset."
-        text={latencies[latencyIndex]}
-        onPress={cycleLatency}
-        buttonTitle="Next Latency"
-        variant="number"
-        animationPreset="bouncy"
-      />
-    </ScrollView>
+          <View style={dividerStyle} />
+
+          <SettingRow label="Text Alignment" onPress={cycleAlignment}>
+            <Text style={valueStyle}>{textAlignment.label}</Text>
+          </SettingRow>
+        </View>
+
+        <View style={actionRowStyle}>
+          <PressableScale onPress={swapWords} style={reverseButtonStyle}>
+            <Text style={[buttonTextStyle, { color: "#252525" }]}>Reverse</Text>
+          </PressableScale>
+
+          <PressableScale onPress={swapWords} style={morphButtonStyle}>
+            <Text style={[buttonTextStyle, { color: "#ffffff" }]}>Morph</Text>
+          </PressableScale>
+        </View>
+      </View>
+    </View>
   );
 }

@@ -10,12 +10,7 @@ type Params = {
 
 type MorphTextStyle = {
   readonly textStyle: StyleProp<TextStyle>;
-  readonly measurementTextStyle: StyleProp<TextStyle>;
 };
-
-const transparentTextStyle = {
-  color: "transparent",
-} as const;
 
 export const useMorphTextStyle = ({
   fontSize,
@@ -44,14 +39,7 @@ export const useMorphTextStyle = ({
     [baseTextStyle, fontStyle, style]
   );
 
-  // reuse the same font stack so probes match the live text
-  const measurementTextStyle = useMemo(
-    () => [baseTextStyle, fontStyle, style, transparentTextStyle],
-    [baseTextStyle, fontStyle, style]
-  );
-
   return {
     textStyle,
-    measurementTextStyle,
   };
 };
