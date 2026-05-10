@@ -6,6 +6,8 @@ export const defaultItemPadding = {
   paddingHorizontal: 20,
 } as const;
 
+export const defaultMinRowHeight = 44;
+
 export const ListStyleContext = React.createContext<ListStyle>("auto");
 
 export const SectionStyleContext = React.createContext<{
@@ -13,8 +15,10 @@ export const SectionStyleContext = React.createContext<{
     readonly paddingVertical: number;
     readonly paddingHorizontal: number;
   };
+  readonly minRowHeight: number;
 }>({
   itemPadding: defaultItemPadding,
+  minRowHeight: defaultMinRowHeight,
 });
 
 export const CardStyleContext = React.createContext<{

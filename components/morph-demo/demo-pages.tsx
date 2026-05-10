@@ -28,6 +28,7 @@ function SettingsSection({ metrics, children }: SettingsSectionProps) {
         backgroundColor: "#f8f8f8",
         borderRadius: metrics.panelRadius,
       }}
+      separatorInset="content"
     >
       {children}
     </FormSection>

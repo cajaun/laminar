@@ -4,6 +4,8 @@ import type { SFSymbol, SymbolWeight } from "expo-symbols";
 
 export type ListStyle = "grouped" | "auto";
 
+export type SeparatorInset = "automatic" | "content" | "full";
+
 export type SystemImageCustomProps = {
   readonly name: SFSymbol;
   readonly color?: ColorValue;

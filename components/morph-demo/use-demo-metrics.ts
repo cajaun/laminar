@@ -34,7 +34,7 @@ export function useDemoMetrics({
     () => {
       const buttonHeight = 50;
       const footerPaddingBottom = bottom * 1.5;
-      const controlTextFontSize = Math.max(20, buttonHeight * 0.38);
+      const controlTextFontSize = 20;
 
       return {
         width,

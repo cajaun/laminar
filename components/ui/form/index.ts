@@ -16,6 +16,7 @@ export { formColors } from "./colors";
 export type {
   FormTextProps,
   ListStyle,
+  SeparatorInset,
   SystemImageCustomProps,
   SystemImageProps,
 } from "./types";

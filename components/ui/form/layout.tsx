@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   separator: {
-    marginStart: 60,
     marginTop: -0.5,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: formColors.separator,

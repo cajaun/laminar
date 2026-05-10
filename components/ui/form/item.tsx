@@ -31,8 +31,9 @@ export function FormItem({
   style,
   ref,
 }: FormItemProps) {
-  const { itemPadding } = React.useContext(SectionStyleContext);
+  const { itemPadding, minRowHeight } = React.useContext(SectionStyleContext);
   const rowStyle = [itemPadding, style];
+  const contentStyle = [styles.minHeight, { minHeight: minRowHeight }];
 
   if (href == null) {
     if (onPress == null && onLongPress == null) {
@@ -41,14 +42,14 @@ export function FormItem({
       if (childrenCount === 1) {
         return (
           <View style={rowStyle}>
-            <View style={styles.minHeight}>{children}</View>
+            <View style={contentStyle}>{children}</View>
           </View>
         );
       }
 
       return (
         <View style={rowStyle}>
-          <HStack style={styles.minHeight}>{children}</HStack>
+          <HStack style={contentStyle}>{children}</HStack>
         </View>
       );
     }
@@ -63,7 +64,7 @@ export function FormItem({
         style={disabled ? styles.disabled : undefined}
       >
         <View style={rowStyle}>
-          <HStack style={styles.minHeight}>{children}</HStack>
+          <HStack style={contentStyle}>{children}</HStack>
         </View>
       </TouchableHighlight>
     );
@@ -79,7 +80,7 @@ export function FormItem({
         onLongPress={onLongPress}
       >
         <View style={rowStyle}>
-          <HStack style={styles.minHeight}>{children}</HStack>
+          <HStack style={contentStyle}>{children}</HStack>
         </View>
       </TouchableHighlight>
     </RouterLink>
@@ -90,7 +91,7 @@ if (__DEV__) FormItem.displayName = "FormItem";
 
 const styles = StyleSheet.create({
   minHeight: {
-    minHeight: 20,
+    justifyContent: "center",
   },
   disabled: {
     opacity: 0.5,

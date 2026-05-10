@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { formColors } from "./colors";
 import {
   defaultItemPadding,
+  defaultMinRowHeight,
   CardStyleContext,
   ListStyleContext,
   SectionStyleContext,
@@ -23,7 +24,7 @@ import { HStack, Separator, Spacer } from "./layout";
 import { Link } from "./link";
 import { SystemImage, LinkChevronIcon } from "./symbol";
 import { Text, TextField } from "./text";
-import type { FormTextProps } from "./types";
+import type { FormTextProps, SeparatorInset, SystemImageProps } from "./types";
 import { getFlatChildren, isStringishNode } from "./utils";
 
 type SectionProps = ViewProps & {
@@ -31,6 +32,12 @@ type SectionProps = ViewProps & {
   readonly titleHint?: string | React.ReactNode;
   readonly footer?: string | React.ReactNode;
   readonly outerStyle?: StyleProp<ViewStyle>;
+  readonly itemPadding?: {
+    readonly paddingVertical: number;
+    readonly paddingHorizontal: number;
+  };
+  readonly minRowHeight?: number;
+  readonly separatorInset?: SeparatorInset;
 };
 
 export function Section({
@@ -40,6 +47,9 @@ export function Section({
   footer,
   style,
   outerStyle,
+  itemPadding = defaultItemPadding,
+  minRowHeight = defaultMinRowHeight,
+  separatorInset = "automatic",
   ...props
 }: SectionProps) {
   const listStyle = React.useContext(ListStyleContext) ?? "auto";
@@ -50,12 +60,20 @@ export function Section({
   const childrenWithSeparator = allChildren.map((child, index) => (
     <React.Fragment key={index}>
       {renderSectionChild(child)}
-      {index < allChildren.length - 1 ? <Separator /> : null}
+      {index < allChildren.length - 1 ? (
+        <Separator
+          style={separatorStyleForChild({
+            child,
+            separatorInset,
+            horizontalInset: itemPadding.paddingHorizontal,
+          })}
+        />
+      ) : null}
     </React.Fragment>
   ));
 
   const contents = (
-    <SectionStyleContext.Provider value={{ itemPadding: defaultItemPadding }}>
+    <SectionStyleContext.Provider value={{ itemPadding, minRowHeight }}>
       <View
         {...props}
         collapsable={false}
@@ -390,6 +408,59 @@ function nativeTextProps(props: Record<string, any>) {
   } = props;
 
   return textProps;
+}
+
+function separatorStyleForChild({
+  child,
+  separatorInset,
+  horizontalInset,
+}: {
+  readonly child: React.ReactNode;
+  readonly separatorInset: SeparatorInset;
+  readonly horizontalInset: number;
+}) {
+  if (separatorInset === "full") {
+    return undefined;
+  }
+
+  const leadingInset =
+    horizontalInset + leadingSystemImageWidth(getSystemImageFromChild(child));
+
+  if (separatorInset === "content") {
+    return {
+      marginStart: leadingInset,
+      marginEnd: horizontalInset,
+    };
+  }
+
+  return {
+    marginStart: leadingInset,
+    marginEnd: 0,
+  };
+}
+
+function getSystemImageFromChild(child: React.ReactNode) {
+  if (!React.isValidElement(child)) {
+    return undefined;
+  }
+
+  return (child.props as { systemImage?: SystemImageProps }).systemImage;
+}
+
+function leadingSystemImageWidth(systemImage?: SystemImageProps) {
+  if (!systemImage) {
+    return 0;
+  }
+
+  if (
+    typeof systemImage === "object" &&
+    systemImage !== null &&
+    "name" in systemImage
+  ) {
+    return (systemImage.size ?? 20) + 8;
+  }
+
+  return 28;
 }
 
 const styles = StyleSheet.create({
