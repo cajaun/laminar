@@ -16,6 +16,11 @@ export const CarouselContent: FC<Props> = ({ renderItem, width }) => {
         ref={carouselRef}
         data={items}
         renderItem={renderItem}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
         horizontal
         showsHorizontalScrollIndicator={false}
         pagingEnabled

@@ -17,17 +17,26 @@ export const fontWeights = [
   },
 ] as const;
 
-export const editorWords = ["Craft", "Creative"] as const;
+export const editorWords = ["Laminar", "Linear"] as const;
 export const standaloneWords = [
-  "Calligraph",
-  "Craft",
-  "Creative",
-  "Create",
+  "Laminar",
+  "Lamina",
+  "Linear",
+  "Layer",
 ] as const;
-export const buttonWords = ["Back Up Now", "Backing Up", "Backed Up!"] as const;
+export const buttonWords = ["Run Simulation", "Running Simulation", "Simulation Done!"] as const;
+// export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$35.99", "$24.89", "$17.38", "$3.15"] as const;
+export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
+export const numberLaneValues = ["$1,234", "$12,345", "$9,876"] as const;
+export const animationLayerValues = ["4", "9", "2", "7"] as const;
+export const autoSizeValues = ["Run Simulation", "Running Simulation", "Simulation Done!"] as const;
 
 export const examplePages = [
+  { id: "textIdentity", label: "Text Identity" },
+  { id: "numberIdentity", label: "Number Identity" },
+  { id: "animationLayer", label: "Animation Layer" },
+  { id: "autoSize", label: "Auto Size" },
   { id: "editor", label: "Editor" },
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },

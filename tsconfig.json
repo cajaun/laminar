@@ -7,6 +7,12 @@
       "node"
     ],
     "paths": {
+      "laminar": [
+        "./packages/laminar/src"
+      ],
+      "laminar/*": [
+        "./packages/laminar/src/*"
+      ],
       "@/*": [
         "./*"
       ]

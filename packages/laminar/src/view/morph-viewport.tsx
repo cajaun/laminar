@@ -32,7 +32,6 @@ const unclippedViewportStyle: ViewStyle = {
 type MorphViewportProps = {
   readonly autoSize: boolean;
   readonly clipToBounds: boolean;
-  readonly containerClassName?: string;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
   readonly measurement?: React.ReactNode;
@@ -43,7 +42,6 @@ export const MorphViewport = React.memo(
   ({
     autoSize,
     clipToBounds,
-    containerClassName,
     containerStyle,
     animatedWidthStyle,
     measurement,
@@ -58,7 +56,7 @@ export const MorphViewport = React.memo(
     );
 
     return (
-      <View className={containerClassName} style={[shellStyle, containerStyle]}>
+      <View style={[shellStyle, containerStyle]}>
         {autoSize ? (
           <>
             <View

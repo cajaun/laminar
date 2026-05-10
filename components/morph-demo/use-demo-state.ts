@@ -1,14 +1,18 @@
 import { useCallback, useMemo, useState } from "react";
 import {
+  animationLayerValues,
+  autoSizeValues,
   buttonWords,
   editorWords,
   examplePages,
   fontSizes,
   fontWeights,
   numericValues,
+  numberLaneValues,
   standaloneWords,
   stepBackward,
   stepForward,
+  textIdentityWords,
 } from "./demo-data";
 
 export function useDemoState(activePageIndex: number) {
@@ -18,6 +22,10 @@ export function useDemoState(activePageIndex: number) {
   const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
   const [buttonWordIndex, setButtonWordIndex] = useState(0);
   const [numberIndex, setNumberIndex] = useState(0);
+  const [textIdentityIndex, setTextIdentityIndex] = useState(0);
+  const [numberLaneIndex, setNumberLaneIndex] = useState(0);
+  const [animationLayerIndex, setAnimationLayerIndex] = useState(0);
+  const [autoSizeIndex, setAutoSizeIndex] = useState(0);
 
   const activePageId = examplePages[activePageIndex]?.id ?? "numbers";
   const fontSize = fontSizes[fontSizeIndex];
@@ -26,10 +34,20 @@ export function useDemoState(activePageIndex: number) {
   const standaloneWord = standaloneWords[standaloneWordIndex];
   const buttonWord = buttonWords[buttonWordIndex];
   const numberValue = numericValues[numberIndex];
+  const textIdentityWord = textIdentityWords[textIdentityIndex];
+  const nextTextIdentityWord =
+    textIdentityWords[stepForward(textIdentityIndex, textIdentityWords.length)];
+  const numberLaneValue = numberLaneValues[numberLaneIndex];
+  const animationLayerValue = animationLayerValues[animationLayerIndex];
+  const autoSizeValue = autoSizeValues[autoSizeIndex];
   const previousNumberValue =
     numericValues[stepBackward(numberIndex, numericValues.length)];
   const nextNumberValue =
     numericValues[stepForward(numberIndex, numericValues.length)];
+  const previousNumberLaneValue =
+    numberLaneValues[stepBackward(numberLaneIndex, numberLaneValues.length)];
+  const nextNumberLaneValue =
+    numberLaneValues[stepForward(numberLaneIndex, numberLaneValues.length)];
 
   const cycleFontSize = useCallback(() => {
     setFontSizeIndex((index) => stepForward(index, fontSizes.length));
@@ -58,6 +76,32 @@ export function useDemoState(activePageIndex: number) {
   }, []);
 
   const morph = useCallback(() => {
+    if (activePageId === "textIdentity") {
+      setTextIdentityIndex((index) =>
+        stepForward(index, textIdentityWords.length)
+      );
+      return;
+    }
+
+    if (activePageId === "numberIdentity") {
+      setNumberLaneIndex((index) =>
+        stepForward(index, numberLaneValues.length)
+      );
+      return;
+    }
+
+    if (activePageId === "animationLayer") {
+      setAnimationLayerIndex((index) =>
+        stepForward(index, animationLayerValues.length)
+      );
+      return;
+    }
+
+    if (activePageId === "autoSize") {
+      setAutoSizeIndex((index) => stepForward(index, autoSizeValues.length));
+      return;
+    }
+
     if (activePageId === "editor") {
       setEditorWordIndex((index) => stepForward(index, editorWords.length));
       return;
@@ -79,6 +123,32 @@ export function useDemoState(activePageIndex: number) {
   }, [activePageId]);
 
   const reverse = useCallback(() => {
+    if (activePageId === "textIdentity") {
+      setTextIdentityIndex((index) =>
+        stepBackward(index, textIdentityWords.length)
+      );
+      return;
+    }
+
+    if (activePageId === "numberIdentity") {
+      setNumberLaneIndex((index) =>
+        stepBackward(index, numberLaneValues.length)
+      );
+      return;
+    }
+
+    if (activePageId === "animationLayer") {
+      setAnimationLayerIndex((index) =>
+        stepBackward(index, animationLayerValues.length)
+      );
+      return;
+    }
+
+    if (activePageId === "autoSize") {
+      setAutoSizeIndex((index) => stepBackward(index, autoSizeValues.length));
+      return;
+    }
+
     if (activePageId === "editor") {
       setEditorWordIndex((index) => stepBackward(index, editorWords.length));
       return;
@@ -107,6 +177,13 @@ export function useDemoState(activePageIndex: number) {
       editorWord,
       standaloneWord,
       buttonWord,
+      textIdentityWord,
+      nextTextIdentityWord,
+      numberLaneValue,
+      previousNumberLaneValue,
+      nextNumberLaneValue,
+      animationLayerValue,
+      autoSizeValue,
       numberValue,
       previousNumberValue,
       nextNumberValue,
@@ -121,6 +198,8 @@ export function useDemoState(activePageIndex: number) {
     }),
     [
       activePageId,
+      animationLayerValue,
+      autoSizeValue,
       buttonWord,
       cycleButtonWord,
       cycleEditorWord,
@@ -132,11 +211,16 @@ export function useDemoState(activePageIndex: number) {
       fontSize,
       fontWeight,
       morph,
+      nextTextIdentityWord,
       nextNumberValue,
+      nextNumberLaneValue,
+      numberLaneValue,
       numberValue,
+      previousNumberLaneValue,
       previousNumberValue,
       reverse,
       standaloneWord,
+      textIdentityWord,
     ]
   );
 }

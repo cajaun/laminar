@@ -29,7 +29,6 @@ type NumberLaneProps = {
   readonly direction: NumericFlowDirection;
   readonly travelDistance: number;
   readonly motionRecipe: MotionRecipe;
-  readonly className?: string;
   readonly textStyle?: StyleProp<TextStyle>;
 };
 
@@ -43,7 +42,6 @@ export const NumberLane = React.memo(
     direction,
     travelDistance,
     motionRecipe,
-    className,
     textStyle,
   }: NumberLaneProps) => {
     const usesDigitTravel = isAsciiDigit(unit);
@@ -99,11 +97,7 @@ export const NumberLane = React.memo(
     );
 
     if (isLead) {
-      return (
-        <Text className={className} style={textStyle}>
-          {unit}
-        </Text>
-      );
+      return <Text style={textStyle}>{unit}</Text>;
     }
 
     return (
@@ -114,7 +108,7 @@ export const NumberLane = React.memo(
         style={laneStyle}
       >
         {/* this hidden copy owns layout while the animated token swaps on top */}
-        <Text className={className} style={[textStyle, laneProbeStyle]}>
+        <Text style={[textStyle, laneProbeStyle]}>
           {unit}
         </Text>
 
@@ -122,7 +116,6 @@ export const NumberLane = React.memo(
           key={`token:${tokenKey}`}
           entering={hasAnimated ? enterTransition : undefined}
           exiting={exitTransition}
-          className={className}
           style={[textStyle, laneTokenStyle]}
         >
           {unit}

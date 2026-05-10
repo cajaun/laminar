@@ -14,7 +14,6 @@ type NumberRunProps = {
   readonly value: string;
   readonly motionRecipe: MotionRecipe;
   readonly fontSize?: number;
-  readonly className?: string;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
 };
@@ -24,7 +23,6 @@ export const NumberRun = React.memo(
     value,
     motionRecipe,
     fontSize,
-    className,
     textStyle,
     staggerMs,
   }: Readonly<NumberRunProps>) => {
@@ -63,7 +61,6 @@ export const NumberRun = React.memo(
               direction={direction}
               travelDistance={travelDistance}
               motionRecipe={motionRecipe}
-              className={className}
               textStyle={textStyle}
             />
           );

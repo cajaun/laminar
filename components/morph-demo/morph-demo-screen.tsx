@@ -9,9 +9,13 @@ import {
 import { carouselItems, examplePages } from "./demo-data";
 import { DemoFooter, DemoPageScroll } from "./demo-chrome";
 import {
+  AnimationLayerDemoPage,
+  AutoSizeDemoPage,
   ButtonDemoPage,
   EditorDemoPage,
   NumbersDemoPage,
+  NumberIdentityDemoPage,
+  TextIdentityDemoPage,
   WordsDemoPage,
 } from "./demo-pages";
 import { useDemoMetrics } from "./use-demo-metrics";
@@ -35,7 +39,15 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
     ({ item }) => {
       const page = examplePages[item];
       const content =
-        page?.id === "editor" ? (
+        page?.id === "textIdentity" ? (
+          <TextIdentityDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "numberIdentity" ? (
+          <NumberIdentityDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "animationLayer" ? (
+          <AnimationLayerDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "autoSize" ? (
+          <AutoSizeDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "editor" ? (
           <EditorDemoPage metrics={metrics} state={state} />
         ) : page?.id === "words" ? (
           <WordsDemoPage metrics={metrics} state={state} />

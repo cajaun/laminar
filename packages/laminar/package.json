@@ -1,0 +1,24 @@
+{
+  "name": "laminar",
+  "version": "0.0.0",
+  "description": "A React Native component for morphing text and numbers with character-level identity.",
+  "source": "./src/index.tsx",
+  "react-native": "./src/index.tsx",
+  "main": "./src/index.tsx",
+  "types": "./src/index.tsx",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.74",
+    "react-native-reanimated": ">=3"
+  }
+}

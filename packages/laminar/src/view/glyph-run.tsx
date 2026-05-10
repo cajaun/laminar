@@ -19,14 +19,12 @@ export const GlyphRun = React.memo(
     layoutTransition,
     enterTransition,
     exitTransition,
-    className,
     textStyle,
   }: Readonly<{
     glyphs: readonly GlyphToken[];
     layoutTransition: ComplexAnimationBuilder;
     enterTransition?: EntryExitAnimationFunction;
     exitTransition?: EntryExitAnimationFunction;
-    className?: string;
     textStyle?: StyleProp<TextStyle>;
   }>) => (
       <View style={rowStyle}>
@@ -37,7 +35,6 @@ export const GlyphRun = React.memo(
             layout={layoutTransition}
             entering={enterTransition}
             exiting={exitTransition}
-            className={className}
             style={textStyle}
           >
             {glyph.value}

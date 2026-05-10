@@ -47,9 +47,7 @@ export type MorphingTextProps = {
   readonly variant?: MorphContentVariant;
   readonly fontSize?: number;
   readonly color?: string;
-  readonly className?: string;
   readonly style?: StyleProp<TextStyle>;
-  readonly containerClassName?: string;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly fontStyle?: StyleProp<TextStyle>;
   readonly animationDuration?: number;
@@ -58,3 +56,5 @@ export type MorphingTextProps = {
   readonly autoSize?: boolean;
   readonly clipToBounds?: boolean;
 };
+
+export type LaminarProps = MorphingTextProps;

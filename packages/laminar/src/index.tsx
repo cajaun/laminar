@@ -12,14 +12,12 @@ import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
 import { TextRun } from "./view/text-run";
 
-export const MorphingText = React.memo(function MorphingText({
+export const Laminar = React.memo(function Laminar({
     text,
     variant = "text",
     fontSize,
     color,
-    className,
     style,
-    containerClassName,
     containerStyle,
     fontStyle,
     animationDuration,
@@ -58,14 +56,12 @@ export const MorphingText = React.memo(function MorphingText({
       <MorphViewport
         autoSize={autoSize}
         clipToBounds={clipToBounds}
-        containerClassName={containerClassName}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
         measurement={
           <Text
             numberOfLines={1}
             onLayout={captureLayout}
-            className={className}
             style={textStyle}
           >
             {measuredValue}
@@ -77,7 +73,6 @@ export const MorphingText = React.memo(function MorphingText({
             value={resolvedValue}
             motionRecipe={motionRecipe}
             fontSize={fontSize}
-            className={className}
             textStyle={textStyle}
             staggerMs={staggerMs}
           />
@@ -85,16 +80,18 @@ export const MorphingText = React.memo(function MorphingText({
           <TextRun
             value={resolvedValue}
             motionRecipe={motionRecipe}
-            className={className}
             textStyle={textStyle}
           />
-        )}
-      </MorphViewport>
-    );
+      )}
+    </MorphViewport>
+  );
   });
 
-export default MorphingText;
+export const MorphingText = Laminar;
+
+export default Laminar;
 export type {
+  LaminarProps,
   MorphAnimationPresetName,
   MorphContentVariant,
   MorphingTextProps,
