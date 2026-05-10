@@ -93,10 +93,10 @@ export function DemoFooter({ metrics, onReverse, onMorph }: DemoFooterProps) {
           }}
         >
           <Text
+            className="text-2xl"
             style={{
               color: "#252525",
               fontFamily: "Sf-bold",
-              fontSize: metrics.buttonTextFontSize,
             }}
           >
             Reverse
@@ -117,10 +117,10 @@ export function DemoFooter({ metrics, onReverse, onMorph }: DemoFooterProps) {
           }}
         >
           <Text
+            className="text-2xl"
             style={{
               color: "#ffffff",
               fontFamily: "Sf-bold",
-              fontSize: metrics.buttonTextFontSize,
             }}
           >
             Morph

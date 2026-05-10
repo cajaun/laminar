@@ -38,18 +38,18 @@ function SettingsSection({ metrics, children }: SettingsSectionProps) {
 type SettingsRowOptions = {
   readonly label: string;
   readonly value: string;
-  readonly metrics: DemoMetrics;
   readonly onPress?: () => void;
 };
 
-function settingsRow({ label, value, metrics, onPress }: SettingsRowOptions) {
+function settingsRow({ label, value, onPress }: SettingsRowOptions) {
   return (
     <FormText
       key={label}
+      bold
       onPress={onPress}
-      style={settingLabelStyle(metrics)}
+      style={settingLabelStyle}
       hint={
-        <FormText numberOfLines={1} style={settingValueStyle(metrics)}>
+        <FormText bold numberOfLines={1} style={settingHintStyle}>
           {value}
         </FormText>
       }
@@ -59,24 +59,13 @@ function settingsRow({ label, value, metrics, onPress }: SettingsRowOptions) {
   );
 }
 
-function settingLabelStyle(metrics: DemoMetrics): TextStyle {
-  return {
-    color: "#989898",
-    fontFamily: "Sf-semibold",
-    fontSize: metrics.buttonTextFontSize,
-    lineHeight: metrics.buttonTextFontSize * 1.2,
-  };
-}
+const settingLabelStyle: TextStyle = {
+  color: "#989898",
+};
 
-function settingValueStyle(metrics: DemoMetrics): TextStyle {
-  return {
-    color: "#007aff",
-    fontFamily: "Sf-regular",
-    fontSize: metrics.buttonTextFontSize,
-    lineHeight: metrics.buttonTextFontSize * 1.2,
-    textAlign: "right",
-  };
-}
+const settingHintStyle: TextStyle = {
+  color: "#007aff",
+};
 
 export function EditorDemoPage({ metrics, state }: DemoPageProps) {
   return (
@@ -105,19 +94,16 @@ export function EditorDemoPage({ metrics, state }: DemoPageProps) {
       <SettingsSection metrics={metrics}>
         {settingsRow({
           label: "Word",
-          metrics,
           value: state.editorWord,
           onPress: state.cycleEditorWord,
         })}
         {settingsRow({
           label: "Font Size",
-          metrics,
           value: `${state.fontSize}pt`,
           onPress: state.cycleFontSize,
         })}
         {settingsRow({
           label: "Font Weight",
-          metrics,
           value: state.fontWeight.label,
           onPress: state.cycleFontWeight,
         })}
@@ -153,12 +139,11 @@ export function WordsDemoPage({ metrics, state }: DemoPageProps) {
       <SettingsSection metrics={metrics}>
         {settingsRow({
           label: "Word",
-          metrics,
           value: state.standaloneWord,
           onPress: state.cycleStandaloneWord,
         })}
-        {settingsRow({ label: "Variant", metrics, value: "Text" })}
-        {settingsRow({ label: "Auto Size", metrics, value: "Off" })}
+        {settingsRow({ label: "Variant", value: "Text" })}
+        {settingsRow({ label: "Auto Size", value: "Off" })}
       </SettingsSection>
     </>
   );
@@ -205,12 +190,11 @@ export function ButtonDemoPage({ metrics, state }: DemoPageProps) {
       <SettingsSection metrics={metrics}>
         {settingsRow({
           label: "Button Text",
-          metrics,
           value: state.buttonWord,
           onPress: state.cycleButtonWord,
         })}
-        {settingsRow({ label: "Surface", metrics, value: "Pressable" })}
-        {settingsRow({ label: "Auto Size", metrics, value: "On" })}
+        {settingsRow({ label: "Surface", value: "Pressable" })}
+        {settingsRow({ label: "Auto Size", value: "On" })}
       </SettingsSection>
     </>
   );
@@ -244,18 +228,15 @@ export function NumbersDemoPage({ metrics, state }: DemoPageProps) {
       <SettingsSection metrics={metrics}>
         {settingsRow({
           label: "Number",
-          metrics,
           value: state.numberValue,
           onPress: state.cycleNumber,
         })}
         {settingsRow({
           label: "Reverse",
-          metrics,
           value: state.previousNumberValue,
         })}
         {settingsRow({
           label: "Morph",
-          metrics,
           value: state.nextNumberValue,
         })}
       </SettingsSection>

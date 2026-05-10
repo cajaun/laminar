@@ -5,7 +5,6 @@ export type DemoMetrics = {
   readonly width: number;
   readonly height: number;
   readonly horizontalInset: number;
-  readonly buttonTextFontSize: number;
   readonly panelRadius: number;
   readonly buttonHeight: number;
   readonly buttonGap: number;
@@ -34,13 +33,11 @@ export function useDemoMetrics({
     () => {
       const buttonHeight = 50;
       const footerPaddingBottom = bottom * 1.5;
-      const controlTextFontSize = 20;
 
       return {
         width,
         height,
         horizontalInset: 24,
-        buttonTextFontSize: controlTextFontSize,
         panelRadius: Math.max(28, Math.min(36, width * 0.075)),
         buttonHeight,
         buttonGap: Math.max(16, width * 0.044),
