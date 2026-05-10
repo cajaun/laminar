@@ -125,7 +125,7 @@ function IdentityCell({
   const isEmpty = unit.length === 0;
   const surviveProgress = useSharedValue(survives ? 1 : 0);
   const currentProgress = useSharedValue(current ? 1 : 0);
-  const visibleProgress = useSharedValue(isEmpty ? 0 : 1);
+  const scaleProgress = useSharedValue(isEmpty ? 0 : 1);
 
   useEffect(() => {
     surviveProgress.value = withTiming(survives ? 1 : 0, {
@@ -140,10 +140,10 @@ function IdentityCell({
   }, [current, currentProgress]);
 
   useEffect(() => {
-    visibleProgress.value = withTiming(isEmpty ? 0 : 1, {
+    scaleProgress.value = withTiming(isEmpty ? 0 : 1, {
       duration: identityColorDurationMs,
     });
-  }, [isEmpty, visibleProgress]);
+  }, [isEmpty, scaleProgress]);
 
   const animatedCellStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(
@@ -152,20 +152,20 @@ function IdentityCell({
       ["#d1d1d6", teachingBlue]
     ),
     backgroundColor: interpolateColor(
-      currentProgress.value,
+      surviveProgress.value,
       [0, 1],
-      ["#ffffff", "#eef6ff"]
+      ["#f2f2f7", "#f7fbff"]
     ),
-    opacity: visibleProgress.value,
+    transform: [{ scale: 0.72 + scaleProgress.value * 0.28 }],
+    opacity: scaleProgress.value,
   }));
 
   const animatedTextStyle = useAnimatedStyle(() => ({
     color: interpolateColor(
       surviveProgress.value,
       [0, 1],
-      ["#8e8e93", teachingBlue]
+      ["#636366", teachingBlue]
     ),
-    opacity: visibleProgress.value,
   }));
 
   return (
@@ -175,10 +175,11 @@ function IdentityCell({
           width: 34,
           height: 37,
           borderRadius: 10,
-          borderWidth: 1,
-          borderStyle: survives ? "solid" : "dashed",
+          borderWidth: 1.5,
+          borderStyle: "solid",
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
         },
         animatedCellStyle,
       ]}
@@ -189,6 +190,7 @@ function IdentityCell({
             fontFamily: "Sf-semibold",
             fontSize: 18,
             textAlign: "center",
+            width: 34,
           },
           animatedTextStyle,
         ]}
@@ -270,7 +272,7 @@ function IdentityMap({
               gap: 4,
             }}
           >
-            <Text
+            <Animated.Text
               style={{
                 width: 32,
                 color: "#8e8e93",
@@ -280,7 +282,7 @@ function IdentityMap({
               }}
             >
               {row.label}
-            </Text>
+            </Animated.Text>
             {row.units.map((unit, index) => {
               return (
                 <IdentityCell
