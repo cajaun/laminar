@@ -7,10 +7,10 @@
       "node"
     ],
     "paths": {
-      "laminar": [
+      "react-native-laminar": [
         "./packages/laminar/src"
       ],
-      "laminar/*": [
+      "react-native-laminar/*": [
         "./packages/laminar/src/*"
       ],
       "@/*": [

@@ -3,7 +3,7 @@
 React Native morphing text and number animation.
 
 ```tsx
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 <Laminar text="$1,234.56" variant="number" />;
 ```

@@ -114,10 +114,10 @@ https://docs.swmansion.com/react-native-reanimated/
 The package entrypoint is `packages/laminar/src/index.tsx`. Both names export the same component.
 
 ```tsx
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 // MorphingText is an alias for Laminar
-import { MorphingText } from "laminar";
+import { MorphingText } from "react-native-laminar";
 ```
 
 ---
@@ -129,7 +129,7 @@ import { MorphingText } from "laminar";
 ```tsx
 import React, { useState } from "react";
 import { Button, View } from "react-native";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 export default function Example() {
   const [word, setWord] = useState("Laminar");
@@ -157,7 +157,7 @@ export default function Example() {
 ```tsx
 import React, { useState } from "react";
 import { Button, View } from "react-native";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 export default function Counter() {
   const [value, setValue] = useState("$1,234");
@@ -240,7 +240,7 @@ Deduction:
 A JavaScript character and a visible glyph are not always the same unit.
 
 ```ts
-"Cafe\u0301" // visually "Café" — the accented e is two code points
+"Cafe\u0301"; // visually "Café" — the accented e is two code points
 ```
 
 Emoji sequences can involve even more code points joined by zero-width joiners.
@@ -341,11 +341,7 @@ Rendering:
 Practical result:
 
 ```tsx
-<Laminar
-  text="$1,234"
-  variant="number"
-  animationPreset="snappy"
-/>
+<Laminar text="$1,234" variant="number" animationPreset="snappy" />
 ```
 
 Currency symbols, commas, and decimal points are handled. Direction is inferred by stripping non-numeric characters and comparing the parsed values.
@@ -404,12 +400,12 @@ Different UI moments need different motion character. A live counter should feel
 
 Presets encode those decisions as named recipes so callsites do not need to manage timing values directly.
 
-| Preset | Character | Default Duration |
-| --- | --- | --- |
-| `default` | Smooth cubic-bezier timing | `380ms` |
-| `smooth` | Spring with no bounce | `400ms` |
-| `snappy` | Spring with light bounce | `350ms` |
-| `bouncy` | Spring with more bounce | `500ms` |
+| Preset    | Character                  | Default Duration |
+| --------- | -------------------------- | ---------------- |
+| `default` | Smooth cubic-bezier timing | `380ms`          |
+| `smooth`  | Spring with no bounce      | `400ms`          |
+| `snappy`  | Spring with light bounce   | `350ms`          |
+| `bouncy`  | Spring with more bounce    | `500ms`          |
 
 Usage:
 
@@ -421,11 +417,7 @@ Usage:
 Duration override:
 
 ```tsx
-<Laminar
-  text={word}
-  animationPreset="default"
-  animationDuration={520}
-/>
+<Laminar text={word} animationPreset="default" animationDuration={520} />
 ```
 
 `animationDuration` is in milliseconds and overrides the preset default.
@@ -457,10 +449,10 @@ React state changes
 ### Laminar
 
 ```tsx
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 // MorphingText is an alias for Laminar
-import { MorphingText } from "laminar";
+import { MorphingText } from "react-native-laminar";
 ```
 
 #### Props
@@ -484,20 +476,20 @@ type LaminarProps = {
 
 #### Prop Breakdown
 
-| Prop | Default | Meaning |
-| --- | --- | --- |
-| `text` | Required | The value to render and animate. Numbers are converted to strings internally. |
-| `variant` | `"text"` | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
-| `fontSize` | Undefined | Text size convenience prop, merged into the text style. |
-| `color` | Undefined | Text color convenience prop, merged into the text style. |
-| `style` | Undefined | Text style applied after `fontSize` and `color`. |
-| `containerStyle` | Undefined | Style for the outer viewport shell. Use for placement and alignment. |
-| `fontStyle` | Undefined | Additional text style merged before `style`. |
-| `animationDuration` | Preset duration | Duration override in milliseconds. |
-| `animationPreset` | `"default"` for text, `"snappy"` for number | Named motion recipe. |
-| `stagger` | `0.02` | Delay in seconds between numeric lane animations. |
-| `autoSize` | `true` | Animate the reserved outer width to the measured final text width. |
-| `clipToBounds` | `false` | Clip animated overflow to the viewport bounds when true. |
+| Prop                | Default                                     | Meaning                                                                            |
+| ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `text`              | Required                                    | The value to render and animate. Numbers are converted to strings internally.      |
+| `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
+| `fontSize`          | Undefined                                   | Text size convenience prop, merged into the text style.                            |
+| `color`             | Undefined                                   | Text color convenience prop, merged into the text style.                           |
+| `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
+| `containerStyle`    | Undefined                                   | Style for the outer viewport shell. Use for placement and alignment.               |
+| `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
+| `animationDuration` | Preset duration                             | Duration override in milliseconds.                                                 |
+| `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe.                                                               |
+| `stagger`           | `0.02`                                      | Delay in seconds between numeric lane animations.                                  |
+| `autoSize`          | `true`                                      | Animate the reserved outer width to the measured final text width.                 |
+| `clipToBounds`      | `false`                                     | Clip animated overflow to the viewport bounds when true.                           |
 
 #### Text Example
 
@@ -756,7 +748,7 @@ import {
     renderItem={({ item }) => <MyPage index={item} />}
   />
   <CarouselPagination defaultDotColor="#d7d7d7" activeDotColor="#000000" />
-</Carousel>
+</Carousel>;
 ```
 
 - **`Carousel`** is the context provider. It holds `currentIndex`, the `FlatList` ref for pages, the `FlatList` ref for dots, and the handlers that keep them in sync.
@@ -773,7 +765,7 @@ import {
 ```tsx
 import React, { useState } from "react";
 import { Button, View } from "react-native";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 export default function BasicTextAnimation() {
   const [word, setWord] = useState("Laminar");
@@ -801,7 +793,7 @@ export default function BasicTextAnimation() {
 ```tsx
 import React, { useState } from "react";
 import { Button, View } from "react-native";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 export default function NumericCounter() {
   const [value, setValue] = useState("$1,234");
@@ -830,7 +822,7 @@ Use `autoSize` when the button should grow and shrink with the label.
 ```tsx
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 
 export default function MorphButton() {
   const [word, setWord] = useState("Run Simulation");
@@ -840,7 +832,7 @@ export default function MorphButton() {
       <Pressable
         onPress={() =>
           setWord((w) =>
-            w === "Run Simulation" ? "Running Simulation" : "Run Simulation"
+            w === "Run Simulation" ? "Running Simulation" : "Run Simulation",
           )
         }
         style={{
@@ -910,11 +902,7 @@ Laminar already keeps animation work on the UI thread. Performance issues typica
 Use shorter durations for rapid values:
 
 ```tsx
-<Laminar
-  text={liveValue}
-  variant="number"
-  animationDuration={220}
-/>
+<Laminar text={liveValue} variant="number" animationDuration={220} />
 ```
 
 Disable autosize when a parent already defines the width:
@@ -928,12 +916,9 @@ Disable autosize when a parent already defines the width:
 Memoize expensive formatting:
 
 ```tsx
-const label = React.useMemo(
-  () => value.toLocaleString("en-US"),
-  [value]
-);
+const label = React.useMemo(() => value.toLocaleString("en-US"), [value]);
 
-<Laminar text={label} variant="number" />
+<Laminar text={label} variant="number" />;
 ```
 
 ### Measuring & Layout Computation
@@ -1044,11 +1029,11 @@ Practical rule:
 
 ### Animation Timing
 
-| Duration | Best For |
-| --- | --- |
-| `180ms - 260ms` | Rapid counters or live data |
+| Duration        | Best For                      |
+| --------------- | ----------------------------- |
+| `180ms - 260ms` | Rapid counters or live data   |
 | `300ms - 450ms` | Normal labels and button text |
-| `500ms - 700ms` | Expressive UI moments |
+| `500ms - 700ms` | Expressive UI moments         |
 
 ```tsx
 <Laminar text={label} animationDuration={380} />
@@ -1070,12 +1055,9 @@ Keep the `text` prop stable. A changing `key` forces a remount and destroys glyp
 Memoize expensive formatting so it does not re-run on every render:
 
 ```tsx
-const formattedPrice = React.useMemo(
-  () => `$${price.toFixed(2)}`,
-  [price]
-);
+const formattedPrice = React.useMemo(() => `$${price.toFixed(2)}`, [price]);
 
-<Laminar text={formattedPrice} variant="number" />
+<Laminar text={formattedPrice} variant="number" />;
 ```
 
 ---

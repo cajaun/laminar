@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Section as FormSection, Text as FormText } from "@/components/ui/form";
-import { Laminar } from "laminar";
+import { Laminar } from "react-native-laminar";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 import { PreviewStage } from "./demo-chrome";
 import type { DemoMetrics } from "./use-demo-metrics";
