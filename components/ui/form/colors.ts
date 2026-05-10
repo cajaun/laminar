@@ -1,0 +1,17 @@
+export const formColors = {
+  background: "#ffffff",
+  groupedBackground: "#f2f2f7",
+  groupedCard: "#ffffff",
+  sheetCard: "#f7f7f7",
+  text: "#111111",
+  textSecondary: "#6e6e73",
+  textTertiary: "#8e8e93",
+  placeholder: "#9a9aa0",
+  separator: "rgba(60, 60, 67, 0.18)",
+  pressed: "rgba(120, 120, 128, 0.16)",
+  fill: "rgba(120, 120, 128, 0.12)",
+  link: "#007aff",
+  green: "#34c759",
+  gray: "#8e8e93",
+  badge: "#0a84ff",
+} as const;
