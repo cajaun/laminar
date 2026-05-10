@@ -35,11 +35,21 @@ export function useDemoState(activePageIndex: number) {
   const buttonWord = buttonWords[buttonWordIndex];
   const numberValue = numericValues[numberIndex];
   const textIdentityWord = textIdentityWords[textIdentityIndex];
+  const previousTextIdentityWord =
+    textIdentityWords[stepBackward(textIdentityIndex, textIdentityWords.length)];
   const nextTextIdentityWord =
     textIdentityWords[stepForward(textIdentityIndex, textIdentityWords.length)];
   const numberLaneValue = numberLaneValues[numberLaneIndex];
   const animationLayerValue = animationLayerValues[animationLayerIndex];
+  const previousAnimationLayerValue =
+    animationLayerValues[stepBackward(animationLayerIndex, animationLayerValues.length)];
+  const nextAnimationLayerValue =
+    animationLayerValues[stepForward(animationLayerIndex, animationLayerValues.length)];
   const autoSizeValue = autoSizeValues[autoSizeIndex];
+  const previousAutoSizeValue =
+    autoSizeValues[stepBackward(autoSizeIndex, autoSizeValues.length)];
+  const nextAutoSizeValue =
+    autoSizeValues[stepForward(autoSizeIndex, autoSizeValues.length)];
   const previousNumberValue =
     numericValues[stepBackward(numberIndex, numericValues.length)];
   const nextNumberValue =
@@ -178,12 +188,17 @@ export function useDemoState(activePageIndex: number) {
       standaloneWord,
       buttonWord,
       textIdentityWord,
+      previousTextIdentityWord,
       nextTextIdentityWord,
       numberLaneValue,
       previousNumberLaneValue,
       nextNumberLaneValue,
       animationLayerValue,
+      previousAnimationLayerValue,
+      nextAnimationLayerValue,
       autoSizeValue,
+      previousAutoSizeValue,
+      nextAutoSizeValue,
       numberValue,
       previousNumberValue,
       nextNumberValue,
@@ -199,7 +214,11 @@ export function useDemoState(activePageIndex: number) {
     [
       activePageId,
       animationLayerValue,
+      previousAnimationLayerValue,
+      nextAnimationLayerValue,
       autoSizeValue,
+      previousAutoSizeValue,
+      nextAutoSizeValue,
       buttonWord,
       cycleButtonWord,
       cycleEditorWord,
@@ -212,6 +231,7 @@ export function useDemoState(activePageIndex: number) {
       fontWeight,
       morph,
       nextTextIdentityWord,
+      previousTextIdentityWord,
       nextNumberValue,
       nextNumberLaneValue,
       numberLaneValue,

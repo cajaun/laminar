@@ -1,12 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Text, View } from "react-native";
 import type { TextStyle } from "react-native";
-import Animated, {
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import { Section as FormSection, Text as FormText } from "@/components/ui/form";
 import { Laminar } from "react-native-laminar";
 import { PressableScale } from "@/shared/ui/pressable-scale";
@@ -113,203 +107,11 @@ function MechanismFrame({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
-function IdentityCell({
-  unit,
-  survives,
-  current,
-}: {
-  readonly unit: string;
-  readonly survives: boolean;
-  readonly current: boolean;
-}) {
-  const isEmpty = unit.length === 0;
-  const surviveProgress = useSharedValue(survives ? 1 : 0);
-  const currentProgress = useSharedValue(current ? 1 : 0);
-  const scaleProgress = useSharedValue(isEmpty ? 0 : 1);
 
-  useEffect(() => {
-    surviveProgress.value = withTiming(survives ? 1 : 0, {
-      duration: identityColorDurationMs,
-    });
-  }, [survives, surviveProgress]);
-
-  useEffect(() => {
-    currentProgress.value = withTiming(current ? 1 : 0, {
-      duration: identityColorDurationMs,
-    });
-  }, [current, currentProgress]);
-
-  useEffect(() => {
-    scaleProgress.value = withTiming(isEmpty ? 0 : 1, {
-      duration: identityColorDurationMs,
-    });
-  }, [isEmpty, scaleProgress]);
-
-  const animatedCellStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(
-      surviveProgress.value,
-      [0, 1],
-      ["#d1d1d6", teachingBlue]
-    ),
-    backgroundColor: interpolateColor(
-      surviveProgress.value,
-      [0, 1],
-      ["#f2f2f7", "#f7fbff"]
-    ),
-    transform: [{ scale: 0.72 + scaleProgress.value * 0.28 }],
-    opacity: scaleProgress.value,
-  }));
-
-  const animatedTextStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      surviveProgress.value,
-      [0, 1],
-      ["#636366", teachingBlue]
-    ),
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        {
-          width: 34,
-          height: 37,
-          borderRadius: 10,
-          borderWidth: 1.5,
-          borderStyle: "solid",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-        },
-        animatedCellStyle,
-      ]}
-    >
-      <Animated.Text
-        style={[
-          {
-            fontFamily: "Sf-semibold",
-            fontSize: 18,
-            textAlign: "center",
-            width: 34,
-          },
-          animatedTextStyle,
-        ]}
-      >
-        {unit}
-      </Animated.Text>
-    </Animated.View>
-  );
+function NoLcsLaminar(props: React.ComponentProps<typeof Laminar>) {
+  return <Laminar key={String(props.text)} {...props} />;
 }
 
-function computeSharedUnitIndexes(fromValue: string, toValue: string) {
-  const fromUnits = fromValue.split("");
-  const toUnits = toValue.split("");
-  const usedToIndexes = new Set<number>();
-  const fromIndexes = new Set<number>();
-  const toIndexes = new Set<number>();
-
-  fromUnits.forEach((unit, fromIndex) => {
-    const toIndex = toUnits.findIndex(
-      (nextUnit, candidateIndex) =>
-        nextUnit === unit && !usedToIndexes.has(candidateIndex)
-    );
-
-    if (toIndex >= 0) {
-      usedToIndexes.add(toIndex);
-      fromIndexes.add(fromIndex);
-      toIndexes.add(toIndex);
-    }
-  });
-
-  return { fromIndexes, toIndexes };
-}
-
-function padUnits(value: string, length: number) {
-  const units = value.split("");
-  return [
-    ...units,
-    ...Array<string>(Math.max(0, length - units.length)).fill(""),
-  ].slice(0, length);
-}
-
-function IdentityMap({
-  value,
-  nextValue,
-}: {
-  readonly value: string;
-  readonly nextValue: string;
-}) {
-  const cellCount = 7;
-  const sharedIndexes = React.useMemo(
-    () => computeSharedUnitIndexes(value, nextValue),
-    [nextValue, value]
-  );
-  const rows = [
-    {
-      label: "now",
-      units: padUnits(value, cellCount),
-      survivors: sharedIndexes.fromIndexes,
-      current: true,
-    },
-    {
-      label: "next",
-      units: padUnits(nextValue, cellCount),
-      survivors: sharedIndexes.toIndexes,
-      current: false,
-    },
-  ] as const;
-
-  return (
-    <MechanismFrame>
-      <View style={{ gap: 7 }}>
-        {rows.map((row) => (
-          <View
-            key={row.label}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-            }}
-          >
-            <Animated.Text
-              style={{
-                width: 32,
-                color: "#8e8e93",
-                fontFamily: "Sf-semibold",
-                fontSize: 15,
-                textAlign: "right",
-              }}
-            >
-              {row.label}
-            </Animated.Text>
-            {row.units.map((unit, index) => {
-              return (
-                <IdentityCell
-                  key={`${row.label}:slot:${index}`}
-                  unit={unit}
-                  current={row.current}
-                  survives={row.survivors.has(index)}
-                />
-              );
-            })}
-          </View>
-        ))}
-      </View>
-      <Text
-        style={{
-          marginTop: 8,
-          color: "#8e8e93",
-          fontFamily: "Sf-semibold",
-          fontSize: 15,
-          textAlign: "center",
-        }}
-      >
-        solid blue glyphs keep their keys
-      </Text>
-    </MechanismFrame>
-  );
-}
 
 function readLaneUnits(value: string) {
   const lead = value.match(/^\D*/)?.[0] ?? "";
@@ -413,107 +215,8 @@ function LaneStrip({ value }: { readonly value: string }) {
   );
 }
 
-function ProbeTokenDiagram({ value }: { readonly value: string }) {
-  return (
-    <MechanismFrame>
-      <View style={{ gap: 8, alignItems: "center" }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <Text
-            style={{
-              width: 48,
-              color: teachingBlue,
-              fontFamily: "Sf-semibold",
-              fontSize: 17,
-              textAlign: "right",
-            }}
-          >
-            space
-          </Text>
-          <View
-            style={{
-              width: 74,
-              height: 42,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: teachingBlue,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "#f7fbff",
-            }}
-          >
-            <Text
-              style={{
-                color: "#c7c7cc",
-                fontFamily: "Sf-semibold",
-                fontSize: 20,
-                fontVariant: ["tabular-nums"],
-              }}
-            >
-              {value}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-          }}
-        >
-          <Text
-            style={{
-              width: 48,
-              color: "#8e8e93",
-              fontFamily: "Sf-semibold",
-              fontSize: 17,
-              textAlign: "right",
-            }}
-          >
-            digit
-          </Text>
-          <View
-            style={{
-              width: 74,
-              height: 42,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: "#d1d1d6",
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Laminar
-              text={value}
-              variant="number"
-              animationDuration={teachingDurationMs}
-              animationPreset="default"
-              autoSize={false}
-              clipToBounds={false}
-              fontSize={30}
-              stagger={0}
-              containerStyle={{ alignSelf: "center" }}
-              style={{
-                color: "#000000",
-                fontFamily: "Sf-semibold",
-                fontSize: 30,
-                fontVariant: ["tabular-nums"],
-                textAlign: "center",
-              }}
-            />
-          </View>
-        </View>
-      </View>
-    </MechanismFrame>
-  );
+function NoProbeDigit({ value }: { readonly value: string }) {
+  return <Laminar key={value} text={value} variant="text" animationDuration={teachingDurationMs} animationPreset="default" autoSize clipToBounds={false} fontSize={62} stagger={0} containerStyle={{ alignSelf: "center" }} style={[showcaseTextStyle, { fontSize: 62, fontVariant: ["tabular-nums"] }]} />;
 }
 
 function AutoSizeComparison({ value }: { readonly value: string }) {
@@ -588,11 +291,33 @@ export function TextIdentityDemoPage({ metrics, state }: DemoPageProps) {
           containerStyle={{ alignSelf: "center" }}
           style={[showcaseTextStyle, { fontSize: 56 }]}
         />
-        <TeachingLabel>stable keys keep matching glyphs alive</TeachingLabel>
-        <IdentityMap
-          value={state.textIdentityWord}
-          nextValue={state.nextTextIdentityWord}
-        />
+        <TeachingLabel>matching glyphs hold position with LCS</TeachingLabel>
+        <MechanismFrame>
+          <Text
+            style={{
+              color: "#8e8e93",
+              fontFamily: "Sf-semibold",
+              fontSize: 13,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              textAlign: "center",
+              marginBottom: 8,
+            }}
+          >
+            without LCS
+          </Text>
+          <NoLcsLaminar
+            text={state.textIdentityWord}
+            animationDuration={teachingDurationMs}
+            animationPreset="default"
+            autoSize
+            clipToBounds={false}
+            fontSize={56}
+            stagger={0.04}
+            containerStyle={{ alignSelf: "center" }}
+            style={[showcaseTextStyle, { fontSize: 56 }]}
+          />
+        </MechanismFrame>
       </PreviewStage>
 
       <View style={{ flex: 1 }} />
@@ -644,8 +369,8 @@ export function NumberIdentityDemoPage({ metrics, state }: DemoPageProps) {
           value: state.numberLaneValue,
           onPress: state.morph,
         })}
-        {settingsRow({ label: "Reverse", value: state.previousNumberLaneValue })}
-        {settingsRow({ label: "Morph", value: state.nextNumberLaneValue })}
+        {settingsRow({ label: "Direction", value: "Up / Down" })}
+        {settingsRow({ label: "Lanes", value: "Fixed width" })}
       </SettingsSection>
     </>
   );
@@ -655,26 +380,64 @@ export function AnimationLayerDemoPage({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
-        <Laminar
-          text={state.animationLayerValue}
-          variant="number"
-          animationDuration={teachingDurationMs}
-          animationPreset="default"
-          autoSize
-          clipToBounds={false}
-          fontSize={62}
-          stagger={0}
-          containerStyle={{ alignSelf: "center" }}
-          style={[
-            showcaseTextStyle,
-            {
-              fontSize: 62,
-              fontVariant: ["tabular-nums"],
-            },
-          ]}
-        />
-        <TeachingLabel>the dashed space stays fixed</TeachingLabel>
-        <ProbeTokenDiagram value={state.animationLayerValue} />
+        <View
+          style={{
+            borderWidth: 1.5,
+            borderStyle: "dashed",
+            borderColor: teachingBlue,
+            borderRadius: 16,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            backgroundColor: "#f7fbff",
+          }}
+        >
+          <Laminar
+            text={state.animationLayerValue}
+            variant="number"
+            animationDuration={teachingDurationMs}
+            animationPreset="default"
+            autoSize
+            clipToBounds={false}
+            fontSize={62}
+            stagger={0}
+            containerStyle={{ alignSelf: "center" }}
+            style={[
+              showcaseTextStyle,
+              {
+                fontSize: 62,
+                fontVariant: ["tabular-nums"],
+              },
+            ]}
+          />
+        </View>
+        <TeachingLabel>probe token holds the lane width during swap</TeachingLabel>
+        <MechanismFrame>
+          <Text
+            style={{
+              color: "#8e8e93",
+              fontFamily: "Sf-semibold",
+              fontSize: 13,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
+              textAlign: "center",
+              marginBottom: 8,
+            }}
+          >
+            without probe
+          </Text>
+          <View
+            style={{
+              borderWidth: 1.5,
+              borderStyle: "dashed",
+              borderColor: "#c7c7cc",
+              borderRadius: 16,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+            }}
+          >
+            <NoProbeDigit value={state.animationLayerValue} />
+          </View>
+        </MechanismFrame>
       </PreviewStage>
 
       <View style={{ flex: 1 }} />
