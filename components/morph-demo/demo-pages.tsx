@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import type { TextStyle } from "react-native";
 import Animated, {
@@ -127,19 +127,19 @@ function IdentityCell({
   const currentProgress = useSharedValue(current ? 1 : 0);
   const visibleProgress = useSharedValue(isEmpty ? 0 : 1);
 
-  React.useEffect(() => {
+  useEffect(() => {
     surviveProgress.value = withTiming(survives ? 1 : 0, {
       duration: identityColorDurationMs,
     });
   }, [survives, surviveProgress]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     currentProgress.value = withTiming(current ? 1 : 0, {
       duration: identityColorDurationMs,
     });
   }, [current, currentProgress]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     visibleProgress.value = withTiming(isEmpty ? 0 : 1, {
       duration: identityColorDurationMs,
     });
@@ -827,7 +827,7 @@ export function ButtonDemoPage({ metrics, state }: DemoPageProps) {
             alignSelf: "center",
             minHeight: state.fontSize * 1.42,
             borderRadius: 36,
-            backgroundColor: "#7ce2fe",
+            backgroundColor: "#007aff",
             paddingHorizontal: state.fontSize * 0.72,
             paddingVertical: state.fontSize * 0.22,
             alignItems: "center",

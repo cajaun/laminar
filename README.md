@@ -718,7 +718,7 @@ Words: `Run Simulation`, `Running Simulation`, `Simulation Done!`.
 
 Currency values morphing with `variant="number"` and the `snappy` preset. The settings panel shows the current value, the previous value, and the next value so the direction of each transition is clear.
 
-Values: `$35.99`, `$24.89`, `$17.38`, `$3.15`.
+Values: `$1,234`, `$12,345`, `$1,089`, `$980`.
 
 [demo]
 

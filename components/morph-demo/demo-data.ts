@@ -24,13 +24,13 @@ export const standaloneWords = [
   "Linear",
   "Layer",
 ] as const;
-export const buttonWords = ["Run Simulation", "Running Simulation", "Simulation Done!"] as const;
+export const buttonWords = ["Send Request", "Sending Request", "Request Sent!"] as const;
 // export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
-export const numericValues = ["$35.99", "$24.89", "$17.38", "$3.15"] as const;
+export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
-export const numberLaneValues = ["$1,234", "$12,345", "$9,876"] as const;
+export const numberLaneValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const animationLayerValues = ["4", "9", "2", "7"] as const;
-export const autoSizeValues = ["Run Simulation", "Running Simulation", "Simulation Done!"] as const;
+export const autoSizeValues = ["Send Request", "Sending Request", "Request Sent!"] as const;
 
 export const examplePages = [
   { id: "textIdentity", label: "Text Identity" },
