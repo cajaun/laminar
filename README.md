@@ -4,7 +4,7 @@ Laminar is a React Native animation system for morphing text and numeric strings
 
 Every changing label has two jobs: show the next value, and preserve enough visual continuity that the user understands how the old value became the new one. A normal React render only solves the first job. If a string changes from `Laminar` to `Linear`, React renders `Linear`, but it has no information about which letters should stay mounted, which should fade out, and which should enter. Laminar adds that layer.
 
-[demo]
+https://github.com/user-attachments/assets/d43bf136-de72-4973-a32c-8e283716ba59
 
 ---
 
@@ -150,7 +150,8 @@ export default function Example() {
 }
 ```
 
-[demo]
+https://github.com/user-attachments/assets/d43bf136-de72-4973-a32c-8e283716ba59
+
 
 ### Numeric Counter
 
@@ -177,7 +178,7 @@ export default function Counter() {
 }
 ```
 
-[demo]
+https://github.com/user-attachments/assets/1c841f55-1aaa-4f44-a868-46ec52a38b1f
 
 ### With Auto-Sizing
 
@@ -189,6 +190,9 @@ export default function Counter() {
   style={{ color: "#ffffff", fontFamily: "Sf-semibold" }}
 />
 ```
+
+https://github.com/user-attachments/assets/0a1ff15f-f7bf-4303-b33f-272d92e42872
+
 
 `autoSize` defaults to `true`. The component measures the final text with a hidden probe and animates the outer width toward that measurement. The container grows and shrinks without layout feedback loops.
 
@@ -304,7 +308,6 @@ Render consequence:
 - New units receive new keys and enter with fade and offset.
 - Removed units exit because their keys disappear from the next render.
 
-[demo]
 
 ### Digit Lane System
 
@@ -346,7 +349,6 @@ Practical result:
 
 Currency symbols, commas, and decimal points are handled. Direction is inferred by stripping non-numeric characters and comparing the parsed values.
 
-[demo]
 
 ### Auto-Sizing
 
@@ -392,7 +394,6 @@ The autosize target is stable because it comes from final text, not from the gly
 
 `autoSize={true}` and `autoSize={false}` solve different layout problems and do not feel identical.
 
-[demo]
 
 ### Motion Control & Presets
 
@@ -664,7 +665,6 @@ Shows a text morph at slow speed so the LCS mechanism is easy to observe. Below 
 
 Values: `Laminar`, `Lamina`, `Linear`.
 
-[demo]
 
 ### Number Identity
 
@@ -672,7 +672,6 @@ Shows a numeric morph with a lane strip below it. The strip has one fixed cell p
 
 Values: `$1,234`, `$12,345`, `$9,876`.
 
-[demo]
 
 ### Animation Layer
 
@@ -680,7 +679,6 @@ Shows a single digit morphing. Below the preview, two rows show the two animatio
 
 Values: `4`, `9`, `2`, `7`.
 
-[demo]
 
 ### Auto Size
 
@@ -688,7 +686,6 @@ Shows a string inside a dashed blue border. The border resizes with the text bec
 
 Values: `Run Simulation`, `Running Simulation`, `Simulation Done!`.
 
-[demo]
 
 ### Editor
 
@@ -696,7 +693,6 @@ A page for exploring arbitrary word and style combinations. The settings panel l
 
 Words: `Laminar`, `Linear`. Font sizes: 32pt, 40pt, 48pt. Font weights: Regular, Semibold, Bold.
 
-[demo]
 
 ### Words
 
@@ -704,7 +700,6 @@ Standalone text morphing without a containing surface. `autoSize={false}` so no 
 
 Words: `Laminar`, `Lamina`, `Linear`, `Layer`.
 
-[demo]
 
 ### Button
 
@@ -712,7 +707,6 @@ Text morphing inside a pressable button with `autoSize={true}`. The button grows
 
 Words: `Run Simulation`, `Running Simulation`, `Simulation Done!`.
 
-[demo]
 
 ### Numbers
 
@@ -720,7 +714,6 @@ Currency values morphing with `variant="number"` and the `snappy` preset. The se
 
 Values: `$1,234`, `$12,345`, `$1,089`, `$980`.
 
-[demo]
 
 ### Carousel & Pagination
 
@@ -786,8 +779,6 @@ export default function BasicTextAnimation() {
 }
 ```
 
-[demo]
-
 ### Numeric Counter
 
 ```tsx
@@ -813,7 +804,6 @@ export default function NumericCounter() {
 }
 ```
 
-[demo]
 
 ### Auto-Sizing Inside a Button
 
@@ -856,7 +846,6 @@ export default function MorphButton() {
 }
 ```
 
-[demo]
 
 ### Standalone Text Without Auto-Sizing
 
