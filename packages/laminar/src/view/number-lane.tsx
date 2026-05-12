@@ -30,6 +30,7 @@ type NumberLaneProps = {
   readonly travelDistance: number;
   readonly motionRecipe: MotionRecipe;
   readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
 };
 
 export const NumberLane = React.memo(
@@ -43,6 +44,7 @@ export const NumberLane = React.memo(
     travelDistance,
     motionRecipe,
     textStyle,
+    className,
   }: NumberLaneProps) => {
     const usesDigitTravel = isAsciiDigit(unit);
     const verticalOffset =
@@ -97,7 +99,7 @@ export const NumberLane = React.memo(
     );
 
     if (isLead) {
-      return <Text style={textStyle}>{unit}</Text>;
+      return <Text style={textStyle} className={className}>{unit}</Text>;
     }
 
     return (
@@ -117,6 +119,7 @@ export const NumberLane = React.memo(
           entering={hasAnimated ? enterTransition : undefined}
           exiting={exitTransition}
           style={[textStyle, laneTokenStyle]}
+          className={className}
         >
           {unit}
         </Animated.Text>

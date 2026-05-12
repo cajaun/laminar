@@ -16,6 +16,7 @@ type NumberRunProps = {
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
+  readonly className?: string;
 };
 
 export const NumberRun = React.memo(
@@ -25,6 +26,7 @@ export const NumberRun = React.memo(
     fontSize,
     textStyle,
     staggerMs,
+    className,
   }: Readonly<NumberRunProps>) => {
     const { units, laneKeys, direction, leadLength } = useNumericLanes(value);
     const lastValueRef = useRef(value);
@@ -62,6 +64,7 @@ export const NumberRun = React.memo(
               travelDistance={travelDistance}
               motionRecipe={motionRecipe}
               textStyle={textStyle}
+              className={className}
             />
           );
         })}

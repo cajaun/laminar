@@ -17,6 +17,7 @@ export const Laminar = React.memo(function Laminar({
     variant = "text",
     fontSize,
     color,
+    className,
     style,
     containerStyle,
     fontStyle,
@@ -75,12 +76,14 @@ export const Laminar = React.memo(function Laminar({
             fontSize={fontSize}
             textStyle={textStyle}
             staggerMs={staggerMs}
+            className={className}
           />
         ) : (
           <TextRun
             value={resolvedValue}
             motionRecipe={motionRecipe}
             textStyle={textStyle}
+            className={className}
           />
       )}
     </MorphViewport>

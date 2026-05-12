@@ -47,6 +47,7 @@ export type MorphingTextProps = {
   readonly variant?: MorphContentVariant;
   readonly fontSize?: number;
   readonly color?: string;
+  readonly className?: string;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly fontStyle?: StyleProp<TextStyle>;

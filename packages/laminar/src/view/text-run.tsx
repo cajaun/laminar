@@ -8,10 +8,11 @@ type TextRunProps = {
   readonly value: string;
   readonly motionRecipe: MotionRecipe;
   readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
 };
 
 export const TextRun = React.memo(
-  ({ value, motionRecipe, textStyle }: TextRunProps) => {
+  ({ value, motionRecipe, textStyle, className }: TextRunProps) => {
     // namespace ids per instance so repeated strings do not collide
     const scopeId = useId();
     const glyphs = useTextGlyphs(value, scopeId);
@@ -32,6 +33,7 @@ export const TextRun = React.memo(
         }
         exitTransition={motionRecipe.exitTransition}
         textStyle={textStyle}
+        className={className}
       />
     );
   }
