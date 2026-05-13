@@ -12,6 +12,7 @@ export type MorphAnimationPresetName =
   | "bouncy";
 
 export type MorphContentVariant = "text" | "number";
+export type LaminarAlign = "left" | "center" | "right";
 
 type CubicBezierTuple = readonly [number, number, number, number];
 
@@ -47,6 +48,7 @@ export type MorphingTextProps = {
   readonly variant?: MorphContentVariant;
   readonly fontSize?: number;
   readonly color?: string;
+  readonly align?: LaminarAlign;
   readonly className?: string;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;

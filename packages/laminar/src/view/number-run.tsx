@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { type StyleProp, type TextStyle, View } from "react-native";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
-import type { MotionRecipe } from "../types";
+import type { LaminarAlign, MotionRecipe } from "../types";
 import { NumberLane } from "./number-lane";
 
 const rowStyle = {
@@ -10,9 +10,16 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
+const rowAlignStyles = {
+  left: { alignSelf: "flex-start" },
+  center: { alignSelf: "center" },
+  right: { alignSelf: "flex-end" },
+} as const;
+
 type NumberRunProps = {
   readonly value: string;
   readonly motionRecipe: MotionRecipe;
+  readonly align: LaminarAlign;
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
@@ -23,6 +30,7 @@ export const NumberRun = React.memo(
   ({
     value,
     motionRecipe,
+    align,
     fontSize,
     textStyle,
     staggerMs,
@@ -45,7 +53,7 @@ export const NumberRun = React.memo(
     const hasAnimated = hasAnimatedRef.current;
 
     return (
-      <View style={rowStyle}>
+      <View style={[rowStyle, rowAlignStyles[align]]}>
         {units.map((unit, index) => {
           const inLead = index < leadLength;
           const laneKey = inLead

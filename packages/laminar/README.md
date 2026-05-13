@@ -86,6 +86,31 @@ export default function Counter() {
 </Pressable>
 ```
 
+### Centered text in a fixed-width container
+
+Use `align` when the parent owns the width and Laminar should place the animated row inside that space.
+
+```tsx
+<Pressable
+  style={{
+    width: "100%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 25,
+    backgroundColor: "#000000",
+  }}
+>
+  <Laminar
+    text={isFinished ? "Continue and Finish" : "Continue"}
+    align="center"
+    autoSize={false}
+    containerStyle={{ width: "100%" }}
+    style={{ color: "#ffffff", fontSize: 24, fontWeight: "700" }}
+  />
+</Pressable>
+```
+
 `autoSize` (default `true`) animates the outer container width toward the measured final text width. The button grows and shrinks without layout feedback loops.
 
 ### Standalone word without auto-sizing
@@ -93,6 +118,7 @@ export default function Counter() {
 ```tsx
 <Laminar
   text={word}
+  align="center"
   autoSize={false}
   fontSize={40}
   style={{ color: "#000000" }}
@@ -111,6 +137,7 @@ type LaminarProps = {
   variant?: "text" | "number";
   fontSize?: number;
   color?: string;
+  align?: "left" | "center" | "right";
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   fontStyle?: StyleProp<TextStyle>;
@@ -128,8 +155,9 @@ type LaminarProps = {
 | `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
+| `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
-| `containerStyle`    | Undefined                                   | Style for the outer viewport shell. Use for placement and alignment.               |
+| `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
 | `animationDuration` | Preset default                              | Duration override in milliseconds.                                                 |
 | `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe.                                                               |
@@ -175,6 +203,15 @@ type LaminarProps = {
 - Buttons, chips, badges → `autoSize={true}`
 - Standalone centered words → `autoSize={false}`
 - Fixed-width counters → `autoSize={false}`
+
+**Use `align` for visual alignment.**
+
+```tsx
+<Laminar text={word} align="center" autoSize={false} />
+<Laminar text={price} variant="number" align="right" autoSize={false} />
+```
+
+Use `containerStyle` only when you need lower-level control over the outer viewport.
 
 **Match formatting across renders for numbers.**
 

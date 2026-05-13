@@ -464,6 +464,7 @@ type LaminarProps = {
   variant?: "text" | "number";
   fontSize?: number;
   color?: string;
+  align?: "left" | "center" | "right";
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   fontStyle?: StyleProp<TextStyle>;
@@ -483,8 +484,9 @@ type LaminarProps = {
 | `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
 | `fontSize`          | Undefined                                   | Text size convenience prop, merged into the text style.                            |
 | `color`             | Undefined                                   | Text color convenience prop, merged into the text style.                           |
+| `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
-| `containerStyle`    | Undefined                                   | Style for the outer viewport shell. Use for placement and alignment.               |
+| `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
 | `animationDuration` | Preset duration                             | Duration override in milliseconds.                                                 |
 | `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe.                                                               |
@@ -553,17 +555,17 @@ Style merge order:
 3. `fontStyle`.
 4. `style`.
 
-#### Container Styling
+#### Alignment
 
 ```tsx
 <Laminar
   text={label}
-  containerStyle={{ alignSelf: "center" }}
+  align="center"
   style={{ color: "#ffffff", fontSize: 24 }}
 />
 ```
 
-`containerStyle` controls placement. `style` controls text appearance.
+`align` controls Laminar's visual placement. `containerStyle` is available for advanced viewport overrides, and `style` controls text appearance.
 
 ---
 
@@ -1005,8 +1007,15 @@ Use `autoSize={false}` when the parent already defines the space:
 
 ```tsx
 <View style={{ width: 220, alignItems: "center" }}>
-  <Laminar text={label} autoSize={false} />
+  <Laminar text={label} align="center" autoSize={false} />
 </View>
+```
+
+Use `align` for visual alignment:
+
+```tsx
+<Laminar text={word} align="center" autoSize={false} />
+<Laminar text={price} variant="number" align="right" autoSize={false} />
 ```
 
 Practical rule:

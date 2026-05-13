@@ -5,12 +5,18 @@ import type {
   ComplexAnimationBuilder,
   EntryExitAnimationFunction,
 } from "react-native-reanimated";
-import type { GlyphToken } from "../types";
+import type { GlyphToken, LaminarAlign } from "../types";
 
 const rowStyle = {
   flexDirection: "row",
   alignItems: "center",
   alignSelf: "flex-start",
+} as const;
+
+const rowAlignStyles = {
+  left: { alignSelf: "flex-start" },
+  center: { alignSelf: "center" },
+  right: { alignSelf: "flex-end" },
 } as const;
 
 export const GlyphRun = React.memo(
@@ -19,6 +25,7 @@ export const GlyphRun = React.memo(
     layoutTransition,
     enterTransition,
     exitTransition,
+    align,
     textStyle,
     className,
   }: Readonly<{
@@ -26,10 +33,11 @@ export const GlyphRun = React.memo(
     layoutTransition: ComplexAnimationBuilder;
     enterTransition?: EntryExitAnimationFunction;
     exitTransition?: EntryExitAnimationFunction;
+    align: LaminarAlign;
     textStyle?: StyleProp<TextStyle>;
     className?: string;
   }>) => (
-      <View style={rowStyle}>
+      <View style={[rowStyle, rowAlignStyles[align]]}>
         {/* glyph ids decide what swaps, layout handles the row reflow */}
         {glyphs.map((glyph) => (
           <Animated.Text

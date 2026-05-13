@@ -17,6 +17,7 @@ export const Laminar = React.memo(function Laminar({
     variant = "text",
     fontSize,
     color,
+    align = "left",
     className,
     style,
     containerStyle,
@@ -57,6 +58,7 @@ export const Laminar = React.memo(function Laminar({
       <MorphViewport
         autoSize={autoSize}
         clipToBounds={clipToBounds}
+        align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
         measurement={
@@ -73,6 +75,7 @@ export const Laminar = React.memo(function Laminar({
           <NumberRun
             value={resolvedValue}
             motionRecipe={motionRecipe}
+            align={align}
             fontSize={fontSize}
             textStyle={textStyle}
             staggerMs={staggerMs}
@@ -82,6 +85,7 @@ export const Laminar = React.memo(function Laminar({
           <TextRun
             value={resolvedValue}
             motionRecipe={motionRecipe}
+            align={align}
             textStyle={textStyle}
             className={className}
           />
@@ -94,6 +98,7 @@ export const MorphingText = Laminar;
 
 export default Laminar;
 export type {
+  LaminarAlign,
   LaminarProps,
   MorphAnimationPresetName,
   MorphContentVariant,

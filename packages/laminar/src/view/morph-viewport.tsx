@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import type { LaminarAlign } from "../types";
 
 const shellStyle = {
   position: "relative",
@@ -29,9 +30,26 @@ const unclippedViewportStyle: ViewStyle = {
   overflow: "visible",
 };
 
+const fullWidthViewportStyle: ViewStyle = {
+  width: "100%",
+};
+
+const shellAlignStyles: Record<LaminarAlign, ViewStyle> = {
+  left: { alignSelf: "flex-start" },
+  center: { alignSelf: "center" },
+  right: { alignSelf: "flex-end" },
+};
+
+const viewportAlignStyles: Record<LaminarAlign, ViewStyle> = {
+  left: { alignItems: "flex-start" },
+  center: { alignItems: "center" },
+  right: { alignItems: "flex-end" },
+};
+
 type MorphViewportProps = {
   readonly autoSize: boolean;
   readonly clipToBounds: boolean;
+  readonly align: LaminarAlign;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
   readonly measurement?: React.ReactNode;
@@ -42,6 +60,7 @@ export const MorphViewport = React.memo(
   ({
     autoSize,
     clipToBounds,
+    align,
     containerStyle,
     animatedWidthStyle,
     measurement,
@@ -50,13 +69,14 @@ export const MorphViewport = React.memo(
     const resolvedViewportStyle = useMemo(
       () => [
         viewportStyle,
+        viewportAlignStyles[align],
         clipToBounds ? clippedViewportStyle : unclippedViewportStyle,
       ],
-      [clipToBounds]
+      [align, clipToBounds]
     );
 
     return (
-      <View style={[shellStyle, containerStyle]}>
+      <View style={[shellStyle, shellAlignStyles[align], containerStyle]}>
         {autoSize ? (
           <>
             <View
@@ -73,7 +93,9 @@ export const MorphViewport = React.memo(
             </Animated.View>
           </>
         ) : (
-          <View style={resolvedViewportStyle}>{children}</View>
+          <View style={[resolvedViewportStyle, fullWidthViewportStyle]}>
+            {children}
+          </View>
         )}
       </View>
     );
