@@ -11,7 +11,7 @@ export type MorphAnimationPresetName =
   | "snappy"
   | "bouncy";
 
-export type MorphContentVariant = "text" | "number";
+export type MorphContentVariant = "text" | "number" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
 
 type CubicBezierTuple = readonly [number, number, number, number];

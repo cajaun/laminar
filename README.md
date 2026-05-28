@@ -461,7 +461,7 @@ import { MorphingText } from "react-native-laminar";
 ```ts
 type LaminarProps = {
   text: string | number;
-  variant?: "text" | "number";
+  variant?: "text" | "number" | "slots";
   fontSize?: number;
   color?: string;
   align?: "left" | "center" | "right";
@@ -481,7 +481,7 @@ type LaminarProps = {
 | Prop                | Default                                     | Meaning                                                                            |
 | ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `text`              | Required                                    | The value to render and animate. Numbers are converted to strings internally.      |
-| `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
+| `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. `"slots"` rolls digits through slot columns using the same lanes. |
 | `fontSize`          | Undefined                                   | Text size convenience prop, merged into the text style.                            |
 | `color`             | Undefined                                   | Text color convenience prop, merged into the text style.                           |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
@@ -514,6 +514,21 @@ type LaminarProps = {
 <Laminar
   text="$1,234"
   variant="number"
+  fontSize={32}
+  animationPreset="snappy"
+  style={{
+    color: "#000000",
+    fontVariant: ["tabular-nums"],
+  }}
+/>
+```
+
+#### Slots Example
+
+```tsx
+<Laminar
+  text="$1,234"
+  variant="slots"
   fontSize={32}
   animationPreset="snappy"
   style={{

@@ -27,6 +27,12 @@ export const standaloneWords = [
 export const buttonWords = ["Send Request", "Sending Request", "Request Sent!"] as const;
 // export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
+export const slotValues = [
+  "$0.08",
+  "$147.29",
+  "$2,943.61",
+  "$12,884.90"
+] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
 export const numberLaneValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const animationLayerValues = ["4", "9", "2", "7"] as const;
@@ -37,10 +43,12 @@ export const examplePages = [
   { id: "numberIdentity", label: "Number Identity" },
   { id: "animationLayer", label: "Animation Layer" },
   { id: "autoSize", label: "Auto Size" },
+  { id: "slots", label: "Slots" },
   { id: "editor", label: "Editor" },
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },
   { id: "numbers", label: "Numbers" },
+  { id: "slotValues", label: "Slot Values" },
 ] as const;
 
 export const carouselItems: CarouselItem[] = examplePages.map(

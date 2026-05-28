@@ -9,6 +9,7 @@ import {
   fontWeights,
   numericValues,
   numberLaneValues,
+  slotValues,
   standaloneWords,
   stepBackward,
   stepForward,
@@ -22,6 +23,7 @@ export function useDemoState(activePageIndex: number) {
   const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
   const [buttonWordIndex, setButtonWordIndex] = useState(0);
   const [numberIndex, setNumberIndex] = useState(0);
+  const [slotIndex, setSlotIndex] = useState(0);
   const [textIdentityIndex, setTextIdentityIndex] = useState(0);
   const [numberLaneIndex, setNumberLaneIndex] = useState(0);
   const [animationLayerIndex, setAnimationLayerIndex] = useState(0);
@@ -34,6 +36,7 @@ export function useDemoState(activePageIndex: number) {
   const standaloneWord = standaloneWords[standaloneWordIndex];
   const buttonWord = buttonWords[buttonWordIndex];
   const numberValue = numericValues[numberIndex];
+  const slotValue = slotValues[slotIndex];
   const textIdentityWord = textIdentityWords[textIdentityIndex];
   const previousTextIdentityWord =
     textIdentityWords[stepBackward(textIdentityIndex, textIdentityWords.length)];
@@ -54,6 +57,10 @@ export function useDemoState(activePageIndex: number) {
     numericValues[stepBackward(numberIndex, numericValues.length)];
   const nextNumberValue =
     numericValues[stepForward(numberIndex, numericValues.length)];
+  const previousSlotValue =
+    slotValues[stepBackward(slotIndex, slotValues.length)];
+  const nextSlotValue =
+    slotValues[stepForward(slotIndex, slotValues.length)];
   const previousNumberLaneValue =
     numberLaneValues[stepBackward(numberLaneIndex, numberLaneValues.length)];
   const nextNumberLaneValue =
@@ -83,6 +90,10 @@ export function useDemoState(activePageIndex: number) {
 
   const cycleNumber = useCallback(() => {
     setNumberIndex((index) => stepForward(index, numericValues.length));
+  }, []);
+
+  const cycleSlots = useCallback(() => {
+    setSlotIndex((index) => stepForward(index, slotValues.length));
   }, []);
 
   const morph = useCallback(() => {
@@ -126,6 +137,16 @@ export function useDemoState(activePageIndex: number) {
 
     if (activePageId === "button") {
       setButtonWordIndex((index) => stepForward(index, buttonWords.length));
+      return;
+    }
+
+    if (activePageId === "slots") {
+      setNumberIndex((index) => stepForward(index, numericValues.length));
+      return;
+    }
+
+    if (activePageId === "slotValues") {
+      setSlotIndex((index) => stepForward(index, slotValues.length));
       return;
     }
 
@@ -176,6 +197,16 @@ export function useDemoState(activePageIndex: number) {
       return;
     }
 
+    if (activePageId === "slots") {
+      setNumberIndex((index) => stepBackward(index, numericValues.length));
+      return;
+    }
+
+    if (activePageId === "slotValues") {
+      setSlotIndex((index) => stepBackward(index, slotValues.length));
+      return;
+    }
+
     setNumberIndex((index) => stepBackward(index, numericValues.length));
   }, [activePageId]);
 
@@ -202,12 +233,16 @@ export function useDemoState(activePageIndex: number) {
       numberValue,
       previousNumberValue,
       nextNumberValue,
+      slotValue,
+      previousSlotValue,
+      nextSlotValue,
       cycleFontSize,
       cycleFontWeight,
       cycleEditorWord,
       cycleStandaloneWord,
       cycleButtonWord,
       cycleNumber,
+      cycleSlots,
       morph,
       reverse,
     }),
@@ -225,6 +260,7 @@ export function useDemoState(activePageIndex: number) {
       cycleFontSize,
       cycleFontWeight,
       cycleNumber,
+      cycleSlots,
       cycleStandaloneWord,
       editorWord,
       fontSize,
@@ -236,9 +272,12 @@ export function useDemoState(activePageIndex: number) {
       nextNumberLaneValue,
       numberLaneValue,
       numberValue,
+      nextSlotValue,
       previousNumberLaneValue,
       previousNumberValue,
+      previousSlotValue,
       reverse,
+      slotValue,
       standaloneWord,
       textIdentityWord,
     ]

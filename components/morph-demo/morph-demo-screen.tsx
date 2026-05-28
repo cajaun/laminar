@@ -15,6 +15,8 @@ import {
   EditorDemoPage,
   NumbersDemoPage,
   NumberIdentityDemoPage,
+  SlotValuesDemoPage,
+  SlotsDemoPage,
   TextIdentityDemoPage,
   WordsDemoPage,
 } from "./demo-pages";
@@ -53,6 +55,10 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
           <WordsDemoPage metrics={metrics} state={state} />
         ) : page?.id === "button" ? (
           <ButtonDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "slots" ? (
+          <SlotsDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "slotValues" ? (
+          <SlotValuesDemoPage metrics={metrics} state={state} />
         ) : (
           <NumbersDemoPage metrics={metrics} state={state} />
         );

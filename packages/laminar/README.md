@@ -134,7 +134,7 @@ Use `autoSize={false}` when the parent already defines the space and you only wa
 ```ts
 type LaminarProps = {
   text: string | number;
-  variant?: "text" | "number";
+  variant?: "text" | "number" | "slots";
   fontSize?: number;
   color?: string;
   align?: "left" | "center" | "right";
@@ -152,7 +152,7 @@ type LaminarProps = {
 | Prop                | Default                                     | Description                                                                        |
 | ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `text`              | Required                                    | The value to display. Numbers are converted to strings internally.                 |
-| `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. |
+| `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. `"slots"` rolls digits through slot columns using the same lanes. |
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
@@ -179,6 +179,7 @@ type LaminarProps = {
 ```tsx
 <Laminar text={word} animationPreset="smooth" />
 <Laminar text={count} variant="number" animationPreset="snappy" />
+<Laminar text={count} variant="slots" animationPreset="snappy" />
 
 // Override duration
 <Laminar text={word} animationPreset="default" animationDuration={520} />

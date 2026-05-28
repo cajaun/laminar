@@ -10,6 +10,7 @@ import {
 import type { MorphingTextProps } from "./types";
 import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
+import { SlotsRun } from "./view/slots-run";
 import { TextRun } from "./view/text-run";
 
 export const Laminar = React.memo(function Laminar({
@@ -71,7 +72,17 @@ export const Laminar = React.memo(function Laminar({
           </Text>
         }
       >
-        {variant === "number" ? (
+        {variant === "slots" ? (
+          <SlotsRun
+            value={resolvedValue}
+            motionRecipe={motionRecipe}
+            align={align}
+            fontSize={fontSize}
+            textStyle={textStyle}
+            staggerMs={staggerMs}
+            className={className}
+          />
+        ) : variant === "number" ? (
           <NumberRun
             value={resolvedValue}
             motionRecipe={motionRecipe}

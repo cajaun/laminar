@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, View } from "react-native";
 import type { TextStyle } from "react-native";
 import { Section as FormSection, Text as FormText } from "@/components/ui/form";
@@ -107,11 +107,9 @@ function MechanismFrame({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
-
 function NoLcsLaminar(props: React.ComponentProps<typeof Laminar>) {
   return <Laminar key={String(props.text)} {...props} />;
 }
-
 
 function readLaneUnits(value: string) {
   const lead = value.match(/^\D*/)?.[0] ?? "";
@@ -216,7 +214,24 @@ function LaneStrip({ value }: { readonly value: string }) {
 }
 
 function NoProbeDigit({ value }: { readonly value: string }) {
-  return <Laminar key={value} text={value} variant="text" animationDuration={teachingDurationMs} animationPreset="default" autoSize clipToBounds={false} fontSize={62} stagger={0} containerStyle={{ alignSelf: "center" }} style={[showcaseTextStyle, { fontSize: 62, fontVariant: ["tabular-nums"] }]} />;
+  return (
+    <Laminar
+      key={value}
+      text={value}
+      variant="text"
+      animationDuration={teachingDurationMs}
+      animationPreset="default"
+      autoSize
+      clipToBounds={false}
+      fontSize={62}
+      stagger={0}
+      containerStyle={{ alignSelf: "center" }}
+      style={[
+        showcaseTextStyle,
+        { fontSize: 62, fontVariant: ["tabular-nums"] },
+      ]}
+    />
+  );
 }
 
 function AutoSizeComparison({ value }: { readonly value: string }) {
@@ -410,7 +425,9 @@ export function AnimationLayerDemoPage({ metrics, state }: DemoPageProps) {
             ]}
           />
         </View>
-        <TeachingLabel>probe token holds the lane width during swap</TeachingLabel>
+        <TeachingLabel>
+          probe token holds the lane width during swap
+        </TeachingLabel>
         <MechanismFrame>
           <Text
             style={{
@@ -477,7 +494,7 @@ export function AutoSizeDemoPage({ metrics, state }: DemoPageProps) {
             clipToBounds={false}
             fontSize={32}
             stagger={0.035}
-            containerStyle={{ alignSelf: "center" }}
+         
             style={[showcaseTextStyle, { fontSize: 32 }]}
           />
         </View>
@@ -507,17 +524,15 @@ export function EditorDemoPage({ metrics, state }: DemoPageProps) {
         <Laminar
           text={state.editorWord}
           autoSize={false}
-          animationPreset="default"
+          animationPreset="smooth"
           fontSize={state.fontSize}
           clipToBounds={false}
-          containerStyle={{
-            alignSelf: "center",
-          }}
+          align="center"
           style={{
             color: "#000000",
             fontFamily: state.fontWeight.fontFamily,
             fontSize: state.fontSize,
-            textAlign: "center",
+    
           }}
         />
       </PreviewStage>
@@ -555,14 +570,12 @@ export function WordsDemoPage({ metrics, state }: DemoPageProps) {
           animationPreset="smooth"
           fontSize={state.fontSize}
           clipToBounds={false}
-          containerStyle={{
-            alignSelf: "center",
-          }}
+          align="center"
           style={{
             color: "#000000",
             fontFamily: state.fontWeight.fontFamily,
             fontSize: state.fontSize,
-            textAlign: "center",
+       
           }}
         />
       </PreviewStage>
@@ -605,14 +618,12 @@ export function ButtonDemoPage({ metrics, state }: DemoPageProps) {
             animationPreset="default"
             fontSize={state.fontSize}
             clipToBounds={false}
-            containerStyle={{
-              alignSelf: "center",
-            }}
+           
             style={{
               color: "#ffffff",
               fontFamily: "Sf-semibold",
               fontSize: 32,
-              textAlign: "center",
+        
             }}
           />
         </PressableScale>
@@ -671,6 +682,110 @@ export function NumbersDemoPage({ metrics, state }: DemoPageProps) {
         {settingsRow({
           label: "Morph",
           value: state.nextNumberValue,
+        })}
+      </SettingsSection>
+    </>
+  );
+}
+
+export function SlotsDemoPage({ metrics, state }: DemoPageProps) {
+  return (
+    <>
+      <PreviewStage metrics={metrics}>
+        <Laminar
+          text={state.numberValue}
+          variant="slots"
+           animationPreset="smooth"
+          autoSize
+          clipToBounds={false}
+          fontSize={state.fontSize}
+          containerStyle={{
+            alignSelf: "center",
+          }}
+          style={{
+            color: "#000000",
+            fontFamily: "Sf-semibold",
+            fontSize: state.fontSize,
+            fontVariant: ["tabular-nums"],
+            textAlign: "center",
+          }}
+        />
+      </PreviewStage>
+
+      <View style={{ flex: 1 }} />
+
+      <SettingsSection metrics={metrics}>
+        {settingsRow({
+          label: "Slots",
+          value: state.numberValue,
+          onPress: state.cycleNumber,
+        })}
+        {settingsRow({
+          label: "Reverse",
+          value: state.previousNumberValue,
+        })}
+        {settingsRow({
+          label: "Morph",
+          value: state.nextNumberValue,
+        })}
+      </SettingsSection>
+    </>
+  );
+}
+
+export function SlotValuesDemoPage({ metrics, state }: DemoPageProps) {
+  return (
+    <>
+      <PreviewStage metrics={metrics}>
+         {/* <PressableScale
+     
+          style={{
+            alignSelf: "center",
+            minHeight: state.fontSize * 1.42,
+            borderRadius: 36,
+            backgroundColor: "#007aff",
+            paddingHorizontal: state.fontSize * 0.72,
+            paddingVertical: state.fontSize * 0.22,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        > */}
+        <Laminar
+          text={state.slotValue}
+          variant="slots"
+          animationPreset="smooth"
+          autoSize
+          clipToBounds={false}
+          fontSize={state.fontSize}
+          containerStyle={{
+            alignSelf: "center",
+          }}
+          style={{
+            color: "#000000",
+            fontFamily: "Sf-semibold",
+            fontSize: state.fontSize,
+            fontVariant: ["tabular-nums"],
+            textAlign: "center",
+          }}
+        />
+        {/* </PressableScale> */}
+      </PreviewStage>
+
+      <View style={{ flex: 1 }} />
+
+      <SettingsSection metrics={metrics}>
+        {settingsRow({
+          label: "Slot Value",
+          value: state.slotValue,
+          onPress: state.cycleSlots,
+        })}
+        {settingsRow({
+          label: "Reverse",
+          value: state.previousSlotValue,
+        })}
+        {settingsRow({
+          label: "Morph",
+          value: state.nextSlotValue,
         })}
       </SettingsSection>
     </>
