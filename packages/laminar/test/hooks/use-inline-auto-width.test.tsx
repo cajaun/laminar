@@ -13,9 +13,15 @@ describe("useInlineAutoWidth", () => {
   test("HAW-ST-001 snaps first width and animates subsequent distinct widths", () => {
     const driveToWidth = jest.fn((value: number) => value + 0.5);
     const hook = renderHook(
-      ({ enabled }: { enabled: boolean }) =>
-        useInlineAutoWidth({ enabled, driveToWidth }),
-      { enabled: true }
+      ({
+        enabled,
+        measurementKey,
+      }: {
+        enabled: boolean;
+        measurementKey: string;
+      }) =>
+        useInlineAutoWidth({ enabled, driveToWidth, measurementKey }),
+      { enabled: true, measurementKey: "A" }
     );
 
     expect(hook.result.animatedWidthStyle).toEqual({});
@@ -24,16 +30,26 @@ describe("useInlineAutoWidth", () => {
     expect(hook.result.animatedWidthStyle).toEqual({ width: 21 });
     expect(driveToWidth).not.toHaveBeenCalled();
 
+    hook.rerender({ enabled: true, measurementKey: "B" });
     act(() => hook.result.captureLayout(layoutEvent(30.2)));
     expect(driveToWidth).toHaveBeenCalledWith(31);
-    hook.rerender({ enabled: true });
+    hook.rerender({ enabled: true, measurementKey: "B" });
     expect(hook.result.animatedWidthStyle).toEqual({ width: 31.5 });
+
+    hook.rerender({ enabled: true, measurementKey: "A" });
+    expect(hook.result.shouldMeasure).toBe(false);
+    expect(driveToWidth).toHaveBeenCalledWith(21);
   });
 
   test("HAW-BVA-001 clamps negative width and rounds fractional boundaries up", () => {
     const driveToWidth = jest.fn((value: number) => value);
     const hook = renderHook(
-      () => useInlineAutoWidth({ enabled: true, driveToWidth }),
+      () =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey: "boundary",
+        }),
       undefined
     );
 
@@ -47,7 +63,11 @@ describe("useInlineAutoWidth", () => {
     const driveToWidth = jest.fn((value: number) => value);
     const hook = renderHook(
       ({ enabled }: { enabled: boolean }) =>
-        useInlineAutoWidth({ enabled, driveToWidth }),
+        useInlineAutoWidth({
+          enabled,
+          driveToWidth,
+          measurementKey: "duplicate",
+        }),
       { enabled: false }
     );
 

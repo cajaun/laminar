@@ -67,4 +67,32 @@ describe("public Laminar API", () => {
         .some((node) => typeof node.props.onLayout === "function")
     ).toBe(false);
   });
+
+  test("API-PERF-001 rapid updates settle on the latest value without retaining transitions", () => {
+    let now = 1_000;
+    jest.spyOn(performance, "now").mockImplementation(() => now);
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar text="A" autoSize={false} />
+      );
+    });
+
+    for (const value of ["B", "C", "D", "E"]) {
+      now += 10;
+      act(() => {
+        renderer.update(<Laminar text={value} autoSize={false} />);
+      });
+    }
+
+    const visibleGlyphs = renderer.root
+      .findAllByType(Text)
+      .filter((node) => node.props.children === "E");
+
+    expect(visibleGlyphs).toHaveLength(1);
+    expect(visibleGlyphs[0].props.entering).toBeUndefined();
+    expect(visibleGlyphs[0].props.exiting).toBeUndefined();
+    jest.restoreAllMocks();
+  });
 });

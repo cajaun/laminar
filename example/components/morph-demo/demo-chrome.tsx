@@ -51,7 +51,11 @@ type DemoFooterProps = {
   readonly onMorph: () => void;
 };
 
-export function DemoFooter({ metrics, onReverse, onMorph }: DemoFooterProps) {
+export const DemoFooter = React.memo(function DemoFooter({
+  metrics,
+  onReverse,
+  onMorph,
+}: DemoFooterProps) {
   return (
     <View
       style={{
@@ -129,4 +133,4 @@ export function DemoFooter({ metrics, onReverse, onMorph }: DemoFooterProps) {
       </View>
     </View>
   );
-}
+});

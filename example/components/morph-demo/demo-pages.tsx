@@ -291,7 +291,7 @@ function AutoSizeComparison({ value }: { readonly value: string }) {
   );
 }
 
-export function TextIdentityDemoPage({ metrics, state }: DemoPageProps) {
+function TextIdentityDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -350,7 +350,7 @@ export function TextIdentityDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function NumberIdentityDemoPage({ metrics, state }: DemoPageProps) {
+function NumberIdentityDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -391,7 +391,7 @@ export function NumberIdentityDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function AnimationLayerDemoPage({ metrics, state }: DemoPageProps) {
+function AnimationLayerDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -472,7 +472,7 @@ export function AnimationLayerDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function AutoSizeDemoPage({ metrics, state }: DemoPageProps) {
+function AutoSizeDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -517,7 +517,7 @@ export function AutoSizeDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function EditorDemoPage({ metrics, state }: DemoPageProps) {
+function EditorDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -560,7 +560,7 @@ export function EditorDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function WordsDemoPage({ metrics, state }: DemoPageProps) {
+function WordsDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -595,7 +595,7 @@ export function WordsDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function ButtonDemoPage({ metrics, state }: DemoPageProps) {
+function ButtonDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -644,7 +644,7 @@ export function ButtonDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function NumbersDemoPage({ metrics, state }: DemoPageProps) {
+function NumbersDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -688,7 +688,7 @@ export function NumbersDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function SlotsDemoPage({ metrics, state }: DemoPageProps) {
+function SlotsDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -733,7 +733,7 @@ export function SlotsDemoPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export function SlotValuesDemoPage({ metrics, state }: DemoPageProps) {
+function SlotValuesDemoPageView({ metrics, state }: DemoPageProps) {
   return (
     <>
       <PreviewStage metrics={metrics}>
@@ -791,3 +791,99 @@ export function SlotValuesDemoPage({ metrics, state }: DemoPageProps) {
     </>
   );
 }
+
+const sameMetrics = (previous: DemoPageProps, next: DemoPageProps) =>
+  previous.metrics === next.metrics;
+
+export const TextIdentityDemoPage = React.memo(
+  TextIdentityDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.textIdentityWord === next.state.textIdentityWord &&
+    previous.state.morph === next.state.morph
+);
+
+export const NumberIdentityDemoPage = React.memo(
+  NumberIdentityDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.numberLaneValue === next.state.numberLaneValue &&
+    previous.state.morph === next.state.morph
+);
+
+export const AnimationLayerDemoPage = React.memo(
+  AnimationLayerDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.animationLayerValue === next.state.animationLayerValue &&
+    previous.state.morph === next.state.morph
+);
+
+export const AutoSizeDemoPage = React.memo(
+  AutoSizeDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.autoSizeValue === next.state.autoSizeValue &&
+    previous.state.morph === next.state.morph
+);
+
+export const EditorDemoPage = React.memo(
+  EditorDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.editorWord === next.state.editorWord &&
+    previous.state.fontSize === next.state.fontSize &&
+    previous.state.fontWeight === next.state.fontWeight &&
+    previous.state.cycleEditorWord === next.state.cycleEditorWord &&
+    previous.state.cycleFontSize === next.state.cycleFontSize &&
+    previous.state.cycleFontWeight === next.state.cycleFontWeight
+);
+
+export const WordsDemoPage = React.memo(
+  WordsDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.standaloneWord === next.state.standaloneWord &&
+    previous.state.fontSize === next.state.fontSize &&
+    previous.state.fontWeight === next.state.fontWeight &&
+    previous.state.cycleStandaloneWord === next.state.cycleStandaloneWord
+);
+
+export const ButtonDemoPage = React.memo(
+  ButtonDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.buttonWord === next.state.buttonWord &&
+    previous.state.fontSize === next.state.fontSize &&
+    previous.state.cycleButtonWord === next.state.cycleButtonWord
+);
+
+export const NumbersDemoPage = React.memo(
+  NumbersDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.numberValue === next.state.numberValue &&
+    previous.state.previousNumberValue === next.state.previousNumberValue &&
+    previous.state.nextNumberValue === next.state.nextNumberValue &&
+    previous.state.cycleNumber === next.state.cycleNumber
+);
+
+export const SlotsDemoPage = React.memo(
+  SlotsDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.numberValue === next.state.numberValue &&
+    previous.state.previousNumberValue === next.state.previousNumberValue &&
+    previous.state.nextNumberValue === next.state.nextNumberValue &&
+    previous.state.cycleNumber === next.state.cycleNumber
+);
+
+export const SlotValuesDemoPage = React.memo(
+  SlotValuesDemoPageView,
+  (previous, next) =>
+    sameMetrics(previous, next) &&
+    previous.state.slotValue === next.state.slotValue &&
+    previous.state.previousSlotValue === next.state.previousSlotValue &&
+    previous.state.nextSlotValue === next.state.nextSlotValue &&
+    previous.state.cycleSlots === next.state.cycleSlots
+);

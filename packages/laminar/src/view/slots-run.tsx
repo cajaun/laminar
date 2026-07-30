@@ -58,7 +58,39 @@ type SlotReelProps = {
   readonly className?: string;
 };
 
-function SlotReel({
+const equalStyleValue = (left: unknown, right: unknown) =>
+  left === right ||
+  (Array.isArray(left) &&
+    Array.isArray(right) &&
+    left.length === right.length &&
+    left.every((value, index) => value === right[index]));
+
+const areSlotReelPropsEqual = (
+  previous: SlotReelProps,
+  next: SlotReelProps
+) => {
+  if (
+    previous.current !== next.current ||
+    previous.slotHeight !== next.slotHeight ||
+    previous.className !== next.className
+  ) {
+    return false;
+  }
+
+  const previousStyle = StyleSheet.flatten(previous.textStyle) ?? {};
+  const nextStyle = StyleSheet.flatten(next.textStyle) ?? {};
+  const previousKeys = Object.keys(previousStyle) as (keyof TextStyle)[];
+  const nextKeys = Object.keys(nextStyle);
+
+  return (
+    previousKeys.length === nextKeys.length &&
+    previousKeys.every((key) =>
+      equalStyleValue(previousStyle[key], nextStyle[key])
+    )
+  );
+};
+
+const SlotReel = React.memo(function SlotReel({
   current,
   slotHeight,
   textStyle,
@@ -104,7 +136,7 @@ function SlotReel({
       ))}
     </Animated.View>
   );
-}
+}, areSlotReelPropsEqual);
 
 type SlotColumnProps = {
   readonly digit: number;
@@ -241,6 +273,7 @@ type SlotsRunProps = {
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
   readonly className?: string;
+  readonly animateTransitions?: boolean;
 };
 
 export const SlotsRun = React.memo(
@@ -252,6 +285,7 @@ export const SlotsRun = React.memo(
     textStyle,
     staggerMs,
     className,
+    animateTransitions = true,
   }: Readonly<SlotsRunProps>) => {
     const { units, direction, leadLength } = useNumericLanes(value);
     const lastValueRef = useRef(value);
@@ -294,8 +328,16 @@ export const SlotsRun = React.memo(
             return (
               <Animated.Text
                 key={laneKey}
-                layout={motionRecipe.layoutTransition}
-                exiting={inLead ? undefined : motionRecipe.exitTransition}
+                layout={
+                  animateTransitions
+                    ? motionRecipe.layoutTransition
+                    : undefined
+                }
+                exiting={
+                  animateTransitions && !inLead
+                    ? motionRecipe.exitTransition
+                    : undefined
+                }
                 style={textStyle}
                 className={className}
               >
@@ -310,9 +352,17 @@ export const SlotsRun = React.memo(
           return (
             <Animated.View
               key={laneKey}
-              layout={motionRecipe.layoutTransition}
-              entering={hasAnimated ? motionRecipe.enterTransition : undefined}
-              exiting={motionRecipe.exitTransition}
+              layout={
+                animateTransitions ? motionRecipe.layoutTransition : undefined
+              }
+              entering={
+                animateTransitions && hasAnimated
+                  ? motionRecipe.enterTransition
+                  : undefined
+              }
+              exiting={
+                animateTransitions ? motionRecipe.exitTransition : undefined
+              }
             >
               <SlotColumn
                 digit={Number(unit)}

@@ -1,6 +1,7 @@
 import React from "react";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
+import { useFrameValue } from "./hooks/use-frame-value";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
 import {
@@ -30,6 +31,8 @@ export const Laminar = React.memo(function Laminar({
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
+    const { value: presentedValue, isBursting } =
+      useFrameValue(resolvedValue);
     const { motionRecipe, staggerMs } = useMorphMotion({
       variant,
       animationPreset,
@@ -43,17 +46,36 @@ export const Laminar = React.memo(function Laminar({
       style,
     });
 
-    const { captureLayout, animatedWidthStyle } = useInlineAutoWidth({
-      enabled: autoSize,
-      driveToWidth: motionRecipe.driveNumber,
-    });
+    const measurementKey = React.useMemo(() => {
+      const flattenedStyle = StyleSheet.flatten(textStyle);
+
+      return JSON.stringify([
+        presentedValue,
+        flattenedStyle?.fontFamily,
+        flattenedStyle?.fontSize,
+        flattenedStyle?.fontStyle,
+        flattenedStyle?.fontWeight,
+        flattenedStyle?.fontVariant,
+        flattenedStyle?.letterSpacing,
+        flattenedStyle?.lineHeight,
+        flattenedStyle?.textTransform,
+      ]);
+    }, [presentedValue, textStyle]);
+    const { captureLayout, animatedWidthStyle, shouldMeasure } =
+      useInlineAutoWidth({
+        enabled: autoSize,
+        driveToWidth: motionRecipe.driveNumber,
+        measurementKey,
+      });
     const measuredValue = React.useMemo(() => {
       if (!autoSize) {
         return "";
       }
 
-      return splitDisplayUnits(resolvedValue).map(normalizeDisplayUnit).join("");
-    }, [autoSize, resolvedValue]);
+      return splitDisplayUnits(presentedValue)
+        .map(normalizeDisplayUnit)
+        .join("");
+    }, [autoSize, presentedValue]);
 
     return (
       <MorphViewport
@@ -63,18 +85,21 @@ export const Laminar = React.memo(function Laminar({
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
         measurement={
-          <Text
-            numberOfLines={1}
-            onLayout={captureLayout}
-            style={textStyle}
-          >
-            {measuredValue}
-          </Text>
+          shouldMeasure ? (
+            <Text
+              numberOfLines={1}
+              onLayout={captureLayout}
+              style={textStyle}
+            >
+              {measuredValue}
+            </Text>
+          ) : undefined
         }
       >
         {variant === "slots" ? (
           <SlotsRun
-            value={resolvedValue}
+            value={presentedValue}
+            animateTransitions={!isBursting}
             motionRecipe={motionRecipe}
             align={align}
             fontSize={fontSize}
@@ -84,7 +109,8 @@ export const Laminar = React.memo(function Laminar({
           />
         ) : variant === "number" ? (
           <NumberRun
-            value={resolvedValue}
+            value={presentedValue}
+            animateTransitions={!isBursting}
             motionRecipe={motionRecipe}
             align={align}
             fontSize={fontSize}
@@ -94,7 +120,8 @@ export const Laminar = React.memo(function Laminar({
           />
         ) : (
           <TextRun
-            value={resolvedValue}
+            value={presentedValue}
+            animateTransitions={!isBursting}
             motionRecipe={motionRecipe}
             align={align}
             textStyle={textStyle}

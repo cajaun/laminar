@@ -19,13 +19,13 @@ export type PressableScaleProps = {
 
 const ANIMATION_DURATION = 250;
 
-const PressableScale: React.FC<PressableScaleProps> = ({
+const PressableScale = React.memo(function PressableScale({
   children,
   onPress,
   style,
   className,
   layout,
-}) => {
+}: PressableScaleProps) {
   const active = useSharedValue(false);
 
   const gesture = Gesture.Tap()
@@ -66,6 +66,6 @@ const PressableScale: React.FC<PressableScaleProps> = ({
       </Animated.View>
     </GestureDetector>
   );
-};
+});
 
 export { PressableScale };

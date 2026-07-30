@@ -31,6 +31,7 @@ type NumberLaneProps = {
   readonly motionRecipe: MotionRecipe;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
+  readonly animateTransitions?: boolean;
 };
 
 export const NumberLane = React.memo(
@@ -45,6 +46,7 @@ export const NumberLane = React.memo(
     motionRecipe,
     textStyle,
     className,
+    animateTransitions = true,
   }: NumberLaneProps) => {
     const usesDigitTravel = isAsciiDigit(unit);
     const verticalOffset =
@@ -104,9 +106,17 @@ export const NumberLane = React.memo(
 
     return (
       <Animated.View
-        layout={motionRecipe.layoutTransition}
-        entering={hasAnimated ? motionRecipe.enterTransition : undefined}
-        exiting={motionRecipe.exitTransition}
+        layout={
+          animateTransitions ? motionRecipe.layoutTransition : undefined
+        }
+        entering={
+          animateTransitions && hasAnimated
+            ? motionRecipe.enterTransition
+            : undefined
+        }
+        exiting={
+          animateTransitions ? motionRecipe.exitTransition : undefined
+        }
         style={laneStyle}
       >
         {/* this hidden copy owns layout while the animated token swaps on top */}
@@ -116,8 +126,10 @@ export const NumberLane = React.memo(
 
         <Animated.Text
           key={`token:${tokenKey}`}
-          entering={hasAnimated ? enterTransition : undefined}
-          exiting={exitTransition}
+          entering={
+            animateTransitions && hasAnimated ? enterTransition : undefined
+          }
+          exiting={animateTransitions ? exitTransition : undefined}
           style={[textStyle, laneTokenStyle]}
           className={className}
         >

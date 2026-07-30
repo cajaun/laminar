@@ -30,7 +30,7 @@ export const GlyphRun = React.memo(
     className,
   }: Readonly<{
     glyphs: readonly GlyphToken[];
-    layoutTransition: ComplexAnimationBuilder;
+    layoutTransition?: ComplexAnimationBuilder;
     enterTransition?: EntryExitAnimationFunction;
     exitTransition?: EntryExitAnimationFunction;
     align: LaminarAlign;

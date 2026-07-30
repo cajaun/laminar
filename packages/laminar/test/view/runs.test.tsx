@@ -157,4 +157,32 @@ describe("rendered run contracts", () => {
     act(() => renderer.unmount());
     expect(driveNumber.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
+
+  test("RUN-PERF-001 SlotsRun reuses reels across equivalent style objects", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    const renderSlots = (fontSize: number) => (
+      <SlotsRun
+        value="12"
+        motionRecipe={motionRecipe}
+        align="left"
+        textStyle={{
+          fontSize,
+          fontVariant: ["tabular-nums"],
+        }}
+        staggerMs={0}
+      />
+    );
+
+    act(() => {
+      renderer = TestRenderer.create(renderSlots(20));
+    });
+    act(() => {
+      renderer.update(renderSlots(20));
+    });
+    act(() => {
+      renderer.update(renderSlots(24));
+    });
+
+    expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(60);
+  });
 });
