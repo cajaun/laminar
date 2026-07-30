@@ -1,4 +1,4 @@
-import { useDeferredValue, useRef } from "react";
+import { useRef } from "react";
 
 type FrameValue<T> = {
   readonly value: T;
@@ -8,7 +8,6 @@ type FrameValue<T> = {
 const BURST_INTERVAL_MS = 50;
 
 export const useFrameValue = <T>(value: T): FrameValue<T> => {
-  const presentedValue = useDeferredValue(value);
   const previousValueRef = useRef(value);
   const lastInputAtRef = useRef(0);
   const rapidInputCountRef = useRef(0);
@@ -25,7 +24,7 @@ export const useFrameValue = <T>(value: T): FrameValue<T> => {
   }
 
   return {
-    value: presentedValue,
+    value,
     isBursting: rapidInputCountRef.current >= 2,
   };
 };

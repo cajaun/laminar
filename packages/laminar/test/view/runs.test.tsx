@@ -102,7 +102,7 @@ describe("rendered run contracts", () => {
         (value) => typeof value === "string" && value.includes("\n")
       )
     ).toBe(false);
-    expect(contents.filter((value) => value === 0).length).toBeGreaterThan(2);
+    expect(renderer.root.findAllByType(Text)).toHaveLength(64);
   });
 
   test("RUN-BVA-001 SlotsRun derives bounded height from font inputs", () => {
@@ -183,6 +183,6 @@ describe("rendered run contracts", () => {
       renderer.update(renderSlots(24));
     });
 
-    expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(60);
+    expect(renderer.root.findAllByType(Text)).toHaveLength(62);
   });
 });

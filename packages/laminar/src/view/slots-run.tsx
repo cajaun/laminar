@@ -43,10 +43,7 @@ const slotDigitStyle = {
 
 const REEL_MIN = -12;
 const REEL_MAX = 22;
-const REEL_RANGE = Array.from(
-  { length: REEL_MAX - REEL_MIN + 1 },
-  (_, index) => REEL_MIN + index
-);
+const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
 
 const mod = (value: number, divisor: number) =>
   ((value % divisor) + divisor) % divisor;
@@ -98,7 +95,7 @@ const SlotReel = React.memo(function SlotReel({
 }: SlotReelProps) {
   const animatedStyle = useAnimatedStyle(
     () => ({
-      transform: [{ translateY: (REEL_MIN - current.value) * slotHeight }],
+      transform: [{ translateY: (-10 - current.value) * slotHeight }],
     }),
     [slotHeight]
   );
@@ -116,23 +113,26 @@ const SlotReel = React.memo(function SlotReel({
         animatedStyle,
       ]}
     >
-      {REEL_RANGE.map((position) => (
-        <View
+      {REEL_POSITIONS.map((position, index) => (
+        <Text
           key={position}
-          style={{ height: slotHeight, justifyContent: "center" }}
+          numberOfLines={1}
+          style={[
+            textStyle,
+            slotDigitStyle,
+            {
+              position: "absolute",
+              top: index * slotHeight,
+              left: 0,
+              right: 0,
+              height: slotHeight,
+              lineHeight: slotHeight,
+            },
+          ]}
+          className={className}
         >
-          <Text
-            numberOfLines={1}
-            style={[
-              textStyle,
-              slotDigitStyle,
-              { height: slotHeight, lineHeight: slotHeight },
-            ]}
-            className={className}
-          >
-            {mod(position, 10)}
-          </Text>
-        </View>
+          {mod(position, 10)}
+        </Text>
       ))}
     </Animated.View>
   );
