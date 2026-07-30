@@ -51,8 +51,6 @@ const REEL_RANGE = Array.from(
 const mod = (value: number, divisor: number) =>
   ((value % divisor) + divisor) % divisor;
 
-const REEL_TEXT = REEL_RANGE.map((position) => mod(position, 10)).join("\n");
-
 type SlotReelProps = {
   readonly current: SharedValue<number>;
   readonly slotHeight: number;
@@ -74,24 +72,37 @@ function SlotReel({
   );
 
   return (
-    <Animated.Text
+    <Animated.View
       pointerEvents="none"
       style={[
-        textStyle,
-        slotDigitStyle,
         {
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          lineHeight: slotHeight,
         },
         animatedStyle,
       ]}
-      className={className}
     >
-      {REEL_TEXT}
-    </Animated.Text>
+      {REEL_RANGE.map((position) => (
+        <View
+          key={position}
+          style={{ height: slotHeight, justifyContent: "center" }}
+        >
+          <Text
+            numberOfLines={1}
+            style={[
+              textStyle,
+              slotDigitStyle,
+              { height: slotHeight, lineHeight: slotHeight },
+            ]}
+            className={className}
+          >
+            {mod(position, 10)}
+          </Text>
+        </View>
+      ))}
+    </Animated.View>
   );
 }
 

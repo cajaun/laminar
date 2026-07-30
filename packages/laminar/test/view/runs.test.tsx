@@ -97,7 +97,12 @@ describe("rendered run contracts", () => {
 
     expect(contents).toContain("$");
     expect(contents).toContain(".");
-    expect(contents.filter((value) => typeof value === "string" && value.includes("\n")).length).toBe(2);
+    expect(
+      contents.some(
+        (value) => typeof value === "string" && value.includes("\n")
+      )
+    ).toBe(false);
+    expect(contents.filter((value) => value === 0).length).toBeGreaterThan(2);
   });
 
   test("RUN-BVA-001 SlotsRun derives bounded height from font inputs", () => {
