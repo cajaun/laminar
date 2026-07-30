@@ -6,6 +6,7 @@ const config = getDefaultConfig(__dirname);
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules ?? {}),
   laminar: path.resolve(__dirname, "packages/laminar/src"),
+  "react-native-laminar": path.resolve(__dirname, "packages/laminar/src"),
 };
 
 module.exports = withUniwindConfig(config, {

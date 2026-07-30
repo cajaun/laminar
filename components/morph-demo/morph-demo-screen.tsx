@@ -40,6 +40,16 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
   const renderExamplePage = useCallback<ListRenderItem<CarouselItem>>(
     ({ item }) => {
       const page = examplePages[item];
+      const isNearbyPage = Math.abs(item - currentIndex) <= 1;
+
+      if (!isNearbyPage) {
+        return (
+          <DemoPageScroll metrics={metrics}>
+            <View style={{ flex: 1 }} />
+          </DemoPageScroll>
+        );
+      }
+
       const content =
         page?.id === "textIdentity" ? (
           <TextIdentityDemoPage metrics={metrics} state={state} />
@@ -65,7 +75,7 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
 
       return <DemoPageScroll metrics={metrics}>{content}</DemoPageScroll>;
     },
-    [metrics, state]
+    [currentIndex, metrics, state]
   );
 
   return (

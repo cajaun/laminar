@@ -1,6 +1,6 @@
 {
   "name": "react-native-laminar",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A React Native component for morphing text and numbers with character-level identity.",
   "keywords": [
     "react-native",
@@ -21,6 +21,8 @@
   "react-native": "./src/index.tsx",
   "exports": {
     ".": {
+      "react-native": "./src/index.tsx",
+      "source": "./src/index.tsx",
       "import": {
         "types": "./lib/typescript/module/index.d.ts",
         "default": "./lib/module/index.js"
