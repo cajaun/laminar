@@ -1,0 +1,54 @@
+name: Package quality
+
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".github/workflows/quality.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".github/workflows/quality.yml"
+
+concurrency:
+  group: package-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  laminar:
+    name: Laminar package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Run package quality gate
+        run: npm run quality
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laminar-coverage
+          path: packages/laminar/coverage
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,27 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react-native-laminar": [
+        "../packages/laminar/src"
+      ],
+      "react-native-laminar/*": [
+        "../packages/laminar/src/*"
+      ],
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "uniwind-env.d.ts"
+  ],
+  "exclude": [
+    "ios",
+    "node_modules"
+  ]
+}

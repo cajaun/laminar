@@ -39,7 +39,14 @@
   ],
   "scripts": {
     "build": "bob build",
-    "prepare": "bob build"
+    "prepare": "bob build",
+    "test": "jest --config jest.config.js --runInBand",
+    "test:watch": "jest --config jest.config.js --watch",
+    "test:coverage": "jest --config jest.config.js --runInBand --coverage && node scripts/check-coverage.js",
+    "test:ci": "jest --config jest.config.js --runInBand --ci --coverage && node scripts/check-coverage.js",
+    "typecheck": "tsc --project tsconfig.test.json --noEmit",
+    "pack:check": "npm pack --dry-run --cache ./coverage/npm-cache",
+    "quality": "npm run typecheck && npm run test:ci && npm run build && npm run pack:check"
   },
   "sideEffects": false,
   "peerDependencies": {
