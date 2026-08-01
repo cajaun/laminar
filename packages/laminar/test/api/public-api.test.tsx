@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import LaminarDefault, {
   Laminar,
@@ -74,10 +74,12 @@ describe("public Laminar API", () => {
       renderer = TestRenderer.create(<Laminar text="A B" />);
     });
     const measurement = renderer.root
-      .findAllByType(Text)
+      .findAllByType(View)
       .find((node) => typeof node.props.onLayout === "function");
 
-    expect(measurement?.props.children).toBe("A\u00A0B");
+    expect(
+      measurement?.findAllByType(Text).map((node) => node.props.children).join("")
+    ).toBe("A\u00A0B");
   });
 
   test("API-DT-005 disabled auto-size does not render a measurement node", () => {

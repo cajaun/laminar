@@ -326,7 +326,9 @@ export const SlotsRun = React.memo(
             return (
               <Animated.Text
                 key={laneKey}
-                layout={motionRecipe.layoutTransition}
+                layout={
+                  hasAnimated ? motionRecipe.layoutTransition : undefined
+                }
                 exiting={!inLead ? motionRecipe.exitTransition : undefined}
                 style={textStyle}
                 className={className}
@@ -342,7 +344,9 @@ export const SlotsRun = React.memo(
           return (
             <Animated.View
               key={laneKey}
-              layout={motionRecipe.layoutTransition}
+              layout={
+                hasAnimated ? motionRecipe.layoutTransition : undefined
+              }
               entering={
                 hasAnimated ? motionRecipe.enterTransition : undefined
               }

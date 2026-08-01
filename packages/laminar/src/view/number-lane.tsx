@@ -104,7 +104,7 @@ export const NumberLane = React.memo(
 
     return (
       <Animated.View
-        layout={motionRecipe.layoutTransition}
+        layout={hasAnimated ? motionRecipe.layoutTransition : undefined}
         entering={
           hasAnimated ? motionRecipe.enterTransition : undefined
         }

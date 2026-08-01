@@ -75,5 +75,6 @@ describe("NumberLane", () => {
     const animatedToken = renderer.root.findAllByType(Text)[1];
 
     expect(animatedToken.props.entering).toBeUndefined();
+    expect(animatedToken.props.layout).toBeUndefined();
   });
 });

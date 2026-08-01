@@ -39,6 +39,9 @@ describe("rendered run contracts", () => {
     expect(
       renderer.root.findAllByType(Text).every((text) => !text.props.entering)
     ).toBe(true);
+    expect(
+      renderer.root.findAllByType(Text).every((text) => !text.props.layout)
+    ).toBe(true);
 
     act(() => {
       renderer.update(
@@ -51,6 +54,9 @@ describe("rendered run contracts", () => {
     });
     expect(
       renderer.root.findAllByType(Text).some((text) => text.props.entering)
+    ).toBe(true);
+    expect(
+      renderer.root.findAllByType(Text).some((text) => text.props.layout)
     ).toBe(true);
   });
 

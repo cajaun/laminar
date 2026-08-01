@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import Animated, {
   Easing,
   interpolate,
@@ -8,11 +8,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Laminar } from "react-native-laminar";
-import * as Haptics from "expo-haptics";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 import { PreviewStage } from "../demo-chrome";
 import { sameMetrics } from "./shared";
 import type { DemoPageProps } from "./types";
+import { SymbolView } from "expo-symbols";
 
 const BUTTON_HEIGHT = 50;
 const BUTTON_WIDTH_RATIO = 0.82;
@@ -29,6 +29,7 @@ function PressableSplitPage({ metrics }: DemoPageProps) {
   const secondaryWidth = buttonWidth - primaryCollapsedWidth - BUTTON_GAP;
   const shouldShowSecondary = step === "split";
   const isJoined = step === "joined";
+  const showLeading = !shouldShowSecondary;
   const splitTarget = useSharedValue(0);
 
   useEffect(() => {
@@ -48,8 +49,18 @@ function PressableSplitPage({ metrics }: DemoPageProps) {
     ),
   }), [buttonWidth, primaryCollapsedWidth]);
 
+  const primaryLabelStyle = useAnimatedStyle(() => ({
+    left: interpolate(
+      splitTarget.value,
+      [0, 1],
+      [0, -(buttonWidth - primaryCollapsedWidth) / 2]
+    ),
+  }), [buttonWidth, primaryCollapsedWidth]);
+
   const secondaryStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(splitTarget.value, [0, 0.6, 1], [0, 0, 1]),
+    left: interpolate(splitTarget.value, [0, 1], [-BUTTON_GAP, 0]),
+    width: interpolate(splitTarget.value, [0, 1], [0, secondaryWidth]),
+    opacity: interpolate(splitTarget.value, [0, 0.85, 1], [0, 0, 1]),
     transform: [
       {
         scale: interpolate(splitTarget.value, [0, 1], [0.97, 1]),
@@ -78,6 +89,67 @@ function PressableSplitPage({ metrics }: DemoPageProps) {
           justifyContent: "center",
         }}
       >
+        <PressableScale
+          onPress={advance}
+          style={[
+            primaryStyle,
+            {
+              position: "absolute",
+              right: 0,
+              height: BUTTON_HEIGHT,
+              overflow: "visible",
+            },
+          ]}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+              backgroundColor: PRIMARY_COLOR,
+              borderRadius: BUTTON_HEIGHT / 2,
+            }}
+          />
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: "absolute",
+                top: 0,
+                width: buttonWidth,
+                height: BUTTON_HEIGHT,
+                alignItems: "center",
+                justifyContent: "center",
+              },
+              primaryLabelStyle,
+            ]}
+          >
+            <Laminar
+              text={isJoined ? "Continue and Finish" : "Continue"}
+              leading={
+                showLeading ? (
+                  <SymbolView
+                    name="faceid"
+                    size={23}
+                    tintColor="#ffffff"
+                  />
+                ) : undefined
+              }
+              leadingGap={6}
+              autoSize={false}
+              align="center"
+              animationPreset="default"
+              clipToBounds={false}
+              containerStyle={{ width: "100%" }}
+              style={{ color: "#ffffff", fontFamily: "Sf-bold" }}
+              className="text-2xl"
+            />
+          </Animated.View>
+        </PressableScale>
+
         <Animated.View
           pointerEvents={shouldShowSecondary ? "auto" : "none"}
           style={[
@@ -102,47 +174,12 @@ function PressableSplitPage({ metrics }: DemoPageProps) {
               alignItems: "center",
             }}
           >
-            <Laminar
-              text="Cancel"
-              autoSize={false}
-              align="center"
+            <Text
+              className="text-2xl"
               style={{ color: "#000000", fontFamily: "Sf-bold" }}
-              className="text-2xl"
-            />
-          </PressableScale>
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            primaryStyle,
-            {
-              position: "absolute",
-              right: 0,
-              height: BUTTON_HEIGHT,
-            },
-          ]}
-        >
-          <PressableScale
-            onPress={advance}
-            style={{
-              width: "100%",
-              height: BUTTON_HEIGHT,
-              alignItems: "center",
-              backgroundColor: PRIMARY_COLOR,
-              borderRadius: BUTTON_HEIGHT / 2,
-              justifyContent: "center",
-              paddingHorizontal: 20,
-            }}
-          >
-            <Laminar
-              text={isJoined ? "Continue and Finish" : "Continue"}
-              autoSize={false}
-              align="center"
-              animationPreset="default"
-              clipToBounds={false}
-              style={{ color: "#ffffff", fontFamily: "Sf-bold" }}
-              className="text-2xl"
-            />
+            >
+              Cancel
+            </Text>
           </PressableScale>
         </Animated.View>
       </View>

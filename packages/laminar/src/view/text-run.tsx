@@ -51,10 +51,14 @@ export const TextRun = React.memo(
       lastLeadingPresenceRef.current = Boolean(leading);
     }
 
+    const hasAnimated = hasAnimatedRef.current;
+
     return (
       <GlyphRun
         glyphs={glyphs}
-        layoutTransition={motionRecipe.layoutTransition}
+        layoutTransition={
+          hasAnimated ? motionRecipe.layoutTransition : undefined
+        }
         enterTransition={
           hasAnimatedRef.current
             ? motionRecipe.enterTransition

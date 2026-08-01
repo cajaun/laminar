@@ -25,7 +25,7 @@ export const standaloneWords = [
   "Layer",
 ] as const;
 export const buttonWords = ["Send Request", "Sending Request", "Request Sent!"] as const;
-export const confirmContinueWords = ["Confirm", "Confirm Slippage"] as const;
+export const confirmContinueWords = ["Continue", "Confirm"] as const;
 // export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const slotValues = [

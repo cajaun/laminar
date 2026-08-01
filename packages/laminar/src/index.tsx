@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
@@ -85,13 +85,16 @@ export const Laminar = React.memo(function Laminar({
         animatedWidthStyle={animatedWidthStyle}
         measurement={
           shouldMeasure ? (
-            <Text
-              numberOfLines={1}
+            <View
               onLayout={captureLayout}
-              style={textStyle}
+              style={{ flexDirection: "row", alignSelf: "flex-start" }}
             >
-              {measuredValue}
-            </Text>
+              {splitDisplayUnits(measuredValue).map((unit, index) => (
+                <Text key={`${unit}-${index}`} style={textStyle}>
+                  {normalizeDisplayUnit(unit)}
+                </Text>
+              ))}
+            </View>
           ) : undefined
         }
       >
