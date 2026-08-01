@@ -73,6 +73,35 @@ export default function Counter() {
 }
 ```
 
+### Slots
+
+Use `variant="slots"` when each digit should roll through a vertical reel.
+Prefixes and separators remain ordinary text content.
+
+```tsx
+import React, { useState } from "react";
+import { Button, View } from "react-native";
+import { Laminar } from "react-native-laminar";
+
+export default function SlotCounter() {
+  const [value, setValue] = useState("07:42");
+
+  return (
+    <View style={{ alignItems: "center", gap: 16 }}>
+      <Laminar
+        text={value}
+        variant="slots"
+        fontSize={48}
+        animationPreset="snappy"
+        clipToBounds
+        style={{ color: "#000000", fontVariant: ["tabular-nums"] }}
+      />
+      <Button title="Change" onPress={() => setValue("08:15")} />
+    </View>
+  );
+}
+```
+
 ### Inside a button with auto-sizing
 
 ```tsx
@@ -85,6 +114,43 @@ export default function Counter() {
   />
 </Pressable>
 ```
+
+### Auto-sized button with leading icons
+
+Pass a text-keyed `leading` map when the button changes between visual states.
+Laminar selects the matching entry and animates icon-to-icon replacements.
+
+```tsx
+import { ActivityIndicator, Pressable, Text } from "react-native";
+import { Laminar } from "react-native-laminar";
+
+const leading = {
+  "Sending Request": <ActivityIndicator color="#ffffff" />,
+  "Request Sent!": <Text style={{ color: "#ffffff", fontSize: 20 }}>✓</Text>,
+};
+
+<Pressable
+  style={{
+    alignItems: "center",
+    backgroundColor: "#007aff",
+    borderRadius: 36,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  }}
+>
+  <Laminar
+    text={status}
+    leading={leading}
+    leadingGap={5}
+    autoSize
+    style={{ color: "#ffffff", fontSize: 18, fontWeight: "700" }}
+  />
+</Pressable>
+```
+
+The map key must match the current `text` value. A missing entry means no
+leading element, so the icon fades out when the button returns to a plain label.
 
 ### Centered text in a fixed-width container
 
