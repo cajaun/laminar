@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import type {
   ComplexAnimationBuilder,
@@ -29,7 +30,9 @@ export type MorphAnimationPreset =
 
 export type GlyphToken = {
   readonly id: string;
-  readonly value: string;
+  readonly kind: "text" | "element";
+  readonly value?: string;
+  readonly element?: ReactNode;
 };
 
 export type NumericFlowDirection = -1 | 0 | 1;
@@ -50,6 +53,10 @@ export type MorphingTextProps = {
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
+  /** Optional inline element reconciled and animated as the leading token. */
+  readonly leading?: ReactNode;
+  /** Spacing between the leading element and the first text glyph. */
+  readonly leadingGap?: number;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly fontStyle?: StyleProp<TextStyle>;

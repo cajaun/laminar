@@ -1,5 +1,6 @@
 import {
   type EntryExitAnimationFunction,
+  type ExitAnimationsValues,
   type WithTimingConfig,
   withDelay,
   withTiming,
@@ -15,6 +16,12 @@ type TransitionParams = {
   readonly toTranslateY: number;
   readonly fromScale: number;
   readonly toScale: number;
+};
+
+type LeadingExitTransitionParams = {
+  readonly durationMs: number;
+  readonly easing: NonNullable<WithTimingConfig["easing"]>;
+  readonly leadingGap: number;
 };
 
 export const createShiftTransition = ({
@@ -68,6 +75,30 @@ export const createShiftTransition = ({
       },
       animations: {
         ...animations,
+      },
+    };
+  };
+};
+
+export const createLeadingExitTransition = ({
+  durationMs,
+  easing,
+  leadingGap,
+}: LeadingExitTransitionParams): EntryExitAnimationFunction => {
+  return (values: ExitAnimationsValues) => {
+    "worklet";
+
+    return {
+      initialValues: {
+        opacity: 1,
+        originX: values.currentOriginX,
+      },
+      animations: {
+        opacity: withTiming(0, { duration: durationMs, easing }),
+        originX: withTiming(
+          values.currentOriginX - values.currentWidth - leadingGap,
+          { duration: durationMs, easing }
+        ),
       },
     };
   };

@@ -146,6 +146,20 @@ import Laminar, {
 `Laminar`, `NamedLaminar`, and `MorphingText` refer to the same memoized
 component.
 
+Text mode can also reconcile a leading inline element with the text. When the
+element is removed, it exits through the same transition as removed glyphs:
+
+```tsx
+<Laminar
+  text={label}
+  leading={label === "Confirm" ? <ConfirmIcon /> : undefined}
+  variant="text"
+  autoSize={false}
+  align="center"
+  containerStyle={{ width: "100%" }}
+/>
+```
+
 ### Props
 
 | Prop | Type | Default | Purpose |
@@ -156,6 +170,8 @@ component.
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
 | `className` | `string` | `undefined` | Utility classes passed to visible text |
+| `leading` | `ReactNode` | `undefined` | Optional leading element reconciled as an inline token in text mode |
+| `leadingGap` | `number` | `0` | Spacing between the leading element and the first text glyph |
 | `style` | `StyleProp<TextStyle>` | `undefined` | Final text style layer |
 | `fontStyle` | `StyleProp<TextStyle>` | `undefined` | Shared font style layer |
 | `containerStyle` | `StyleProp<ViewStyle>` | `undefined` | Outer shell style |

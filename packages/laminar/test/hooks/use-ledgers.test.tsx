@@ -1,3 +1,5 @@
+import { Text } from "react-native";
+import type { ReactNode } from "react";
 import { useNumericLanes } from "../../src/hooks/use-numeric-lanes";
 import { useTextGlyphs } from "../../src/hooks/use-text-glyphs";
 import { renderHook } from "../support/render-hook";
@@ -44,5 +46,29 @@ describe("identity ledger hooks", () => {
       "second:c0",
       "second:c1",
     ]);
+  });
+
+  test("HTG-DT-002 leading elements reconcile as removable inline tokens", () => {
+    const initialProps: { value: string; leading?: ReactNode } = {
+      value: "Confirm",
+      leading: <Text>icon</Text>,
+    };
+    const hook = renderHook(
+      ({ value, leading }: { value: string; leading?: ReactNode }) =>
+        useTextGlyphs(value, "leading", leading),
+      initialProps
+    );
+    const leadingToken = hook.result[0];
+
+    expect(leadingToken.kind).toBe("element");
+    expect(leadingToken.element).toBeTruthy();
+
+    hook.rerender({
+      value: "Confirm Slippage",
+      leading: undefined,
+    });
+
+    expect(hook.result.every((glyph) => glyph.kind === "text")).toBe(true);
+    expect(hook.result.some((glyph) => glyph.id === leadingToken.id)).toBe(false);
   });
 });

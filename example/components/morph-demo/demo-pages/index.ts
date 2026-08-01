@@ -1,6 +1,8 @@
 export { AnimationLayerDemoPage } from "./animation-layer";
 export { AutoSizeDemoPage } from "./auto-size";
 export { ButtonDemoPage } from "./button";
+export { ConfirmationDemoPage } from "./confirmation";
+export { PressableSplitDemoPage } from "./pressable-split";
 export { EditorDemoPage } from "./editor";
 export { NumberIdentityDemoPage } from "./number-identity";
 export { NumbersDemoPage } from "./numbers";

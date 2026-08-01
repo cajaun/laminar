@@ -17,7 +17,7 @@ export const fontWeights = [
   },
 ] as const;
 
-export const editorWords = ["Laminar", "Linear"] as const;
+export const editorWords = ["Craft", "Creative"] as const;
 export const standaloneWords = [
   "Laminar",
   "Lamina",
@@ -25,6 +25,7 @@ export const standaloneWords = [
   "Layer",
 ] as const;
 export const buttonWords = ["Send Request", "Sending Request", "Request Sent!"] as const;
+export const confirmContinueWords = ["Confirm", "Confirm Slippage"] as const;
 // export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const slotValues = [
@@ -47,6 +48,8 @@ export const examplePages = [
   { id: "editor", label: "Editor" },
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },
+  { id: "confirmation", label: "Confirmation" },
+  { id: "pressableSplit", label: "Pressable Split" },
   { id: "numbers", label: "Numbers" },
   { id: "slotValues", label: "Slot Values" },
 ] as const;

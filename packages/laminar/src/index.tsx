@@ -20,6 +20,8 @@ export const Laminar = React.memo(function Laminar({
     color,
     align = "left",
     className,
+    leading,
+    leadingGap = 0,
     style,
     containerStyle,
     fontStyle,
@@ -118,6 +120,8 @@ export const Laminar = React.memo(function Laminar({
             value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
+            leading={leading}
+            leadingGap={leadingGap}
             textStyle={textStyle}
             className={className}
           />

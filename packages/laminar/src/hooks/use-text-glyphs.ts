@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import {
   normalizeDisplayUnit,
   splitDisplayUnits,
@@ -8,28 +8,52 @@ import type { GlyphToken } from "../types";
 
 type TextGlyphLedger = {
   previousValue: string;
-  previousUnits: readonly string[];
+  previousSignatures: readonly string[];
   glyphKeys: readonly string[];
   nextSeed: number;
 };
 
+type TextGlyphUnit =
+  | { readonly kind: "text"; readonly signature: string; readonly value: string }
+  | { readonly kind: "element"; readonly signature: string; readonly element: ReactNode };
+
 export const useTextGlyphs = (
   value: string,
-  namespace: string
+  namespace: string,
+  leading?: ReactNode
 ): readonly GlyphToken[] => {
-  const units = useMemo(() => splitDisplayUnits(value), [value]);
+  const units = useMemo<readonly TextGlyphUnit[]>(
+    () => [
+      ...(leading
+        ? [{ kind: "element", signature: "leading", element: leading } as const]
+        : []),
+      ...splitDisplayUnits(value).map((unit) => ({
+        kind: "text" as const,
+        signature: `text:${unit}`,
+        value: unit,
+      })),
+    ],
+    [leading, value]
+  );
+  const signatures = units.map((unit) => unit.signature);
   const ledgerRef = useRef<TextGlyphLedger>({
     previousValue: value,
-    previousUnits: units,
+    previousSignatures: signatures,
     glyphKeys: units.map((_, index) => `${namespace}:c${index}`),
     nextSeed: units.length,
   });
 
-  if (value !== ledgerRef.current.previousValue) {
+  if (
+    value !== ledgerRef.current.previousValue ||
+    signatures.length !== ledgerRef.current.previousSignatures.length ||
+    signatures.some(
+      (signature, index) => signature !== ledgerRef.current.previousSignatures[index]
+    )
+  ) {
     // keep ids stable so unchanged glyphs stay mounted between updates
     const nextLedger = reconcileTextGlyphKeys(
-      ledgerRef.current.previousUnits,
-      units,
+      ledgerRef.current.previousSignatures,
+      signatures,
       ledgerRef.current.glyphKeys,
       ledgerRef.current.nextSeed,
       namespace
@@ -37,7 +61,7 @@ export const useTextGlyphs = (
 
     ledgerRef.current = {
       previousValue: value,
-      previousUnits: units,
+      previousSignatures: signatures,
       glyphKeys: nextLedger.glyphKeys,
       nextSeed: nextLedger.nextSeed,
     };
@@ -49,7 +73,10 @@ export const useTextGlyphs = (
     () =>
       units.map((unit, index) => ({
         id: glyphKeys[index],
-        value: normalizeDisplayUnit(unit),
+        kind: unit.kind,
+        ...(unit.kind === "text"
+          ? { value: normalizeDisplayUnit(unit.value) }
+          : { element: unit.element }),
       })),
     [glyphKeys, units]
   );

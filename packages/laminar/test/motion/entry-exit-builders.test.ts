@@ -1,4 +1,7 @@
-import { createShiftTransition } from "../../src/motion/entry-exit-builders";
+import {
+  createLeadingExitTransition,
+  createShiftTransition,
+} from "../../src/motion/entry-exit-builders";
 
 const easing = ((value: number) => value) as never;
 
@@ -49,6 +52,27 @@ describe("shift transition builder", () => {
     expect(transition({} as never).initialValues).toEqual({
       opacity: 1,
       transform: [{ translateY: 0 }, { scale: 1 }],
+    });
+  });
+
+  test("ET-DT-003 leading element exits left while fading", () => {
+    const transition = createLeadingExitTransition({
+      durationMs: 380,
+      easing,
+      leadingGap: 4,
+    });
+
+    expect(
+      transition({ currentOriginX: 40, currentWidth: 18 } as never)
+    ).toMatchObject({
+      initialValues: {
+        opacity: 1,
+        originX: 40,
+      },
+      animations: {
+        opacity: expect.anything(),
+        originX: expect.objectContaining({ toValue: 18 }),
+      },
     });
   });
 });

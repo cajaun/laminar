@@ -12,6 +12,8 @@ import {
   AnimationLayerDemoPage,
   AutoSizeDemoPage,
   ButtonDemoPage,
+  ConfirmationDemoPage,
+  PressableSplitDemoPage,
   EditorDemoPage,
   NumbersDemoPage,
   NumberIdentityDemoPage,
@@ -65,6 +67,10 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
           <WordsDemoPage metrics={metrics} state={state} />
         ) : page?.id === "button" ? (
           <ButtonDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "confirmation" ? (
+          <ConfirmationDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "pressableSplit" ? (
+          <PressableSplitDemoPage metrics={metrics} state={state} />
         ) : page?.id === "slots" ? (
           <SlotsDemoPage metrics={metrics} state={state} />
         ) : page?.id === "slotValues" ? (
@@ -86,11 +92,14 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
       }}
     >
       <CarouselContent renderItem={renderExamplePage} width={width} />
-      <DemoFooter
-        metrics={metrics}
-        onReverse={state.reverse}
-        onMorph={state.morph}
-      />
+      {examplePages[currentIndex]?.id === "confirmation" ||
+      examplePages[currentIndex]?.id === "pressableSplit" ? null : (
+        <DemoFooter
+          metrics={metrics}
+          onReverse={state.reverse}
+          onMorph={state.morph}
+        />
+      )}
     </View>
   );
 }

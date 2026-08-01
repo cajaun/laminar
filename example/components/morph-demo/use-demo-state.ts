@@ -3,6 +3,7 @@ import {
   animationLayerValues,
   autoSizeValues,
   buttonWords,
+  confirmContinueWords,
   editorWords,
   examplePages,
   fontSizes,
@@ -22,6 +23,7 @@ export function useDemoState(activePageIndex: number) {
   const [fontWeightIndex, setFontWeightIndex] = useState(1);
   const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
   const [buttonWordIndex, setButtonWordIndex] = useState(0);
+  const [confirmationWordIndex, setConfirmationWordIndex] = useState(0);
   const [numberIndex, setNumberIndex] = useState(0);
   const [slotIndex, setSlotIndex] = useState(0);
   const [textIdentityIndex, setTextIdentityIndex] = useState(0);
@@ -35,6 +37,7 @@ export function useDemoState(activePageIndex: number) {
   const editorWord = editorWords[editorWordIndex];
   const standaloneWord = standaloneWords[standaloneWordIndex];
   const buttonWord = buttonWords[buttonWordIndex];
+  const confirmationWord = confirmContinueWords[confirmationWordIndex];
   const numberValue = numericValues[numberIndex];
   const slotValue = slotValues[slotIndex];
   const textIdentityWord = textIdentityWords[textIdentityIndex];
@@ -86,6 +89,12 @@ export function useDemoState(activePageIndex: number) {
 
   const cycleButtonWord = useCallback(() => {
     setButtonWordIndex((index) => stepForward(index, buttonWords.length));
+  }, []);
+
+  const cycleConfirmation = useCallback(() => {
+    setConfirmationWordIndex((index) =>
+      stepForward(index, confirmContinueWords.length)
+    );
   }, []);
 
   const cycleNumber = useCallback(() => {
@@ -218,6 +227,7 @@ export function useDemoState(activePageIndex: number) {
       editorWord,
       standaloneWord,
       buttonWord,
+      confirmationWord,
       textIdentityWord,
       previousTextIdentityWord,
       nextTextIdentityWord,
@@ -241,6 +251,7 @@ export function useDemoState(activePageIndex: number) {
       cycleEditorWord,
       cycleStandaloneWord,
       cycleButtonWord,
+      cycleConfirmation,
       cycleNumber,
       cycleSlots,
       morph,
@@ -255,7 +266,9 @@ export function useDemoState(activePageIndex: number) {
       previousAutoSizeValue,
       nextAutoSizeValue,
       buttonWord,
+      confirmationWord,
       cycleButtonWord,
+      cycleConfirmation,
       cycleEditorWord,
       cycleFontSize,
       cycleFontWeight,

@@ -27,6 +27,31 @@ describe("public Laminar API", () => {
     expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(0);
   });
 
+  test("API-DT-006 reconciles a leading inline element with text updates", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar
+          text="Confirm"
+          leading={<Text>icon</Text>}
+          autoSize={false}
+        />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "icon")
+    ).toBe(true);
+
+    act(() => {
+      renderer.update(<Laminar text="Confirm Slippage" autoSize={false} />);
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "icon")
+    ).toBe(false);
+  });
+
   test("API-EP-001 coerces number and nullish runtime inputs without throwing", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     expect(() => {
