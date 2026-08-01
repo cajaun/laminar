@@ -5,6 +5,7 @@ import {
   withDelay,
   withTiming,
 } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 
 type TransitionParams = {
   readonly delayMs?: number;
@@ -22,6 +23,32 @@ type LeadingExitTransitionParams = {
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
   readonly leadingGap: number;
+  readonly scale?: boolean | SharedValue<number>;
+};
+
+type LeadingEnterTransitionParams = {
+  readonly durationMs: number;
+  readonly easing: NonNullable<WithTimingConfig["easing"]>;
+};
+
+export const createLeadingEnterTransition = ({
+  durationMs,
+  easing,
+}: LeadingEnterTransitionParams): EntryExitAnimationFunction => {
+  return () => {
+    "worklet";
+
+    return {
+      initialValues: {
+        opacity: 0,
+        transform: [{ scale: 0.5 }],
+      },
+      animations: {
+        opacity: withTiming(1, { duration: durationMs, easing }),
+        transform: [{ scale: withTiming(1, { duration: durationMs, easing }) }],
+      },
+    };
+  };
 };
 
 export const createShiftTransition = ({
@@ -84,14 +111,19 @@ export const createLeadingExitTransition = ({
   durationMs,
   easing,
   leadingGap,
+  scale = false,
 }: LeadingExitTransitionParams): EntryExitAnimationFunction => {
   return (values: ExitAnimationsValues) => {
     "worklet";
+
+    const shouldScale =
+      typeof scale === "object" ? scale.value > 0.5 : scale;
 
     return {
       initialValues: {
         opacity: 1,
         originX: values.currentOriginX,
+        ...(shouldScale ? { transform: [{ scale: 1 }] } : {}),
       },
       animations: {
         opacity: withTiming(0, { duration: durationMs, easing }),
@@ -99,6 +131,13 @@ export const createLeadingExitTransition = ({
           values.currentOriginX - values.currentWidth - leadingGap,
           { duration: durationMs, easing }
         ),
+        ...(shouldScale
+          ? {
+              transform: [
+                { scale: withTiming(0.5, { duration: durationMs, easing }) },
+              ],
+            }
+          : {}),
       },
     };
   };

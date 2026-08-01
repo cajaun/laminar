@@ -20,12 +20,19 @@ type TextGlyphUnit =
 export const useTextGlyphs = (
   value: string,
   namespace: string,
-  leading?: ReactNode
+  leading?: ReactNode,
+  leadingKey?: string | number
 ): readonly GlyphToken[] => {
   const units = useMemo<readonly TextGlyphUnit[]>(
     () => [
       ...(leading
-        ? [{ kind: "element", signature: "leading", element: leading } as const]
+        ? [
+            {
+              kind: "element",
+              signature: `leading:${String(leadingKey ?? "default")}`,
+              element: leading,
+            } as const,
+          ]
         : []),
       ...splitDisplayUnits(value).map((unit) => ({
         kind: "text" as const,
@@ -33,7 +40,7 @@ export const useTextGlyphs = (
         value: unit,
       })),
     ],
-    [leading, value]
+    [leading, leadingKey, value]
   );
   const signatures = units.map((unit) => unit.signature);
   const ledgerRef = useRef<TextGlyphLedger>({

@@ -24,6 +24,7 @@ export const GlyphRun = React.memo(
     glyphs,
     layoutTransition,
     enterTransition,
+    elementEnterTransition,
     exitTransition,
     elementExitTransition,
     leadingGap,
@@ -34,6 +35,7 @@ export const GlyphRun = React.memo(
     glyphs: readonly GlyphToken[];
     layoutTransition?: ComplexAnimationBuilder;
     enterTransition?: EntryExitAnimationFunction;
+    elementEnterTransition?: EntryExitAnimationFunction;
     exitTransition?: EntryExitAnimationFunction;
     elementExitTransition?: EntryExitAnimationFunction;
     leadingGap?: number;
@@ -48,7 +50,7 @@ export const GlyphRun = React.memo(
             <Animated.View
               key={glyph.id}
               layout={layoutTransition}
-              entering={enterTransition}
+              entering={elementEnterTransition ?? enterTransition}
               exiting={elementExitTransition ?? exitTransition}
               style={[
                 { alignItems: "center", justifyContent: "center" },

@@ -54,10 +54,8 @@ export default function Counter() {
 }
 ```
 
-`Laminar` is the default export. `MorphingText` remains available as an alias.
-
 ```tsx
-import Laminar, { MorphingText } from "react-native-laminar";
+import { Laminar } from "react-native-laminar";
 ```
 
 ## Choose a Variant
@@ -133,9 +131,8 @@ sizes, or line heights.
 ### Exports
 
 ```tsx
-import Laminar, {
-  Laminar as NamedLaminar,
-  MorphingText,
+import {
+  Laminar,
   type LaminarProps,
   type LaminarAlign,
   type MorphAnimationPresetName,
@@ -143,16 +140,19 @@ import Laminar, {
 } from "react-native-laminar";
 ```
 
-`Laminar`, `NamedLaminar`, and `MorphingText` refer to the same memoized
-component.
+`Laminar` is the package's only component export.
 
-Text mode can also reconcile a leading inline element with the text. When the
-element is removed, it exits through the same transition as removed glyphs:
+Text mode can reconcile leading content for each text state. Matching entries
+are selected automatically, and changing between two entries uses the icon
+replacement transition:
 
 ```tsx
 <Laminar
   text={label}
-  leading={label === "Confirm" ? <ConfirmIcon /> : undefined}
+  leading={{
+    Confirm: <ConfirmIcon />,
+    "Confirm Slippage": <SlippageIcon />,
+  }}
   variant="text"
   autoSize={false}
   align="center"
@@ -170,7 +170,8 @@ element is removed, it exits through the same transition as removed glyphs:
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
 | `className` | `string` | `undefined` | Utility classes passed to visible text |
-| `leading` | `ReactNode` | `undefined` | Optional leading element reconciled as an inline token in text mode |
+| `leading` | `ReactNode \| Record<string, ReactNode>` | `undefined` | Optional leading element, or text-keyed leading content, in text mode |
+| `leadingKey` | `string \| number` | `undefined` | Advanced identity override for a direct leading element |
 | `leadingGap` | `number` | `0` | Spacing between the leading element and the first text glyph |
 | `style` | `StyleProp<TextStyle>` | `undefined` | Final text style layer |
 | `fontStyle` | `StyleProp<TextStyle>` | `undefined` | Shared font style layer |

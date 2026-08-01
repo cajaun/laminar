@@ -14,6 +14,7 @@ export type MorphAnimationPresetName =
 
 export type MorphContentVariant = "text" | "number" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
+export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 type CubicBezierTuple = readonly [number, number, number, number];
 
@@ -54,7 +55,9 @@ export type MorphingTextProps = {
   readonly align?: LaminarAlign;
   readonly className?: string;
   /** Optional inline element reconciled and animated as the leading token. */
-  readonly leading?: ReactNode;
+  readonly leading?: ReactNode | LaminarLeadingMap;
+  /** Identity for swapping one leading element for another. */
+  readonly leadingKey?: string | number;
   /** Spacing between the leading element and the first text glyph. */
   readonly leadingGap?: number;
   readonly style?: StyleProp<TextStyle>;

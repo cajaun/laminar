@@ -138,6 +138,9 @@ type LaminarProps = {
   fontSize?: number;
   color?: string;
   align?: "left" | "center" | "right";
+  leading?: ReactNode | Readonly<Record<string, ReactNode>>;
+  leadingKey?: string | number;
+  leadingGap?: number;
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   fontStyle?: StyleProp<TextStyle>;
@@ -156,6 +159,9 @@ type LaminarProps = {
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
+| `leading`           | Undefined                                   | Optional inline element, or text-keyed leading content, rendered in text mode.   |
+| `leadingKey`        | Undefined                                   | Advanced identity override for a direct leading element.                          |
+| `leadingGap`        | `0`                                         | Spacing between the leading element and the first text glyph.                      |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
 | `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |

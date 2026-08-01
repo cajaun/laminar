@@ -47,7 +47,6 @@ function ConfirmationPage({ metrics, state }: DemoPageProps) {
             align="center"
             animationPreset="default"
             clipToBounds={false}
-            containerStyle={{ width: "100%" }}
             style={{
               color: "#ffffff",
               fontFamily: "Sf-bold",

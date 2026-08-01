@@ -71,4 +71,23 @@ describe("identity ledger hooks", () => {
     expect(hook.result.every((glyph) => glyph.kind === "text")).toBe(true);
     expect(hook.result.some((glyph) => glyph.id === leadingToken.id)).toBe(false);
   });
+
+  test("HTG-DT-003 leading keys replace an element so it can exit and enter", () => {
+    const hook = renderHook(
+      ({ leadingKey }: { leadingKey: string }) =>
+        useTextGlyphs(
+          "Continue",
+          "leading-key",
+          <Text>{leadingKey}</Text>,
+          leadingKey
+        ),
+      { leadingKey: "loading" }
+    );
+    const loadingToken = hook.result[0];
+
+    hook.rerender({ leadingKey: "success" });
+
+    expect(hook.result[0].kind).toBe("element");
+    expect(hook.result[0].id).not.toBe(loadingToken.id);
+  });
 });

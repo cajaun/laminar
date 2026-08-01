@@ -7,7 +7,7 @@ import {
   normalizeDisplayUnit,
   splitDisplayUnits,
 } from "./model/display-units";
-import type { MorphingTextProps } from "./types";
+import type { LaminarLeadingMap, MorphingTextProps } from "./types";
 import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
 import { SlotsRun } from "./view/slots-run";
@@ -21,6 +21,7 @@ export const Laminar = React.memo(function Laminar({
     align = "left",
     className,
     leading,
+    leadingKey,
     leadingGap = 0,
     style,
     containerStyle,
@@ -32,6 +33,11 @@ export const Laminar = React.memo(function Laminar({
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
+    const leadingMap = isLeadingMap(leading) ? leading : undefined;
+    const resolvedLeading: React.ReactNode = leadingMap
+      ? leadingMap[resolvedValue]
+      : (leading as React.ReactNode);
+    const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
     const { motionRecipe, staggerMs } = useMorphMotion({
       variant,
       animationPreset,
@@ -58,8 +64,18 @@ export const Laminar = React.memo(function Laminar({
         flattenedStyle?.letterSpacing,
         flattenedStyle?.lineHeight,
         flattenedStyle?.textTransform,
+        variant === "text" && Boolean(resolvedLeading),
+        variant === "text" ? resolvedLeadingKey : undefined,
+        variant === "text" ? leadingGap : 0,
       ]);
-    }, [resolvedValue, textStyle]);
+    }, [
+      leadingGap,
+      resolvedLeading,
+      resolvedLeadingKey,
+      resolvedValue,
+      textStyle,
+      variant,
+    ]);
     const { captureLayout, animatedWidthStyle, shouldMeasure } =
       useInlineAutoWidth({
         enabled: autoSize,
@@ -89,6 +105,17 @@ export const Laminar = React.memo(function Laminar({
               onLayout={captureLayout}
               style={{ flexDirection: "row", alignSelf: "flex-start" }}
             >
+              {variant === "text" && resolvedLeading ? (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: leadingGap,
+                  }}
+                >
+                  {resolvedLeading}
+                </View>
+              ) : null}
               {splitDisplayUnits(measuredValue).map((unit, index) => (
                 <Text key={`${unit}-${index}`} style={textStyle}>
                   {normalizeDisplayUnit(unit)}
@@ -123,7 +150,8 @@ export const Laminar = React.memo(function Laminar({
             value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
-            leading={leading}
+            leading={resolvedLeading}
+            leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
             textStyle={textStyle}
             className={className}
@@ -133,11 +161,20 @@ export const Laminar = React.memo(function Laminar({
   );
   });
 
-export const MorphingText = Laminar;
+function isLeadingMap(
+  value: MorphingTextProps["leading"]
+): value is LaminarLeadingMap {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !React.isValidElement(value) &&
+    !Array.isArray(value)
+  );
+}
 
-export default Laminar;
 export type {
   LaminarAlign,
+  LaminarLeadingMap,
   LaminarProps,
   MorphAnimationPresetName,
   MorphContentVariant,

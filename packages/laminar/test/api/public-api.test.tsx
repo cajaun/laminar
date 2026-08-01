@@ -1,17 +1,9 @@
 import React from "react";
 import { Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
-import LaminarDefault, {
-  Laminar,
-  MorphingText,
-} from "../../src";
+import { Laminar } from "../../src";
 
 describe("public Laminar API", () => {
-  test("API-REG-001 default and compatibility exports share one component", () => {
-    expect(LaminarDefault).toBe(Laminar);
-    expect(MorphingText).toBe(Laminar);
-  });
-
   test.each([
     ["API-DT-001 text", "text"],
     ["API-DT-002 number", "number"],
@@ -49,6 +41,37 @@ describe("public Laminar API", () => {
 
     expect(
       renderer.root.findAllByType(Text).some((node) => node.props.children === "icon")
+    ).toBe(false);
+  });
+
+  test("API-DT-007 selects keyed leading content from the current text", () => {
+    const leading = {
+      Loading: <Text>spinner</Text>,
+      Success: <Text>check</Text>,
+    };
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar text="Loading" leading={leading} autoSize={false} />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "spinner")
+    ).toBe(true);
+
+    act(() => {
+      renderer.update(
+        <Laminar text="Success" leading={leading} autoSize={false} />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "check")
+    ).toBe(true);
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "spinner")
     ).toBe(false);
   });
 

@@ -1,4 +1,5 @@
 import {
+  createLeadingEnterTransition,
   createLeadingExitTransition,
   createShiftTransition,
 } from "../../src/motion/entry-exit-builders";
@@ -6,6 +7,24 @@ import {
 const easing = ((value: number) => value) as never;
 
 describe("shift transition builder", () => {
+  test("ET-DT-004 leading elements scale in", () => {
+    const transition = createLeadingEnterTransition({
+      durationMs: 380,
+      easing,
+    });
+
+    expect(transition({} as never)).toMatchObject({
+      initialValues: {
+        opacity: 0,
+        transform: [{ scale: 0.5 }],
+      },
+      animations: {
+        opacity: expect.anything(),
+        transform: [{ scale: expect.anything() }],
+      },
+    });
+  });
+
   test.each([
     ["ET-DT-001 immediate", 0],
     ["ET-DT-002 delayed", 25],
@@ -73,6 +92,22 @@ describe("shift transition builder", () => {
         opacity: expect.anything(),
         originX: expect.objectContaining({ toValue: 18 }),
       },
+    });
+  });
+
+  test("ET-DT-005 leading replacement also scales the outgoing element", () => {
+    const transition = createLeadingExitTransition({
+      durationMs: 380,
+      easing,
+      leadingGap: 4,
+      scale: true,
+    });
+
+    expect(
+      transition({ currentOriginX: 40, currentWidth: 18 } as never)
+    ).toMatchObject({
+      initialValues: { transform: [{ scale: 1 }] },
+      animations: { transform: [{ scale: expect.anything() }] },
     });
   });
 });
