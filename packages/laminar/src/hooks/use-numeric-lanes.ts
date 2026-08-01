@@ -20,6 +20,7 @@ type NumericLaneSnapshot = {
   readonly leadLength: number;
 };
 
+// retain numeric lane identity across value changes without storing it in state
 export const useNumericLanes = (value: string): NumericLaneSnapshot => {
   const units = useMemo(() => splitDisplayUnits(value), [value]);
   const ledgerRef = useRef<NumericLedger>({

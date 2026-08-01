@@ -4,9 +4,11 @@ import {
   splitDisplayUnits,
 } from "./display-units";
 
+// strip formatting before comparing values so direction follows the displayed number
 const readNumericMagnitude = (input: string) =>
   parseFloat(input.replace(/[^0-9.-]/g, "")) || 0;
 
+// the sign controls which side of each digit lane enters and exits
 const deriveFlowDirection = (
   previousValue: string,
   nextValue: string
@@ -19,6 +21,7 @@ type ReconciledLaneState = {
   readonly direction: NumericFlowDirection;
 };
 
+// preserve right-aligned place values while allowing prefixes to grow or shrink
 export const reconcileNumericLanes = (
   previousValue: string,
   nextValue: string,

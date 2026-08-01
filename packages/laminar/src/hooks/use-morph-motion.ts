@@ -18,13 +18,14 @@ type MorphMotion = {
   readonly staggerMs: number;
 };
 
+// resolve one motion recipe and one shared stagger unit for a render tree
 export const useMorphMotion = ({
   variant,
   animationPreset,
   animationDuration,
   stagger,
 }: Params): MorphMotion => {
-  // numbers feel better with snappy unless you pick something else
+  // numeric variants need a quicker default because their lanes update often
   const resolvedPreset =
     animationPreset ?? (variant === "text" ? "default" : "snappy");
 

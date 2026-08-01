@@ -45,6 +45,7 @@ const REEL_MIN = -12;
 const REEL_MAX = 22;
 const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
 
+// wrap reel positions so a bounded strip can represent an endless digit wheel
 const mod = (value: number, divisor: number) =>
   ((value % divisor) + divisor) % divisor;
 
@@ -55,6 +56,7 @@ type SlotReelProps = {
   readonly className?: string;
 };
 
+// compare flattened style values without treating a new array as a visual change
 const equalStyleValue = (left: unknown, right: unknown) =>
   left === right ||
   (Array.isArray(left) &&
@@ -62,6 +64,7 @@ const equalStyleValue = (left: unknown, right: unknown) =>
     left.length === right.length &&
     left.every((value, index) => value === right[index]));
 
+// prevent every parent update from rebuilding the thirty-text reel
 const areSlotReelPropsEqual = (
   previous: SlotReelProps,
   next: SlotReelProps
@@ -93,6 +96,7 @@ const SlotReel = React.memo(function SlotReel({
   textStyle,
   className,
 }: SlotReelProps) {
+  // translate one bounded reel instead of mounting a new animated digit per update
   const animatedStyle = useAnimatedStyle(
     () => ({
       transform: [{ translateY: (-10 - current.value) * slotHeight }],
@@ -159,6 +163,7 @@ function SlotColumn({
   textStyle,
   className,
 }: SlotColumnProps) {
+  // cumulative positions let the reel move across digit wraparound without jumps
   const spinInDistance = Math.max(digit, 1);
   const initialDirection = direction || 1;
   const initialValue = animateIn
@@ -205,6 +210,7 @@ function SlotColumn({
   };
 
   useEffect(() => {
+    // continue the current reel from its last committed target when the column exits
     return () => {
       const exitState = exitStateRef.current;
       const spinOutDistance = Math.max(exitState.digit, 1);
@@ -217,6 +223,7 @@ function SlotColumn({
   }, [current]);
 
   useEffect(() => {
+    // keep the reel bounded by recentring after enough cumulative turns
     if (initialRef.current) {
       initialRef.current = false;
 
@@ -275,6 +282,7 @@ type SlotsRunProps = {
   readonly className?: string;
 };
 
+// render text prefixes beside reusable digit reels
 export const SlotsRun = React.memo(
   ({
     value,
@@ -285,9 +293,11 @@ export const SlotsRun = React.memo(
     staggerMs,
     className,
   }: Readonly<SlotsRunProps>) => {
+    // numeric lane identity decides which columns stay mounted as values change
     const { units, direction, leadLength } = useNumericLanes(value);
     const lastValueRef = useRef(value);
     const hasAnimatedRef = useRef(false);
+    // derive one stable row height so every reel position shares the same baseline
     const slotHeight = useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
       const resolvedLineHeight =

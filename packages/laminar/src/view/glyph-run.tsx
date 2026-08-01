@@ -19,6 +19,7 @@ const rowAlignStyles = {
   right: { alignSelf: "flex-end" },
 } as const;
 
+// render text and inline elements through one animated token row
 export const GlyphRun = React.memo(
   ({
     glyphs,
@@ -43,6 +44,7 @@ export const GlyphRun = React.memo(
     textStyle?: StyleProp<TextStyle>;
     className?: string;
   }>) => (
+    // each token keeps its own view so reanimated can animate only changed content
       <View style={[rowStyle, rowAlignStyles[align]]}>
         {/* glyph ids decide what swaps, layout handles the row reflow */}
         {glyphs.map((glyph, glyphIndex) =>

@@ -26,6 +26,7 @@ type NumberRunProps = {
   readonly className?: string;
 };
 
+// arrange numeric lanes from left to right while the hook preserves their identities
 export const NumberRun = React.memo(
   ({
     value,
@@ -36,6 +37,7 @@ export const NumberRun = React.memo(
     staggerMs,
     className,
   }: Readonly<NumberRunProps>) => {
+    // the hook owns lane identity while this component owns row placement and timing
     const { units, laneKeys, direction, leadLength } = useNumericLanes(value);
     const lastValueRef = useRef(value);
     const hasAnimatedRef = useRef(false);
@@ -46,6 +48,7 @@ export const NumberRun = React.memo(
       lastValueRef.current = value;
     }
 
+    // scale travel from the font while keeping a minimum visible movement
     const travelDistance = useMemo(
       () => Math.max(8, Math.round((fontSize ?? 16) * 0.4)),
       [fontSize]

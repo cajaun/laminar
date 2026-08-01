@@ -56,6 +56,7 @@ type MorphViewportProps = {
   readonly children: React.ReactNode;
 };
 
+// separate hidden measurement from visible content while sharing the shell alignment
 export const MorphViewport = React.memo(
   ({
     autoSize,
@@ -66,6 +67,7 @@ export const MorphViewport = React.memo(
     measurement,
     children,
   }: MorphViewportProps) => {
+    // compute alignment once so the animated shell and its child share one layout contract
     const resolvedViewportStyle = useMemo(
       () => [
         viewportStyle,
@@ -75,6 +77,7 @@ export const MorphViewport = React.memo(
       [align, clipToBounds]
     );
 
+    // keep measurement outside the visible viewport so it cannot affect accessibility or layout
     return (
       <View style={[shellStyle, shellAlignStyles[align], containerStyle]}>
         {autoSize ? (

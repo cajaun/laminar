@@ -13,6 +13,7 @@ import { NumberRun } from "./view/number-run";
 import { SlotsRun } from "./view/slots-run";
 import { TextRun } from "./view/text-run";
 
+// choose the content variant and connect it to the shared viewport and measurement flow
 export const Laminar = React.memo(function Laminar({
     text,
     variant = "text",
@@ -33,6 +34,7 @@ export const Laminar = React.memo(function Laminar({
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
+    // resolve state keyed leading content before measurement and token reconciliation
     const leadingMap = isLeadingMap(leading) ? leading : undefined;
     const resolvedLeading: React.ReactNode = leadingMap
       ? leadingMap[resolvedValue]
@@ -51,6 +53,7 @@ export const Laminar = React.memo(function Laminar({
       style,
     });
 
+    // invalidate the probe when text style, leading content, or leading spacing changes
     const measurementKey = React.useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
 
@@ -82,6 +85,7 @@ export const Laminar = React.memo(function Laminar({
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
       });
+    // measurement uses the same normalized units as the visible text row
     const measuredValue = React.useMemo(() => {
       if (!autoSize) {
         return "";
@@ -164,6 +168,7 @@ export const Laminar = React.memo(function Laminar({
 function isLeadingMap(
   value: MorphingTextProps["leading"]
 ): value is LaminarLeadingMap {
+  // react elements are objects too, so exclude them before treating a value as a map
   return (
     typeof value === "object" &&
     value !== null &&

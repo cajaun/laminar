@@ -17,6 +17,7 @@ type TextGlyphUnit =
   | { readonly kind: "text"; readonly signature: string; readonly value: string }
   | { readonly kind: "element"; readonly signature: string; readonly element: ReactNode };
 
+// build the inline token stream that lets text and leading content share one ledger
 export const useTextGlyphs = (
   value: string,
   namespace: string,
@@ -25,6 +26,7 @@ export const useTextGlyphs = (
 ): readonly GlyphToken[] => {
   const units = useMemo<readonly TextGlyphUnit[]>(
     () => [
+      // the map key becomes the identity when leading content is state keyed
       ...(leading
         ? [
             {
@@ -50,6 +52,7 @@ export const useTextGlyphs = (
     nextSeed: units.length,
   });
 
+  // reconcile only when a token signature changes so stable glyphs keep their views
   if (
     value !== ledgerRef.current.previousValue ||
     signatures.length !== ledgerRef.current.previousSignatures.length ||
@@ -76,6 +79,7 @@ export const useTextGlyphs = (
 
   const glyphKeys = ledgerRef.current.glyphKeys;
 
+  // normalize spaces at the edge where tokens become renderable glyphs
   return useMemo(
     () =>
       units.map((unit, index) => ({

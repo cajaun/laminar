@@ -4,6 +4,7 @@ const graphemeSegmenter =
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
     : null;
 
+// segment graphemes when the runtime supports them so emoji and combining marks stay whole
 export const splitDisplayUnits = (input: string): string[] => {
   if (graphemeSegmenter) {
     return Array.from(
@@ -15,12 +16,14 @@ export const splitDisplayUnits = (input: string): string[] => {
   return Array.from(input);
 };
 
-// swap plain spaces so measured text keeps its width
+// replace plain spaces because native text measurement can collapse them
 export const normalizeDisplayUnit = (unit: string) =>
   unit === " " ? NBSP : unit;
 
+// numeric lanes only treat ascii digits as place-value columns
 export const isAsciiDigit = (unit: string) => unit >= "0" && unit <= "9";
 
+// leading symbols and punctuation stay attached to the left side of a number
 export const findNumericLeadLength = (units: readonly string[]) => {
   const firstDigitIndex = units.findIndex(isAsciiDigit);
 

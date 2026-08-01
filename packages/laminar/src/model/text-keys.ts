@@ -1,3 +1,4 @@
+// find the longest ordered set of shared units so edits keep nearby glyph identity
 const computeLcsPairs = (
   previousUnits: readonly string[],
   nextUnits: readonly string[]
@@ -9,6 +10,7 @@ const computeLcsPairs = (
     return [];
   }
 
+  // dynamic programming makes the middle edit deterministic when prefix and suffix match
   const dp = Array.from({ length: previousLength + 1 }, () =>
     new Array<number>(nextLength + 1).fill(0)
   );
@@ -54,6 +56,7 @@ type ReconciledTextGlyphState = {
   readonly nextSeed: number;
 };
 
+// reuse prefix, suffix, and lcs matches before allocating keys for new glyphs
 export const reconcileTextGlyphKeys = (
   previousUnits: readonly string[],
   nextUnits: readonly string[],

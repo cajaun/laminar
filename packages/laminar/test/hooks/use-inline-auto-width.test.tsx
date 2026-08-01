@@ -82,4 +82,33 @@ describe("useInlineAutoWidth", () => {
     hook.rerender({ enabled: false });
     expect(hook.result.animatedWidthStyle).toEqual({});
   });
+
+  test("HAW-ST-002 evicts the least recently used width after promoting a hit", () => {
+    const driveToWidth = jest.fn((value: number) => value);
+    const hook = renderHook(
+      ({ measurementKey }: { measurementKey: string }) =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey,
+        }),
+      { measurementKey: "key-0" }
+    );
+
+    act(() => hook.result.captureLayout(layoutEvent(10)));
+
+    for (let index = 1; index <= 64; index += 1) {
+      hook.rerender({ measurementKey: `key-${index}` });
+      act(() => hook.result.captureLayout(layoutEvent(index + 10)));
+    }
+
+    hook.rerender({ measurementKey: "key-1" });
+    expect(hook.result.shouldMeasure).toBe(false);
+
+    hook.rerender({ measurementKey: "key-65" });
+    act(() => hook.result.captureLayout(layoutEvent(75)));
+
+    hook.rerender({ measurementKey: "key-2" });
+    expect(hook.result.shouldMeasure).toBe(true);
+  });
 });

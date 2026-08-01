@@ -14,6 +14,7 @@ export type MorphAnimationPresetName =
 
 export type MorphContentVariant = "text" | "number" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
+// text keys let leading content follow the same state as the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 type CubicBezierTuple = readonly [number, number, number, number];
@@ -39,6 +40,7 @@ export type GlyphToken = {
 export type NumericFlowDirection = -1 | 0 | 1;
 
 export type MotionRecipe = {
+  // every variant consumes the same timing and layout contract
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
   readonly layoutTransition: ComplexAnimationBuilder;
@@ -54,11 +56,11 @@ export type MorphingTextProps = {
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
-  /** Optional inline element reconciled and animated as the leading token. */
+  /** optional inline element reconciled and animated as the leading token */
   readonly leading?: ReactNode | LaminarLeadingMap;
-  /** Identity for swapping one leading element for another. */
+  /** identity for swapping one leading element for another */
   readonly leadingKey?: string | number;
-  /** Spacing between the leading element and the first text glyph. */
+  /** spacing between the leading element and the first text glyph */
   readonly leadingGap?: number;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;

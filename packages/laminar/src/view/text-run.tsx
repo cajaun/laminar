@@ -21,6 +21,7 @@ type TextRunProps = {
   readonly className?: string;
 };
 
+// connect text identity, leading transitions, and glyph layout into one run
 export const TextRun = React.memo(
   ({
     value,
@@ -42,6 +43,7 @@ export const TextRun = React.memo(
       Boolean(leading) &&
       lastLeadingPresenceRef.current &&
       leadingKey !== lastLeadingKeyRef.current;
+    // update the worklet flag after commit so render never writes a shared value
     const leadingSwapProgress = useSharedValue(0);
     useLayoutEffect(() => {
       leadingSwapProgress.value = isLeadingSwap ? 1 : 0;
@@ -71,6 +73,7 @@ export const TextRun = React.memo(
       ]
     );
 
+    // mark the first value as settled and later changes as eligible for motion
     if (
       value !== lastValueRef.current ||
       Boolean(leading) !== lastLeadingPresenceRef.current ||

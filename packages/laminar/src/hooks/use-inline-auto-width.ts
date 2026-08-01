@@ -10,6 +10,7 @@ type Params = {
 
 const WIDTH_CACHE_LIMIT = 64;
 
+// measure each content signature once and drive later changes through one width value
 export const useInlineAutoWidth = ({
   enabled,
   driveToWidth,
@@ -21,6 +22,7 @@ export const useInlineAutoWidth = ({
   const widthCacheRef = useRef(new Map<string, number>());
   const [hasBootstrappedWidth, setHasBootstrappedWidth] = useState(false);
 
+  // the first measurement establishes the shell without animating from zero
   const applyWidth = useCallback(
     (nextWidth: number) => {
       if (measuredWidthRef.current === nextWidth) {
@@ -47,12 +49,14 @@ export const useInlineAutoWidth = ({
         return;
       }
 
+      // round up so fractional native measurements cannot clip the final glyph
       const nextWidth = Math.max(0, Math.ceil(event.nativeEvent.layout.width));
 
-      if (
-        !widthCacheRef.current.has(measurementKey) &&
-        widthCacheRef.current.size >= WIDTH_CACHE_LIMIT
-      ) {
+      // delete before setting so a repeated key moves to the most recent position
+      widthCacheRef.current.delete(measurementKey);
+
+      if (widthCacheRef.current.size >= WIDTH_CACHE_LIMIT) {
+        // map insertion order gives the lru entry at the front
         const oldestKey = widthCacheRef.current.keys().next().value;
 
         if (oldestKey !== undefined) {
@@ -68,8 +72,12 @@ export const useInlineAutoWidth = ({
 
   const cachedWidth = widthCacheRef.current.get(measurementKey);
 
+  // a cached width can restore the shell before the hidden probe renders again
   useEffect(() => {
     if (enabled && cachedWidth !== undefined) {
+      // promote cache hits so active states stay available longer
+      widthCacheRef.current.delete(measurementKey);
+      widthCacheRef.current.set(measurementKey, cachedWidth);
       applyWidth(cachedWidth);
     }
   }, [applyWidth, cachedWidth, enabled, measurementKey]);

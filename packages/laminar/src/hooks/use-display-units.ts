@@ -4,6 +4,7 @@ import {
   splitDisplayUnits,
 } from "../model/display-units";
 
+// normalize the same units used by rendering before measurement reads them
 export const useDisplayUnits = (
   value: string,
   enabled = true
