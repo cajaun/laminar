@@ -273,7 +273,6 @@ type SlotsRunProps = {
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
   readonly className?: string;
-  readonly animateTransitions?: boolean;
 };
 
 export const SlotsRun = React.memo(
@@ -285,7 +284,6 @@ export const SlotsRun = React.memo(
     textStyle,
     staggerMs,
     className,
-    animateTransitions = true,
   }: Readonly<SlotsRunProps>) => {
     const { units, direction, leadLength } = useNumericLanes(value);
     const lastValueRef = useRef(value);
@@ -328,16 +326,8 @@ export const SlotsRun = React.memo(
             return (
               <Animated.Text
                 key={laneKey}
-                layout={
-                  animateTransitions
-                    ? motionRecipe.layoutTransition
-                    : undefined
-                }
-                exiting={
-                  animateTransitions && !inLead
-                    ? motionRecipe.exitTransition
-                    : undefined
-                }
+                layout={motionRecipe.layoutTransition}
+                exiting={!inLead ? motionRecipe.exitTransition : undefined}
                 style={textStyle}
                 className={className}
               >
@@ -352,16 +342,12 @@ export const SlotsRun = React.memo(
           return (
             <Animated.View
               key={laneKey}
-              layout={
-                animateTransitions ? motionRecipe.layoutTransition : undefined
-              }
+              layout={motionRecipe.layoutTransition}
               entering={
-                animateTransitions && hasAnimated
-                  ? motionRecipe.enterTransition
-                  : undefined
+                hasAnimated ? motionRecipe.enterTransition : undefined
               }
               exiting={
-                animateTransitions ? motionRecipe.exitTransition : undefined
+                motionRecipe.exitTransition
               }
             >
               <SlotColumn

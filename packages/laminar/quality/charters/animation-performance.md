@@ -23,7 +23,8 @@ Disable remote JS debugging. Capture idle baseline FPS and memory first.
 3. Exercise short/long alternation, `9 <-> 10`, `99 <-> 100`, positive/negative,
    grouped decimals, currency prefixes, empty values, and repeated glyphs.
 4. Run text, number, and slots separately, then mixed.
-5. Switch screens during a burst; background/foreground; unmount mid-animation.
+5. Switch screens during rapid updates; background/foreground; unmount
+   mid-animation.
 6. Repeat with system font, custom font, explicit line height, large text, and
    clip-to-bounds.
 7. Stop updates and observe final value, animation backlog, memory recovery,

@@ -38,7 +38,7 @@ Run on at least one current iOS device and one current Android device:
 - [ ] Execute `PERF-EXP-001` on a release build, not remote debugging.
 - [ ] Capture JS and UI FPS plus profiler evidence for text, number, slots.
 - [ ] No sustained freeze, runaway memory growth, or animation backlog remains
-      after the update burst.
+      after the rapid-update sequence.
 - [ ] Compare against the last released baseline on the same device/build mode.
 
 ## Defects and release decision

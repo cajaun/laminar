@@ -10,7 +10,6 @@ type TextRunProps = {
   readonly align: LaminarAlign;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
-  readonly animateTransitions?: boolean;
 };
 
 export const TextRun = React.memo(
@@ -20,7 +19,6 @@ export const TextRun = React.memo(
     align,
     textStyle,
     className,
-    animateTransitions = true,
   }: TextRunProps) => {
     // namespace ids per instance so repeated strings do not collide
     const scopeId = useId();
@@ -36,17 +34,13 @@ export const TextRun = React.memo(
     return (
       <GlyphRun
         glyphs={glyphs}
-        layoutTransition={
-          animateTransitions ? motionRecipe.layoutTransition : undefined
-        }
+        layoutTransition={motionRecipe.layoutTransition}
         enterTransition={
-          animateTransitions && hasAnimatedRef.current
+          hasAnimatedRef.current
             ? motionRecipe.enterTransition
             : undefined
         }
-        exitTransition={
-          animateTransitions ? motionRecipe.exitTransition : undefined
-        }
+        exitTransition={motionRecipe.exitTransition}
         align={align}
         textStyle={textStyle}
         className={className}

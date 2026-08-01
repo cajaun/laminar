@@ -1,7 +1,6 @@
 import React from "react";
 import { StyleSheet, Text } from "react-native";
 import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
-import { useFrameValue } from "./hooks/use-frame-value";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
 import {
@@ -31,8 +30,6 @@ export const Laminar = React.memo(function Laminar({
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
-    const { value: presentedValue, isBursting } =
-      useFrameValue(resolvedValue);
     const { motionRecipe, staggerMs } = useMorphMotion({
       variant,
       animationPreset,
@@ -50,7 +47,7 @@ export const Laminar = React.memo(function Laminar({
       const flattenedStyle = StyleSheet.flatten(textStyle);
 
       return JSON.stringify([
-        presentedValue,
+        resolvedValue,
         flattenedStyle?.fontFamily,
         flattenedStyle?.fontSize,
         flattenedStyle?.fontStyle,
@@ -60,7 +57,7 @@ export const Laminar = React.memo(function Laminar({
         flattenedStyle?.lineHeight,
         flattenedStyle?.textTransform,
       ]);
-    }, [presentedValue, textStyle]);
+    }, [resolvedValue, textStyle]);
     const { captureLayout, animatedWidthStyle, shouldMeasure } =
       useInlineAutoWidth({
         enabled: autoSize,
@@ -72,10 +69,10 @@ export const Laminar = React.memo(function Laminar({
         return "";
       }
 
-      return splitDisplayUnits(presentedValue)
+      return splitDisplayUnits(resolvedValue)
         .map(normalizeDisplayUnit)
         .join("");
-    }, [autoSize, presentedValue]);
+    }, [autoSize, resolvedValue]);
 
     return (
       <MorphViewport
@@ -98,8 +95,7 @@ export const Laminar = React.memo(function Laminar({
       >
         {variant === "slots" ? (
           <SlotsRun
-            value={presentedValue}
-            animateTransitions={!isBursting}
+            value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
             fontSize={fontSize}
@@ -109,8 +105,7 @@ export const Laminar = React.memo(function Laminar({
           />
         ) : variant === "number" ? (
           <NumberRun
-            value={presentedValue}
-            animateTransitions={!isBursting}
+            value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
             fontSize={fontSize}
@@ -120,8 +115,7 @@ export const Laminar = React.memo(function Laminar({
           />
         ) : (
           <TextRun
-            value={presentedValue}
-            animateTransitions={!isBursting}
+            value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
             textStyle={textStyle}

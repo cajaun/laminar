@@ -52,7 +52,7 @@ require the release checklist and exploratory charters.
 - **Historical regression:** real-device clipping, lane remounts, stale width,
   first-paint animation, and rapid-update frame loss.
 - **Experience based:** fault attacks using malformed runtime values, extreme
-  lengths, mixed scripts, unusual fonts, and update bursts.
+  lengths, mixed scripts, unusual fonts, and rapid update sequences.
 
 ## Entry and exit criteria
 
