@@ -17,6 +17,7 @@ type TextRunProps = {
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
+  readonly ready?: boolean;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
 };
@@ -30,25 +31,58 @@ export const TextRun = React.memo(
     leading,
     leadingKey,
     leadingGap = 0,
+    ready = true,
     textStyle,
     className,
   }: TextRunProps) => {
     // namespace ids per instance so repeated strings do not collide
     const scopeId = useId();
-    const lastValueRef = useRef(value);
-    const lastLeadingPresenceRef = useRef(Boolean(leading));
-    const lastLeadingKeyRef = useRef(leadingKey);
+    const hasDisplayedRef = useRef(false);
+    const displayedValueRef = useRef(value);
+    const displayedLeadingRef = useRef(leading);
+    const displayedLeadingKeyRef = useRef(leadingKey);
+    const displayedLeadingGapRef = useRef(leadingGap);
+    const shouldDisplayTarget = ready || !hasDisplayedRef.current;
+    const visibleValue = shouldDisplayTarget
+      ? value
+      : displayedValueRef.current;
+    const visibleLeading = shouldDisplayTarget
+      ? leading
+      : displayedLeadingRef.current;
+    const visibleLeadingKey = shouldDisplayTarget
+      ? leadingKey
+      : displayedLeadingKeyRef.current;
+    const visibleLeadingGap = shouldDisplayTarget
+      ? leadingGap
+      : displayedLeadingGapRef.current;
+
+    if (shouldDisplayTarget) {
+      hasDisplayedRef.current = true;
+      displayedValueRef.current = value;
+      displayedLeadingRef.current = leading;
+      displayedLeadingKeyRef.current = leadingKey;
+      displayedLeadingGapRef.current = leadingGap;
+    }
+
+    const lastValueRef = useRef(visibleValue);
+    const lastLeadingPresenceRef = useRef(Boolean(visibleLeading));
+    const lastLeadingKeyRef = useRef(visibleLeadingKey);
     const hasAnimatedRef = useRef(false);
     const isLeadingSwap =
-      Boolean(leading) &&
+      Boolean(visibleLeading) &&
       lastLeadingPresenceRef.current &&
-      leadingKey !== lastLeadingKeyRef.current;
+      visibleLeadingKey !== lastLeadingKeyRef.current;
     // update the worklet flag after commit so render never writes a shared value
     const leadingSwapProgress = useSharedValue(0);
     useLayoutEffect(() => {
       leadingSwapProgress.value = isLeadingSwap ? 1 : 0;
     }, [isLeadingSwap, leadingSwapProgress]);
-    const glyphs = useTextGlyphs(value, scopeId, leading, leadingKey);
+    const glyphs = useTextGlyphs(
+      visibleValue,
+      scopeId,
+      visibleLeading,
+      visibleLeadingKey
+    );
     const elementEnterTransition = useMemo(
       () =>
         createLeadingEnterTransition({
@@ -62,11 +96,11 @@ export const TextRun = React.memo(
         createLeadingExitTransition({
           durationMs: motionRecipe.durationMs,
           easing: motionRecipe.easing,
-          leadingGap,
+          leadingGap: visibleLeadingGap,
           scale: leadingSwapProgress,
         }),
       [
-        leadingGap,
+        visibleLeadingGap,
         leadingSwapProgress,
         motionRecipe.durationMs,
         motionRecipe.easing,
@@ -75,14 +109,14 @@ export const TextRun = React.memo(
 
     // mark the first value as settled and later changes as eligible for motion
     if (
-      value !== lastValueRef.current ||
-      Boolean(leading) !== lastLeadingPresenceRef.current ||
-      leadingKey !== lastLeadingKeyRef.current
+      visibleValue !== lastValueRef.current ||
+      Boolean(visibleLeading) !== lastLeadingPresenceRef.current ||
+      visibleLeadingKey !== lastLeadingKeyRef.current
     ) {
       hasAnimatedRef.current = true;
-      lastValueRef.current = value;
-      lastLeadingPresenceRef.current = Boolean(leading);
-      lastLeadingKeyRef.current = leadingKey;
+      lastValueRef.current = visibleValue;
+      lastLeadingPresenceRef.current = Boolean(visibleLeading);
+      lastLeadingKeyRef.current = visibleLeadingKey;
     }
 
     const hasAnimated = hasAnimatedRef.current;
@@ -103,7 +137,7 @@ export const TextRun = React.memo(
         }
         exitTransition={motionRecipe.exitTransition}
         elementExitTransition={elementExitTransition}
-        leadingGap={leadingGap}
+        leadingGap={visibleLeadingGap}
         align={align}
         textStyle={textStyle}
         className={className}

@@ -60,6 +60,70 @@ describe("rendered run contracts", () => {
     ).toBe(true);
   });
 
+  test("RUN-ST-004 TextRun holds a new value until autosize is ready", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <TextRun
+          value="Send Request"
+          motionRecipe={motionRecipe}
+          align="left"
+          ready
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <TextRun
+          value="Sending Request"
+          leading={<Text>icon</Text>}
+          leadingKey="sending"
+          leadingGap={4}
+          motionRecipe={motionRecipe}
+          align="left"
+          ready={false}
+        />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "icon")
+    ).toBe(false);
+    expect(
+      renderer.root
+        .findAllByType(Text)
+        .filter((node) => typeof node.props.children === "string")
+        .map((node) => node.props.children)
+        .join("")
+    ).toContain("Send\u00a0Request");
+
+    act(() => {
+      renderer.update(
+        <TextRun
+          value="Sending Request"
+          leading={<Text>icon</Text>}
+          leadingKey="sending"
+          leadingGap={4}
+          motionRecipe={motionRecipe}
+          align="left"
+          ready
+        />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "icon")
+    ).toBe(true);
+    expect(
+      renderer.root
+        .findAllByType(Text)
+        .filter((node) => typeof node.props.children === "string")
+        .map((node) => node.props.children)
+        .join("")
+    ).toContain("Sending\u00a0Request");
+  });
+
   test("RUN-ST-002 NumberRun preserves lead text and staggers lane updates", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {

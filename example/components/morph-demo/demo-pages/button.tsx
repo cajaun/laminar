@@ -39,7 +39,7 @@ function ButtonPage({ metrics, state }: DemoPageProps) {
               ),
             }}
             leadingGap={4}
-            animationPreset="snappy"
+            animationPreset="default"
             clipToBounds={false}
             style={{
               color: "#ffffff",

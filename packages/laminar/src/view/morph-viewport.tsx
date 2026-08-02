@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { StyleProp, ViewStyle } from "react-native";
+import type { LayoutChangeEvent, StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { LaminarAlign } from "../types";
@@ -52,6 +52,7 @@ type MorphViewportProps = {
   readonly align: LaminarAlign;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
+  readonly onVisibleLayout?: (event: LayoutChangeEvent) => void;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -64,6 +65,7 @@ export const MorphViewport = React.memo(
     align,
     containerStyle,
     animatedWidthStyle,
+    onVisibleLayout,
     measurement,
     children,
   }: MorphViewportProps) => {
@@ -91,7 +93,10 @@ export const MorphViewport = React.memo(
             >
               {measurement}
             </View>
-            <Animated.View style={[resolvedViewportStyle, animatedWidthStyle]}>
+            <Animated.View
+              onLayout={onVisibleLayout}
+              style={[resolvedViewportStyle, animatedWidthStyle]}
+            >
               {children}
             </Animated.View>
           </>

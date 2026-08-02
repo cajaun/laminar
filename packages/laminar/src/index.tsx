@@ -79,7 +79,13 @@ export const Laminar = React.memo(function Laminar({
       textStyle,
       variant,
     ]);
-    const { captureLayout, animatedWidthStyle, shouldMeasure } =
+    const {
+      captureLayout,
+      captureVisibleLayout,
+      animatedWidthStyle,
+      isReady: isAutoSizeReady,
+      shouldMeasure,
+    } =
       useInlineAutoWidth({
         enabled: autoSize,
         driveToWidth: motionRecipe.driveNumber,
@@ -103,9 +109,11 @@ export const Laminar = React.memo(function Laminar({
         align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
+        onVisibleLayout={autoSize ? captureVisibleLayout : undefined}
         measurement={
           shouldMeasure ? (
             <View
+              key={measurementKey}
               onLayout={captureLayout}
               style={{ flexDirection: "row", alignSelf: "flex-start" }}
             >
@@ -157,6 +165,7 @@ export const Laminar = React.memo(function Laminar({
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
+            ready={!autoSize || isAutoSizeReady}
             textStyle={textStyle}
             className={className}
           />
