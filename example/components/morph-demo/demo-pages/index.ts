@@ -9,4 +9,5 @@ export { NumbersDemoPage } from "./numbers";
 export { SlotValuesDemoPage } from "./slot-values";
 export { SlotsDemoPage } from "./slots";
 export { TextIdentityDemoPage } from "./text-identity";
+export { TransactionDemoPage } from "./transaction";
 export { WordsDemoPage } from "./words";

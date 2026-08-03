@@ -1,5 +1,5 @@
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import type { MotionRecipe } from "../../src/types";
 import { NumberRun } from "../../src/view/number-run";
@@ -122,6 +122,78 @@ describe("rendered run contracts", () => {
         .map((node) => node.props.children)
         .join("")
     ).toContain("Sending\u00a0Request");
+  });
+
+  test("RUN-ST-005 leading swaps do not stack generic layout motion", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <TextRun
+          value="Send Request"
+          leading={<Text>face</Text>}
+          leadingKey="face"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <TextRun
+          value="Sending Request"
+          leading={<Text>spinner</Text>}
+          leadingKey="spinner"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    const leadingWrapper = renderer.root.findAllByType(View).find((node) => {
+      const styles = Array.isArray(node.props.style)
+        ? node.props.style
+        : [node.props.style];
+
+      return (
+        styles.some(
+          (style) =>
+            style?.alignItems === "center" &&
+            style?.justifyContent === "center"
+        ) &&
+        node
+          .findAllByType(Text)
+          .some((text) => text.props.children === "spinner")
+      );
+    });
+
+    expect(leadingWrapper).toBeDefined();
+    expect(leadingWrapper?.props.layout).toBeUndefined();
+  });
+
+  test("RUN-ST-006 plain text keeps glyphs in the original row", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <TextRun
+          value="Laminar"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    const nestedTextRows = renderer.root.findAllByType(View).filter((node) => {
+      const style = node.props.style;
+
+      return (
+        !Array.isArray(style) &&
+        style?.flexDirection === "row" &&
+        style?.alignItems === "center"
+      );
+    });
+
+    expect(nestedTextRows).toHaveLength(0);
   });
 
   test("RUN-ST-002 NumberRun preserves lead text and staggers lane updates", () => {

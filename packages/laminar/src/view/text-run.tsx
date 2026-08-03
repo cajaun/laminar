@@ -15,6 +15,7 @@ type TextRunProps = {
   readonly motionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
   readonly leading?: ReactNode;
+  readonly leadingLayoutGroup?: boolean;
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
   readonly ready?: boolean;
@@ -29,6 +30,7 @@ export const TextRun = React.memo(
     motionRecipe,
     align,
     leading,
+    leadingLayoutGroup = false,
     leadingKey,
     leadingGap = 0,
     ready = true,
@@ -72,6 +74,10 @@ export const TextRun = React.memo(
       Boolean(visibleLeading) &&
       lastLeadingPresenceRef.current &&
       visibleLeadingKey !== lastLeadingKeyRef.current;
+    const isLeadingChange =
+      Boolean(visibleLeading) !== lastLeadingPresenceRef.current ||
+      (Boolean(visibleLeading) &&
+        visibleLeadingKey !== lastLeadingKeyRef.current);
     // update the worklet flag after commit so render never writes a shared value
     const leadingSwapProgress = useSharedValue(0);
     useLayoutEffect(() => {
@@ -127,6 +133,10 @@ export const TextRun = React.memo(
         layoutTransition={
           hasAnimated ? motionRecipe.layoutTransition : undefined
         }
+        leadingLayoutTransition={
+          isLeadingChange ? motionRecipe.layoutTransition : undefined
+        }
+        leadingLayoutGroup={leadingLayoutGroup}
         enterTransition={
           hasAnimatedRef.current
             ? motionRecipe.enterTransition

@@ -1,6 +1,6 @@
 {
   "name": "react-native-laminar",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "A React Native component for morphing text and numbers with character-level identity.",
   "keywords": [
     "react-native",

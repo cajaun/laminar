@@ -163,6 +163,7 @@ export const Laminar = React.memo(function Laminar({
             motionRecipe={motionRecipe}
             align={align}
             leading={resolvedLeading}
+            leadingLayoutGroup={Boolean(leading)}
             leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
             ready={!autoSize || isAutoSizeReady}

@@ -15,6 +15,7 @@ import {
   stepBackward,
   stepForward,
   textIdentityWords,
+  transactionStates,
 } from "./demo-data";
 
 export function useDemoState(activePageIndex: number) {
@@ -23,6 +24,7 @@ export function useDemoState(activePageIndex: number) {
   const [fontWeightIndex, setFontWeightIndex] = useState(1);
   const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
   const [buttonWordIndex, setButtonWordIndex] = useState(0);
+  const [transactionStateIndex, setTransactionStateIndex] = useState(0);
   const [confirmationWordIndex, setConfirmationWordIndex] = useState(0);
   const [numberIndex, setNumberIndex] = useState(0);
   const [slotIndex, setSlotIndex] = useState(0);
@@ -37,6 +39,7 @@ export function useDemoState(activePageIndex: number) {
   const editorWord = editorWords[editorWordIndex];
   const standaloneWord = standaloneWords[standaloneWordIndex];
   const buttonWord = buttonWords[buttonWordIndex];
+  const transactionState = transactionStates[transactionStateIndex];
   const confirmationWord = confirmContinueWords[confirmationWordIndex];
   const numberValue = numericValues[numberIndex];
   const slotValue = slotValues[slotIndex];
@@ -89,6 +92,12 @@ export function useDemoState(activePageIndex: number) {
 
   const cycleButtonWord = useCallback(() => {
     setButtonWordIndex((index) => stepForward(index, buttonWords.length));
+  }, []);
+
+  const cycleTransaction = useCallback(() => {
+    setTransactionStateIndex((index) =>
+      stepForward(index, transactionStates.length)
+    );
   }, []);
 
   const cycleConfirmation = useCallback(() => {
@@ -149,6 +158,13 @@ export function useDemoState(activePageIndex: number) {
       return;
     }
 
+    if (activePageId === "transaction") {
+      setTransactionStateIndex((index) =>
+        stepForward(index, transactionStates.length)
+      );
+      return;
+    }
+
     if (activePageId === "slots") {
       setNumberIndex((index) => stepForward(index, numericValues.length));
       return;
@@ -206,6 +222,13 @@ export function useDemoState(activePageIndex: number) {
       return;
     }
 
+    if (activePageId === "transaction") {
+      setTransactionStateIndex((index) =>
+        stepBackward(index, transactionStates.length)
+      );
+      return;
+    }
+
     if (activePageId === "slots") {
       setNumberIndex((index) => stepBackward(index, numericValues.length));
       return;
@@ -227,6 +250,7 @@ export function useDemoState(activePageIndex: number) {
       editorWord,
       standaloneWord,
       buttonWord,
+      transactionState,
       confirmationWord,
       textIdentityWord,
       previousTextIdentityWord,
@@ -251,6 +275,7 @@ export function useDemoState(activePageIndex: number) {
       cycleEditorWord,
       cycleStandaloneWord,
       cycleButtonWord,
+      cycleTransaction,
       cycleConfirmation,
       cycleNumber,
       cycleSlots,
@@ -266,8 +291,10 @@ export function useDemoState(activePageIndex: number) {
       previousAutoSizeValue,
       nextAutoSizeValue,
       buttonWord,
+      transactionState,
       confirmationWord,
       cycleButtonWord,
+      cycleTransaction,
       cycleConfirmation,
       cycleEditorWord,
       cycleFontSize,

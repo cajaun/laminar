@@ -20,6 +20,7 @@ import {
   SlotValuesDemoPage,
   SlotsDemoPage,
   TextIdentityDemoPage,
+  TransactionDemoPage,
   WordsDemoPage,
 } from "./demo-pages";
 import { useDemoMetrics } from "./use-demo-metrics";
@@ -67,6 +68,8 @@ function MorphDemoInner({ height, width }: MorphDemoInnerProps) {
           <WordsDemoPage metrics={metrics} state={state} />
         ) : page?.id === "button" ? (
           <ButtonDemoPage metrics={metrics} state={state} />
+        ) : page?.id === "transaction" ? (
+          <TransactionDemoPage metrics={metrics} state={state} />
         ) : page?.id === "confirmation" ? (
           <ConfirmationDemoPage metrics={metrics} state={state} />
         ) : page?.id === "pressableSplit" ? (

@@ -33,15 +33,11 @@ function ConfirmationPage({ metrics, state }: DemoPageProps) {
         >
           <Laminar
             text={state.confirmationWord}
-            leading={
-              state.confirmationWord === "Confirm" ? (
-                <SymbolView
-                  name="faceid"
-                  size={23}
-                  tintColor="#ffffff"
-                />
-              ) : undefined
-            }
+            leading={{
+              "Confirm": (
+                <SymbolView name="faceid" size={23} tintColor="#ffffff" />
+              ),
+            }}
             leadingGap={5}
             autoSize={false}
             align="center"

@@ -13,6 +13,12 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
+const textRowStyle = {
+  flexDirection: "row",
+  alignItems: "center",
+  alignSelf: "flex-start",
+} as const;
+
 const rowAlignStyles = {
   left: { alignSelf: "flex-start" },
   center: { alignSelf: "center" },
@@ -24,6 +30,8 @@ export const GlyphRun = React.memo(
   ({
     glyphs,
     layoutTransition,
+    leadingLayoutTransition,
+    leadingLayoutGroup = false,
     enterTransition,
     elementEnterTransition,
     exitTransition,
@@ -35,6 +43,8 @@ export const GlyphRun = React.memo(
   }: Readonly<{
     glyphs: readonly GlyphToken[];
     layoutTransition?: ComplexAnimationBuilder;
+    leadingLayoutTransition?: ComplexAnimationBuilder;
+    leadingLayoutGroup?: boolean;
     enterTransition?: EntryExitAnimationFunction;
     elementEnterTransition?: EntryExitAnimationFunction;
     exitTransition?: EntryExitAnimationFunction;
@@ -43,41 +53,60 @@ export const GlyphRun = React.memo(
     align: LaminarAlign;
     textStyle?: StyleProp<TextStyle>;
     className?: string;
-  }>) => (
-    // each token keeps its own view so reanimated can animate only changed content
+  }>) => {
+    // The leading token is always first. Keep it outside the text row so its
+    // appearance moves the text as one unit instead of reflowing every glyph.
+    const leadingGlyph = glyphs[0]?.kind === "element" ? glyphs[0] : undefined;
+    const textGlyphs = leadingGlyph ? glyphs.slice(1) : glyphs;
+    const shouldGroupText =
+      Boolean(leadingGlyph) || Boolean(leadingLayoutTransition) || leadingLayoutGroup;
+
+    const renderTextGlyph = (glyph: GlyphToken) =>
+      glyph.kind === "text" ? (
+        <Animated.Text
+          key={glyph.id}
+          layout={layoutTransition}
+          entering={enterTransition}
+          exiting={exitTransition}
+          style={textStyle}
+          className={className}
+        >
+          {glyph.value}
+        </Animated.Text>
+      ) : null;
+
+    const textRow = (
+      <Animated.View
+        key="text-row"
+        layout={leadingLayoutTransition}
+        style={textRowStyle}
+      >
+        {textGlyphs.map(renderTextGlyph)}
+      </Animated.View>
+    );
+
+    return (
       <View style={[rowStyle, rowAlignStyles[align]]}>
-        {/* glyph ids decide what swaps, layout handles the row reflow */}
-        {glyphs.map((glyph, glyphIndex) =>
-          glyph.kind === "element" ? (
-            <Animated.View
-              key={glyph.id}
-              layout={layoutTransition}
-              entering={elementEnterTransition ?? enterTransition}
-              exiting={elementExitTransition ?? exitTransition}
-              style={[
-                { alignItems: "center", justifyContent: "center" },
-                glyphIndex === 0 && (leadingGap ?? 0) > 0
-                  ? { marginRight: leadingGap }
-                  : undefined,
-              ]}
-            >
-              {glyph.element}
-            </Animated.View>
-          ) : (
-            <Animated.Text
-              key={glyph.id}
-              layout={layoutTransition}
-              entering={enterTransition}
-              exiting={exitTransition}
-              style={textStyle}
-              className={className}
-            >
-              {glyph.value}
-            </Animated.Text>
-          )
-        )}
+        {leadingGlyph ? (
+          <Animated.View
+            key={leadingGlyph.id}
+            // leading elements own their enter/exit geometry; generic layout
+            // motion here would compete with those transitions
+            layout={undefined}
+            entering={elementEnterTransition ?? enterTransition}
+            exiting={elementExitTransition ?? exitTransition}
+            style={[
+              { alignItems: "center", justifyContent: "center" },
+              (leadingGap ?? 0) > 0 ? { marginRight: leadingGap } : undefined,
+            ]}
+          >
+            {leadingGlyph.element}
+          </Animated.View>
+        ) : null}
+        {shouldGroupText ? textRow : textGlyphs.map(renderTextGlyph)}
       </View>
-    )
+    );
+  }
 );
 
 GlyphRun.displayName = "GlyphRun";
