@@ -108,7 +108,7 @@ describe("useInlineAutoWidth", () => {
     expect(driveToWidth).not.toHaveBeenCalled();
   });
 
-  test("HAW-ST-006 bridges a probe for the old key into visible layout for the new key", () => {
+  test("HAW-ST-006 bridges an old probe while the new key measures", () => {
     const driveToWidth = jest.fn((value: number) => value + 0.5);
     const hook = renderHook(
       ({ measurementKey }: { measurementKey: string }) =>
@@ -123,10 +123,61 @@ describe("useInlineAutoWidth", () => {
     act(() => hook.result.captureLayout(layoutEvent(20.2)));
     hook.rerender({ measurementKey: "B" });
     act(() => hook.result.captureVisibleLayout(layoutEvent(30.1)));
+    act(() => hook.result.captureLayout(layoutEvent(30.2)));
     hook.rerender({ measurementKey: "B" });
 
-    expect(driveToWidth).toHaveBeenCalledWith(30.1);
-    expect(hook.result.animatedWidthStyle).toEqual({ width: 30.6 });
+    expect(driveToWidth).toHaveBeenCalledWith(31);
+    expect(hook.result.animatedWidthStyle).toEqual({ width: 31.5 });
+  });
+
+  test("HAW-ST-008 does not cache stale visible width under the new key", () => {
+    const driveToWidth = jest.fn((value: number) => value + 0.5);
+    const hook = renderHook(
+      ({ measurementKey }: { measurementKey: string }) =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey,
+        }),
+      { measurementKey: "A" }
+    );
+
+    act(() => hook.result.captureLayout(layoutEvent(20.2)));
+    hook.rerender({ measurementKey: "B" });
+    act(() => hook.result.captureVisibleLayout(layoutEvent(20.1)));
+
+    act(() => hook.result.captureLayout(layoutEvent(40.2)));
+    hook.rerender({ measurementKey: "B" });
+
+    expect(hook.result.animatedWidthStyle).toEqual({ width: 41.5 });
+    expect(driveToWidth).toHaveBeenCalledWith(41);
+
+    hook.rerender({ measurementKey: "A" });
+    expect(hook.result.shouldMeasure).toBe(false);
+  });
+
+  test("HAW-ST-009 keeps a new key pending when no old probe has fired", () => {
+    const driveToWidth = jest.fn((value: number) => value + 0.5);
+    const hook = renderHook(
+      ({ measurementKey }: { measurementKey: string }) =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey,
+        }),
+      { measurementKey: "A" }
+    );
+
+    hook.rerender({ measurementKey: "B" });
+    act(() => hook.result.captureVisibleLayout(layoutEvent(20.1)));
+
+    expect(hook.result.isReady).toBe(false);
+
+    act(() => hook.result.captureLayout(layoutEvent(40.2)));
+    hook.rerender({ measurementKey: "B" });
+
+    expect(hook.result.animatedWidthStyle).toEqual({ width: 41 });
+    expect(driveToWidth).not.toHaveBeenCalled();
   });
 
   test("HAW-ST-005 cold-start probe fallback preserves a pending first morph", () => {

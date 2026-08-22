@@ -32,6 +32,7 @@ export const useInlineAutoWidth = ({
   const measuredWidthRef = useRef<number | null>(null);
   const bootstrappedRef = useRef(false);
   const widthCacheRef = useRef(new Map<string, number>());
+  const firstEnabledMeasurementKeyRef = useRef<string | null>(null);
   const hasCapturedVisibleLayoutRef = useRef(false);
   const initialMeasurementKeyRef = useRef<string | null>(null);
   const firstProbeRef = useRef<PendingProbe | null>(null);
@@ -40,6 +41,11 @@ export const useInlineAutoWidth = ({
   const [readyMeasurementKey, setReadyMeasurementKey] = useState<string | null>(
     null
   );
+
+  // latch the first enabled key so a pending visible layout cannot use a later key
+  if (enabled && firstEnabledMeasurementKeyRef.current === null) {
+    firstEnabledMeasurementKeyRef.current = measurementKey;
+  }
 
   const markMeasurementReady = useCallback((key: string) => {
     setReadyMeasurementKey((currentKey) =>
@@ -111,11 +117,37 @@ export const useInlineAutoWidth = ({
       // bootstrap from the visible tree so the first explicit width matches
       // the geometry that was already painted to the user
       const nextWidth = Math.max(0, event.nativeEvent.layout.width);
+      const firstEnabledMeasurementKey =
+        firstEnabledMeasurementKeyRef.current;
+      const visibleKeyMatchesInitialKey =
+        firstEnabledMeasurementKey === null ||
+        firstEnabledMeasurementKey === measurementKey;
+      const firstProbe = firstProbeRef.current;
+
+      if (!visibleKeyMatchesInitialKey) {
+        // ignore a visible layout from the initial row when the key has changed
+        const currentProbeWidth =
+          firstProbe?.key === measurementKey
+            ? firstProbe.width
+            : widthCacheRef.current.get(measurementKey);
+
+        if (currentProbeWidth !== undefined) {
+          initialMeasurementKeyRef.current = measurementKey;
+          applyWidth(currentProbeWidth);
+          markMeasurementReady(measurementKey);
+        } else if (firstProbe) {
+          // use the old probe as the shell baseline until the current key is measured
+          initialMeasurementKeyRef.current = firstProbe.key;
+          applyWidth(firstProbe.width);
+        }
+
+        return;
+      }
+
       // retain the visible width for the initial key so a later cache hit does
       // not reintroduce the probe-to-visible mismatch
       widthCacheRef.current.delete(measurementKey);
       widthCacheRef.current.set(measurementKey, nextWidth);
-      const firstProbe = firstProbeRef.current;
       if (firstProbe && firstProbe.key !== measurementKey) {
         initialMeasurementKeyRef.current = firstProbe.key;
         applyWidth(firstProbe.width);
