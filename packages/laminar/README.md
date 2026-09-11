@@ -93,6 +93,7 @@ export default function SlotCounter() {
         variant="slots"
         fontSize={48}
         animationPreset="snappy"
+        shadow
         clipToBounds
         style={{ color: "#000000", fontVariant: ["tabular-nums"] }}
       />
@@ -101,6 +102,10 @@ export default function SlotCounter() {
   );
 }
 ```
+
+The `shadow` prop requires the app to provide the
+`@react-native-masked-view/masked-view` and `expo-linear-gradient` peer
+dependencies.
 
 ### Inside a button with auto-sizing
 
@@ -117,7 +122,7 @@ export default function SlotCounter() {
 
 ### Auto-sized button with leading icons
 
-Pass a text-keyed `leading` map when the button changes between visual states.
+Pass a value-keyed `leading` map when the button changes between visual states.
 Laminar selects the matching entry and animates icon-to-icon replacements.
 
 ```tsx
@@ -150,7 +155,7 @@ const leading = {
 ```
 
 The map key must match the current `text` value. A missing entry means no
-leading element, so the icon fades out when the button returns to a plain label.
+leading element, so the icon fades out when the value returns to a plain label.
 
 ### Centered text in a fixed-width container
 
@@ -207,6 +212,7 @@ type LaminarProps = {
   leading?: ReactNode | Readonly<Record<string, ReactNode>>;
   leadingKey?: string | number;
   leadingGap?: number;
+  shadow?: boolean | { color?: string; size?: number };
   style?: StyleProp<TextStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   fontStyle?: StyleProp<TextStyle>;
@@ -225,9 +231,10 @@ type LaminarProps = {
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
-| `leading`           | Undefined                                   | Optional inline element, or text-keyed leading content, rendered in text mode.   |
+| `leading`           | Undefined                                   | Optional inline element, or value-keyed leading content, rendered by every variant. |
 | `leadingKey`        | Undefined                                   | Advanced identity override for a direct leading element.                          |
 | `leadingGap`        | `0`                                         | Spacing between the leading element and the first text glyph.                      |
+| `shadow`            | `false`                                     | Softens the top and bottom clipping edges of `slots` reels. Accepts `true` or `{ color, size }`. |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
 | `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |

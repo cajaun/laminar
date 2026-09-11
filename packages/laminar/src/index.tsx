@@ -24,6 +24,7 @@ export const Laminar = React.memo(function Laminar({
     leading,
     leadingKey,
     leadingGap = 0,
+    shadow = false,
     style,
     containerStyle,
     fontStyle,
@@ -67,9 +68,9 @@ export const Laminar = React.memo(function Laminar({
         flattenedStyle?.letterSpacing,
         flattenedStyle?.lineHeight,
         flattenedStyle?.textTransform,
-        variant === "text" && Boolean(resolvedLeading),
-        variant === "text" ? resolvedLeadingKey : undefined,
-        variant === "text" ? leadingGap : 0,
+        Boolean(resolvedLeading),
+        resolvedLeadingKey,
+        leadingGap,
       ]);
     }, [
       leadingGap,
@@ -117,7 +118,7 @@ export const Laminar = React.memo(function Laminar({
               onLayout={captureLayout}
               style={{ flexDirection: "row", alignSelf: "flex-start" }}
             >
-              {variant === "text" && resolvedLeading ? (
+              {resolvedLeading ? (
                 <View
                   style={{
                     alignItems: "center",
@@ -146,6 +147,11 @@ export const Laminar = React.memo(function Laminar({
             textStyle={textStyle}
             staggerMs={staggerMs}
             className={className}
+            leading={resolvedLeading}
+            leadingKey={resolvedLeadingKey}
+            leadingGap={leadingGap}
+            ready={!autoSize || isAutoSizeReady}
+            shadow={shadow}
           />
         ) : variant === "number" ? (
           <NumberRun
@@ -156,6 +162,10 @@ export const Laminar = React.memo(function Laminar({
             textStyle={textStyle}
             staggerMs={staggerMs}
             className={className}
+            leading={resolvedLeading}
+            leadingKey={resolvedLeadingKey}
+            leadingGap={leadingGap}
+            ready={!autoSize || isAutoSizeReady}
           />
         ) : (
           <TextRun
@@ -190,6 +200,8 @@ function isLeadingMap(
 export type {
   LaminarAlign,
   LaminarLeadingMap,
+  LaminarShadow,
+  LaminarShadowOptions,
   LaminarProps,
   MorphAnimationPresetName,
   MorphContentVariant,

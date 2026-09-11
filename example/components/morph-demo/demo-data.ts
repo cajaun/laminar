@@ -38,10 +38,15 @@ export const confirmContinueWords = ["Continue", "Confirm"] as const;
 // export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 export const slotValues = [
-  "$0.08",
-  "$147.29",
-  "$2,943.61",
-  "$12,884.90",
+  // "$0.08",
+  // "$147.29",
+  // "$2,943.61",
+  // "$12,884.90",
+  "0.05%",
+  "0%",
+  "3.66%",
+  "31.35%",
+  "43.83%",
 ] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
 export const numberLaneValues = [

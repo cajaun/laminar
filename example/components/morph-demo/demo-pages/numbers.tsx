@@ -11,7 +11,7 @@ function NumbersPage({ metrics, state }: DemoPageProps) {
         <Laminar
           text={state.numberValue}
           variant="number"
-          animationPreset="snappy"
+          animationPreset="default"
           fontSize={state.fontSize}
           clipToBounds={false}
           containerStyle={{ alignSelf: "center" }}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,9 +11,17 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
 import { isAsciiDigit } from "../model/display-units";
-import type { LaminarAlign, MotionRecipe, NumericFlowDirection } from "../types";
+import type {
+  LaminarAlign,
+  LaminarShadow,
+  MotionRecipe,
+  NumericFlowDirection,
+} from "../types";
+import { LeadingElement } from "./leading-element";
+import { SlotShadow } from "./slot-shadow";
 
 const rowStyle = {
   flexDirection: "row",
@@ -64,7 +72,7 @@ const equalStyleValue = (left: unknown, right: unknown) =>
     left.length === right.length &&
     left.every((value, index) => value === right[index]));
 
-// prevent every parent update from rebuilding the thirty-text reel
+// prevent every parent update from rebuilding the bounded reel
 const areSlotReelPropsEqual = (
   previous: SlotReelProps,
   next: SlotReelProps
@@ -151,6 +159,7 @@ type SlotColumnProps = {
   readonly slotHeight: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
+  readonly shadow?: LaminarShadow;
 };
 
 function SlotColumn({
@@ -162,6 +171,7 @@ function SlotColumn({
   slotHeight,
   textStyle,
   className,
+  shadow = false,
 }: SlotColumnProps) {
   // cumulative positions let the reel move across digit wraparound without jumps
   const spinInDistance = Math.max(digit, 1);
@@ -179,7 +189,12 @@ function SlotColumn({
     motionRecipe,
     target: digit,
   });
-
+  const shadowOptions =
+    shadow !== null && typeof shadow === "object"
+      ? shadow
+      : shadow
+        ? {}
+        : undefined;
   if (digit !== previousDigitRef.current) {
     const previousDigit = previousDigitRef.current;
     let digitDelta: number;
@@ -254,20 +269,35 @@ function SlotColumn({
     current.value = motionRecipe.driveNumber(target, delayMs);
   }, [animateIn, current, delayMs, digit, direction, motionRecipe]);
 
+  const reel = (
+    <SlotReel
+      current={current}
+      slotHeight={slotHeight}
+      textStyle={textStyle}
+      className={className}
+    />
+  );
+
   return (
-    <View style={slotFrameStyle}>
+    <View style={[slotFrameStyle, { height: slotHeight }]}>
       <Text
         style={[textStyle, slotProbeStyle, { lineHeight: slotHeight }]}
         className={className}
       >
         0
       </Text>
-      <SlotReel
-        current={current}
-        slotHeight={slotHeight}
-        textStyle={textStyle}
-        className={className}
-      />
+      {shadowOptions ? (
+        <SlotShadow
+          slotHeight={slotHeight}
+          viewportHeight={slotHeight}
+          color={shadowOptions.color}
+          size={shadowOptions.size}
+        >
+          {reel}
+        </SlotShadow>
+      ) : (
+        reel
+      )}
     </View>
   );
 }
@@ -280,6 +310,11 @@ type SlotsRunProps = {
   readonly textStyle?: StyleProp<TextStyle>;
   readonly staggerMs: number;
   readonly className?: string;
+  readonly leading?: ReactNode;
+  readonly leadingKey?: string | number;
+  readonly leadingGap?: number;
+  readonly ready?: boolean;
+  readonly shadow?: LaminarShadow;
 };
 
 // render text prefixes beside reusable digit reels
@@ -292,10 +327,53 @@ export const SlotsRun = React.memo(
     textStyle,
     staggerMs,
     className,
+    leading,
+    leadingKey,
+    leadingGap = 0,
+    ready = true,
+    shadow = false,
   }: Readonly<SlotsRunProps>) => {
+    const hasDisplayedRef = useRef(false);
+    const displayedValueRef = useRef(value);
+    const displayedLeadingRef = useRef(leading);
+    const displayedLeadingKeyRef = useRef(leadingKey);
+    const displayedLeadingGapRef = useRef(leadingGap);
+    const shouldDisplayTarget = ready || !hasDisplayedRef.current;
+    const visibleValue = shouldDisplayTarget
+      ? value
+      : displayedValueRef.current;
+    const visibleLeading = shouldDisplayTarget
+      ? leading
+      : displayedLeadingRef.current;
+    const visibleLeadingKey = shouldDisplayTarget
+      ? leadingKey
+      : displayedLeadingKeyRef.current;
+    const visibleLeadingGap = shouldDisplayTarget
+      ? leadingGap
+      : displayedLeadingGapRef.current;
+
+    if (shouldDisplayTarget) {
+      hasDisplayedRef.current = true;
+      displayedValueRef.current = value;
+      displayedLeadingRef.current = leading;
+      displayedLeadingKeyRef.current = leadingKey;
+      displayedLeadingGapRef.current = leadingGap;
+    }
+
+    const {
+      elementEnterTransition,
+      elementExitTransition,
+      isLeadingChange,
+      isLeadingSwap,
+    } = useLeadingAnimation({
+      leading: visibleLeading,
+      leadingKey: visibleLeadingKey,
+      leadingGap: visibleLeadingGap,
+      motionRecipe,
+    });
     // numeric lane identity decides which columns stay mounted as values change
-    const { units, direction, leadLength } = useNumericLanes(value);
-    const lastValueRef = useRef(value);
+    const { units, direction, leadLength } = useNumericLanes(visibleValue);
+    const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     // derive one stable row height so every reel position shares the same baseline
     const slotHeight = useMemo(() => {
@@ -315,9 +393,9 @@ export const SlotsRun = React.memo(
       );
     }, [fontSize, textStyle]);
 
-    if (value !== lastValueRef.current) {
+    if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
-      lastValueRef.current = value;
+      lastValueRef.current = visibleValue;
     }
 
     const digitCount = units.filter(isAsciiDigit).length;
@@ -326,57 +404,74 @@ export const SlotsRun = React.memo(
 
     return (
       <View style={[rowStyle, rowAlignStyles[align]]}>
-        {units.map((unit, index) => {
-          const inLead = index < leadLength;
-          const laneKey = inLead
-            ? `lead:${index}`
-            : `slot:${units.length - 1 - index}`;
+        <LeadingElement
+          leading={visibleLeading}
+          leadingKey={visibleLeadingKey}
+          leadingGap={visibleLeadingGap}
+          enterTransition={
+            hasAnimated ? motionRecipe.enterTransition : undefined
+          }
+          elementEnterTransition={
+            isLeadingSwap ? elementEnterTransition : undefined
+          }
+          exitTransition={motionRecipe.exitTransition}
+          elementExitTransition={elementExitTransition}
+        />
+        <Animated.View
+          layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
+          style={rowStyle}
+        >
+          {units.map((unit, index) => {
+            const inLead = index < leadLength;
+            const laneKey = inLead
+              ? `lead:${index}`
+              : `slot:${units.length - 1 - index}`;
 
-          if (inLead || !isAsciiDigit(unit)) {
+            if (inLead || !isAsciiDigit(unit)) {
+              return (
+                <Animated.Text
+                  key={laneKey}
+                  layout={
+                    hasAnimated ? motionRecipe.layoutTransition : undefined
+                  }
+                  exiting={!inLead ? motionRecipe.exitTransition : undefined}
+                  style={textStyle}
+                  className={className}
+                >
+                  {unit}
+                </Animated.Text>
+              );
+            }
+
+            const delayMs = (digitCount - 1 - digitIndex) * staggerMs;
+            digitIndex += 1;
+
             return (
-              <Animated.Text
+              <Animated.View
                 key={laneKey}
                 layout={
                   hasAnimated ? motionRecipe.layoutTransition : undefined
                 }
-                exiting={!inLead ? motionRecipe.exitTransition : undefined}
-                style={textStyle}
-                className={className}
+                entering={
+                  hasAnimated ? motionRecipe.enterTransition : undefined
+                }
+                exiting={motionRecipe.exitTransition}
               >
-                {unit}
-              </Animated.Text>
+                <SlotColumn
+                  digit={Number(unit)}
+                  direction={direction}
+                  delayMs={delayMs}
+                  animateIn={hasAnimated}
+                  motionRecipe={motionRecipe}
+                  slotHeight={slotHeight}
+                  textStyle={textStyle}
+                  className={className}
+                  shadow={shadow}
+                />
+              </Animated.View>
             );
-          }
-
-          const delayMs = (digitCount - 1 - digitIndex) * staggerMs;
-          digitIndex += 1;
-
-          return (
-            <Animated.View
-              key={laneKey}
-              layout={
-                hasAnimated ? motionRecipe.layoutTransition : undefined
-              }
-              entering={
-                hasAnimated ? motionRecipe.enterTransition : undefined
-              }
-              exiting={
-                motionRecipe.exitTransition
-              }
-            >
-              <SlotColumn
-                digit={Number(unit)}
-                direction={direction}
-                delayMs={delayMs}
-                animateIn={hasAnimated}
-                motionRecipe={motionRecipe}
-                slotHeight={slotHeight}
-                textStyle={textStyle}
-                className={className}
-              />
-            </Animated.View>
-          );
-        })}
+          })}
+        </Animated.View>
       </View>
     );
   }

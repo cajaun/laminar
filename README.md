@@ -122,6 +122,16 @@ ASCII digits receive slot reels. Prefixes and punctuation render as text.
 Laminar derives reel height from `lineHeight`, then `fontSize`, with a
 12-point floor.
 
+Set `shadow` to soften the top and bottom clipping edges of each slot reel:
+
+```tsx
+<Laminar text="07:42" variant="slots" shadow />
+```
+
+The `shadow` effect uses `@react-native-masked-view/masked-view` and
+`expo-linear-gradient`, which must be installed by the application using this
+feature.
+
 Custom fonts can report different baseline and line-height metrics on iOS and
 Android. Test slot rendering on physical devices when you change fonts,
 sizes, or line heights.
@@ -137,14 +147,16 @@ import {
   type LaminarAlign,
   type MorphAnimationPresetName,
   type MorphContentVariant,
+  type LaminarShadow,
+  type LaminarShadowOptions,
 } from "react-native-laminar";
 ```
 
 `Laminar` is the package's only component export.
 
-Text mode can reconcile leading content for each text state. Matching entries
-are selected automatically, and changing between two entries uses the icon
-replacement transition:
+All variants can reconcile leading content for each value state. Matching
+entries are selected automatically, and changing between two entries uses the
+icon replacement transition:
 
 ```tsx
 <Laminar
@@ -170,9 +182,10 @@ replacement transition:
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
 | `className` | `string` | `undefined` | Utility classes passed to visible text |
-| `leading` | `ReactNode \| Record<string, ReactNode>` | `undefined` | Optional leading element, or text-keyed leading content, in text mode |
+| `leading` | `ReactNode \| Record<string, ReactNode>` | `undefined` | Optional leading element, or value-keyed leading content, for every variant |
 | `leadingKey` | `string \| number` | `undefined` | Advanced identity override for a direct leading element |
 | `leadingGap` | `number` | `0` | Spacing between the leading element and the first text glyph |
+| `shadow` | `boolean \| LaminarShadowOptions` | `false` | Adds soft top and bottom fades to `slots` reels |
 | `style` | `StyleProp<TextStyle>` | `undefined` | Final text style layer |
 | `fontStyle` | `StyleProp<TextStyle>` | `undefined` | Shared font style layer |
 | `containerStyle` | `StyleProp<ViewStyle>` | `undefined` | Outer shell style |

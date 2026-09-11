@@ -1,4 +1,6 @@
 import React from "react";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import { Laminar } from "../../src";
@@ -73,6 +75,107 @@ describe("public Laminar API", () => {
     expect(
       renderer.root.findAllByType(Text).some((node) => node.props.children === "spinner")
     ).toBe(false);
+  });
+
+  test.each(["number", "slots"] as const)(
+    "API-DT-008 %s renders and reconciles a leading inline element",
+    (variant) => {
+      const leading = {
+        "$12": <Text>coin</Text>,
+        "$13": <Text>updated-coin</Text>,
+      };
+      let renderer!: TestRenderer.ReactTestRenderer;
+
+      act(() => {
+        renderer = TestRenderer.create(
+          <Laminar
+            text="$12"
+            variant={variant}
+            leading={leading}
+            leadingGap={4}
+            autoSize={false}
+          />
+        );
+      });
+
+      expect(
+        renderer.root.findAllByType(Text).some((node) => node.props.children === "coin")
+      ).toBe(true);
+
+      act(() => {
+        renderer.update(
+          <Laminar
+            text="$13"
+            variant={variant}
+            leading={leading}
+            leadingGap={4}
+            autoSize={false}
+          />
+        );
+      });
+
+      expect(
+        renderer.root
+          .findAllByType(Text)
+          .some((node) => node.props.children === "updated-coin")
+      ).toBe(true);
+      expect(
+        renderer.root.findAllByType(Text).some((node) => node.props.children === "coin")
+      ).toBe(false);
+    }
+  );
+
+  test.each(["number", "slots"] as const)(
+    "API-DT-009 %s includes leading content in auto-size measurement",
+    (variant) => {
+      let renderer!: TestRenderer.ReactTestRenderer;
+
+      act(() => {
+        renderer = TestRenderer.create(
+          <Laminar
+            text="42"
+            variant={variant}
+            leading={<Text>coin</Text>}
+            leadingGap={4}
+          />
+        );
+      });
+
+      const measurement = renderer.root
+        .findAllByType(View)
+        .find((node) => typeof node.props.onLayout === "function");
+
+      expect(
+        measurement?.findAllByType(Text).some((node) => node.props.children === "coin")
+      ).toBe(true);
+    }
+  );
+
+  test("API-DT-010 renders top and bottom fades for shadow-enabled slot reels", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar
+          text="42"
+          variant="slots"
+          shadow
+          autoSize={false}
+        />
+      );
+    });
+
+    const shadowMasks = renderer.root.findAllByType(MaskedView);
+    const maskGradient = shadowMasks[0].props.maskElement;
+
+    expect(shadowMasks).toHaveLength(2);
+    expect(maskGradient.type).toBe(LinearGradient);
+    expect(maskGradient.props.colors).toEqual([
+      "rgba(255, 255, 255, 0)",
+      "#ffffff",
+      "#ffffff",
+      "rgba(255, 255, 255, 0)",
+    ]);
   });
 
   test("API-EP-001 coerces number and nullish runtime inputs without throwing", () => {

@@ -1,12 +1,8 @@
-import React, { useId, useLayoutEffect, useMemo, useRef } from "react";
+import React, { useId, useRef } from "react";
 import type { ReactNode } from "react";
 import type { StyleProp, TextStyle } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
 import { useTextGlyphs } from "../hooks/use-text-glyphs";
-import {
-  createLeadingEnterTransition,
-  createLeadingExitTransition,
-} from "../motion/entry-exit-builders";
+import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import type { LaminarAlign, MotionRecipe } from "../types";
 import { GlyphRun } from "./glyph-run";
 
@@ -67,62 +63,29 @@ export const TextRun = React.memo(
     }
 
     const lastValueRef = useRef(visibleValue);
-    const lastLeadingPresenceRef = useRef(Boolean(visibleLeading));
-    const lastLeadingKeyRef = useRef(visibleLeadingKey);
     const hasAnimatedRef = useRef(false);
-    const isLeadingSwap =
-      Boolean(visibleLeading) &&
-      lastLeadingPresenceRef.current &&
-      visibleLeadingKey !== lastLeadingKeyRef.current;
-    const isLeadingChange =
-      Boolean(visibleLeading) !== lastLeadingPresenceRef.current ||
-      (Boolean(visibleLeading) &&
-        visibleLeadingKey !== lastLeadingKeyRef.current);
-    // update the worklet flag after commit so render never writes a shared value
-    const leadingSwapProgress = useSharedValue(0);
-    useLayoutEffect(() => {
-      leadingSwapProgress.value = isLeadingSwap ? 1 : 0;
-    }, [isLeadingSwap, leadingSwapProgress]);
+    const {
+      elementEnterTransition,
+      elementExitTransition,
+      isLeadingChange,
+      isLeadingSwap,
+    } = useLeadingAnimation({
+      leading: visibleLeading,
+      leadingKey: visibleLeadingKey,
+      leadingGap: visibleLeadingGap,
+      motionRecipe,
+    });
     const glyphs = useTextGlyphs(
       visibleValue,
       scopeId,
       visibleLeading,
       visibleLeadingKey
     );
-    const elementEnterTransition = useMemo(
-      () =>
-        createLeadingEnterTransition({
-          durationMs: motionRecipe.durationMs,
-          easing: motionRecipe.easing,
-        }),
-      [motionRecipe.durationMs, motionRecipe.easing]
-    );
-    const elementExitTransition = useMemo(
-      () =>
-        createLeadingExitTransition({
-          durationMs: motionRecipe.durationMs,
-          easing: motionRecipe.easing,
-          leadingGap: visibleLeadingGap,
-          scale: leadingSwapProgress,
-        }),
-      [
-        visibleLeadingGap,
-        leadingSwapProgress,
-        motionRecipe.durationMs,
-        motionRecipe.easing,
-      ]
-    );
 
     // mark the first value as settled and later changes as eligible for motion
-    if (
-      visibleValue !== lastValueRef.current ||
-      Boolean(visibleLeading) !== lastLeadingPresenceRef.current ||
-      visibleLeadingKey !== lastLeadingKeyRef.current
-    ) {
+    if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
       lastValueRef.current = visibleValue;
-      lastLeadingPresenceRef.current = Boolean(visibleLeading);
-      lastLeadingKeyRef.current = visibleLeadingKey;
     }
 
     const hasAnimated = hasAnimatedRef.current;

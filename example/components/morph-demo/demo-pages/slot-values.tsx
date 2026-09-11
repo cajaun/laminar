@@ -2,6 +2,7 @@ import React from "react";
 import { Laminar } from "react-native-laminar";
 import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import { SymbolView } from "expo-symbols";
 
 function SlotValuesPage({ metrics, state }: DemoPageProps) {
   return (
@@ -10,18 +11,31 @@ function SlotValuesPage({ metrics, state }: DemoPageProps) {
       preview={
         <Laminar
           text={state.slotValue}
+          leading={<SymbolView name="arrow.up" size={32} tintColor="#00CA47" />}
+          leadingGap={6}
+          shadow
           variant="slots"
-          animationPreset="smooth"
+          animationPreset="default"
           autoSize
           clipToBounds={false}
           fontSize={state.fontSize}
           containerStyle={{ alignSelf: "center" }}
-          style={{ color: "#000000", fontFamily: "Sf-semibold", fontSize: state.fontSize, fontVariant: ["tabular-nums"], textAlign: "center" }}
+          style={{
+            color: "#00CA47",
+            fontFamily: "Sf-semibold",
+            fontSize: state.fontSize,
+            fontVariant: ["tabular-nums"],
+            textAlign: "center",
+          }}
         />
       }
       settings={
         <>
-          {settingsRow({ label: "Slot Value", value: state.slotValue, onPress: state.cycleSlots })}
+          {settingsRow({
+            label: "Slot Value",
+            value: state.slotValue,
+            onPress: state.cycleSlots,
+          })}
           {settingsRow({ label: "Reverse", value: state.previousSlotValue })}
           {settingsRow({ label: "Morph", value: state.nextSlotValue })}
         </>
@@ -37,5 +51,5 @@ export const SlotValuesDemoPage = React.memo(
     previous.state.slotValue === next.state.slotValue &&
     previous.state.previousSlotValue === next.state.previousSlotValue &&
     previous.state.nextSlotValue === next.state.nextSlotValue &&
-    previous.state.cycleSlots === next.state.cycleSlots
+    previous.state.cycleSlots === next.state.cycleSlots,
 );

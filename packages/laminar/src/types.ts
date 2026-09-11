@@ -17,6 +17,15 @@ export type LaminarAlign = "left" | "center" | "right";
 // text keys let leading content follow the same state as the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
+export type LaminarShadowOptions = {
+  /** background color used to fade the reel into its surrounding surface */
+  readonly color?: string;
+  /** fade depth in pixels; defaults to a little less than one row */
+  readonly size?: number;
+};
+
+export type LaminarShadow = boolean | LaminarShadowOptions;
+
 type CubicBezierTuple = readonly [number, number, number, number];
 
 export type MorphAnimationPreset =
@@ -56,12 +65,14 @@ export type MorphingTextProps = {
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
-  /** optional inline element reconciled and animated as the leading token */
+  /** optional inline element reconciled and animated before the rendered value */
   readonly leading?: ReactNode | LaminarLeadingMap;
   /** identity for swapping one leading element for another */
   readonly leadingKey?: string | number;
   /** spacing between the leading element and the first text glyph */
   readonly leadingGap?: number;
+  /** opt-in top and bottom fades for slot reels */
+  readonly shadow?: LaminarShadow;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly fontStyle?: StyleProp<TextStyle>;
