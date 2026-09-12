@@ -10,17 +10,19 @@ export type MorphAnimationPresetName =
   | "default"
   | "smooth"
   | "snappy"
-  | "bouncy";
+  | "bouncy"
+  | "ticker";
 
 export type MorphContentVariant = "text" | "number" | "slots";
+export type MorphNumberMode = "morph" | "ticker";
 export type LaminarAlign = "left" | "center" | "right";
 // text keys let leading content follow the same state as the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 export type LaminarShadowOptions = {
-  /** background color used to fade the reel into its surrounding surface */
+  /** surface color used by the alpha mask when a platform requires it */
   readonly color?: string;
-  /** fade depth in pixels; defaults to a little less than one row */
+  /** fade depth in pixels; defaults to roughly one third of the viewport */
   readonly size?: number;
 };
 
@@ -61,6 +63,8 @@ export type MotionRecipe = {
 export type MorphingTextProps = {
   readonly text: string | number;
   readonly variant?: MorphContentVariant;
+  /** number-only renderer mode; ticker uses crisp in-place digit flow */
+  readonly numberMode?: MorphNumberMode;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;

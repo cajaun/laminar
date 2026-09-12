@@ -15,6 +15,7 @@ import type {
 
 // keep all presets on one curve family so layout and glyph motion agree
 const DEFAULT_CURVE = [0.19, 1, 0.22, 1] as const;
+const TICKER_CURVE = [0.33, 1, 0.68, 1] as const;
 
 export const MOTION_PRESETS: Record<
   MorphAnimationPresetName,
@@ -38,6 +39,10 @@ export const MOTION_PRESETS: Record<
     type: "spring",
     duration: 0.5,
     bounce: 0.3,
+  },
+  ticker: {
+    duration: 0.3,
+    ease: TICKER_CURVE,
   },
 } as const;
 

@@ -104,6 +104,23 @@ magnitude sets the animation direction.
 Formatting characters remain visible. Laminar accepts strings such as
 `$1,240.00`, `-18%`, and `USD 42`.
 
+For the clean live-number flow used by market-style value updates, opt into
+the transition-local number mode:
+
+```tsx
+<Laminar
+  text="$2,459.70"
+  variant="number"
+  numberMode="ticker"
+  stagger={0}
+/>
+```
+
+The flow keeps prefixes, punctuation, and unchanged digits crisp while
+replacing changed digits in place. It does not render a vertical reel or a
+top/bottom shadow; use `variant="slots"` with `shadow` when that effect is
+wanted.
+
 ### Slots
 
 Use `slots` when each digit should roll through a reel.
@@ -122,7 +139,7 @@ ASCII digits receive slot reels. Prefixes and punctuation render as text.
 Laminar derives reel height from `lineHeight`, then `fontSize`, with a
 12-point floor.
 
-Set `shadow` to soften the top and bottom clipping edges of each slot reel:
+Set `shadow` to soften the top and bottom clipping edges of each digit viewport:
 
 ```tsx
 <Laminar text="07:42" variant="slots" shadow />
@@ -147,6 +164,7 @@ import {
   type LaminarAlign,
   type MorphAnimationPresetName,
   type MorphContentVariant,
+  type MorphNumberMode,
   type LaminarShadow,
   type LaminarShadowOptions,
 } from "react-native-laminar";
@@ -178,6 +196,7 @@ icon replacement transition:
 | --- | --- | --- | --- |
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
+| `numberMode` | `"morph" \| "ticker"` | `"morph"` | Number-only renderer mode; `ticker` uses crisp in-place digit flow |
 | `fontSize` | `number` | inherited | Font size and numeric travel input |
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
@@ -185,13 +204,13 @@ icon replacement transition:
 | `leading` | `ReactNode \| Record<string, ReactNode>` | `undefined` | Optional leading element, or value-keyed leading content, for every variant |
 | `leadingKey` | `string \| number` | `undefined` | Advanced identity override for a direct leading element |
 | `leadingGap` | `number` | `0` | Spacing between the leading element and the first text glyph |
-| `shadow` | `boolean \| LaminarShadowOptions` | `false` | Adds soft top and bottom fades to `slots` reels |
+| `shadow` | `boolean \| LaminarShadowOptions` | `false` | Adds persistent top and bottom alpha fades to slot digit viewports |
 | `style` | `StyleProp<TextStyle>` | `undefined` | Final text style layer |
 | `fontStyle` | `StyleProp<TextStyle>` | `undefined` | Shared font style layer |
 | `containerStyle` | `StyleProp<ViewStyle>` | `undefined` | Outer shell style |
 | `animationDuration` | `number` | preset duration | Duration override in milliseconds |
-| `animationPreset` | `"default" \| "smooth" \| "snappy" \| "bouncy"` | variant default | Motion recipe |
-| `stagger` | `number` | `0.02` | Delay between numeric lanes in seconds |
+| `animationPreset` | `"default" \| "smooth" \| "snappy" \| "bouncy" \| "ticker"` | variant default | Motion recipe |
+| `stagger` | `number` | `0.02` (`0` for ticker mode) | Delay between numeric lane replacements in seconds |
 | `autoSize` | `boolean` | `true` | Measure and animate the inline width |
 | `clipToBounds` | `boolean` | `false` | Hide content outside the viewport |
 
@@ -211,9 +230,10 @@ The final `style` value wins when layers define the same property.
 | `smooth` | Spring with no bounce | 400 ms |
 | `snappy` | Spring with light bounce | 350 ms |
 | `bouncy` | Spring with more bounce | 500 ms |
+| `ticker` | In-place number-flow timing | 300 ms |
 
 Text uses `default` unless you choose a preset. Number and slot variants use
-`snappy`.
+`snappy`; ticker number mode uses `ticker`.
 
 `animationDuration` replaces the preset duration:
 

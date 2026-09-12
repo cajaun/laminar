@@ -11,6 +11,7 @@ import type { LaminarLeadingMap, MorphingTextProps } from "./types";
 import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
 import { SlotsRun } from "./view/slots-run";
+import { TickerRun } from "./view/ticker-run";
 import { TextRun } from "./view/text-run";
 
 // choose the content variant and connect it to the shared viewport and measurement flow
@@ -24,13 +25,14 @@ export const Laminar = React.memo(function Laminar({
     leading,
     leadingKey,
     leadingGap = 0,
+    numberMode = "morph",
     shadow = false,
     style,
     containerStyle,
     fontStyle,
     animationDuration,
     animationPreset,
-    stagger = 0.02,
+    stagger,
     autoSize = true,
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
@@ -41,11 +43,16 @@ export const Laminar = React.memo(function Laminar({
       ? leadingMap[resolvedValue]
       : (leading as React.ReactNode);
     const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
+    const resolvedStagger =
+      stagger ?? (variant === "number" && numberMode === "ticker" ? 0 : 0.02);
+    const useLayoutAutoSize =
+      autoSize && variant === "number" && numberMode === "ticker";
     const { motionRecipe, staggerMs } = useMorphMotion({
       variant,
+      numberMode,
       animationPreset,
       animationDuration,
-      stagger,
+      stagger: resolvedStagger,
     });
     const { textStyle } = useMorphTextStyle({
       fontSize,
@@ -110,6 +117,9 @@ export const Laminar = React.memo(function Laminar({
         align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
+        autoSizeLayoutTransition={
+          useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
+        }
         onVisibleLayout={autoSize ? captureVisibleLayout : undefined}
         measurement={
           shouldMeasure ? (
@@ -140,6 +150,21 @@ export const Laminar = React.memo(function Laminar({
       >
         {variant === "slots" ? (
           <SlotsRun
+            value={resolvedValue}
+            motionRecipe={motionRecipe}
+            align={align}
+            fontSize={fontSize}
+            textStyle={textStyle}
+            staggerMs={staggerMs}
+            className={className}
+            leading={resolvedLeading}
+            leadingKey={resolvedLeadingKey}
+            leadingGap={leadingGap}
+            ready={!autoSize || isAutoSizeReady}
+            shadow={shadow}
+          />
+        ) : variant === "number" && numberMode === "ticker" ? (
+          <TickerRun
             value={resolvedValue}
             motionRecipe={motionRecipe}
             align={align}
@@ -205,5 +230,6 @@ export type {
   LaminarProps,
   MorphAnimationPresetName,
   MorphContentVariant,
+  MorphNumberMode,
   MorphingTextProps,
 } from "./types";

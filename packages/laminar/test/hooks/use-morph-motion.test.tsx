@@ -7,6 +7,7 @@ import { renderHook } from "../support/render-hook";
 
 type Props = {
   variant: MorphContentVariant;
+  numberMode?: "morph" | "ticker";
   animationPreset?: MorphAnimationPresetName;
   animationDuration?: number;
   stagger: number;
@@ -29,6 +30,15 @@ describe("useMorphMotion", () => {
       expect(hook.result.motionRecipe.durationMs).toBe(expectedDuration);
     }
   );
+
+  test("HMM-DT-005 ticker mode selects the reference timing", () => {
+    const hook = renderHook(
+      (props: Props) => useMorphMotion({ ...props, numberMode: "ticker" }),
+      { variant: "number", stagger: 0 }
+    );
+
+    expect(hook.result.motionRecipe.durationMs).toBe(300);
+  });
 
   test.each([
     ["HMM-BVA-001 negative stagger", -0.001, -1],

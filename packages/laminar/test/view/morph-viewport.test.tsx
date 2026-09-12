@@ -80,4 +80,45 @@ describe("MorphViewport", () => {
     expect(renderer.root.findAllByProps({ children: "measure" })).toHaveLength(0);
     expect(StyleSheet.flatten(views[1].props.style).width).toBe("100%");
   });
+
+  test("MV-DT-008 animates the aligned shell for ticker auto-size", () => {
+    const layoutTransition = {} as NonNullable<
+      React.ComponentProps<typeof MorphViewport>["autoSizeLayoutTransition"]
+    >;
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <MorphViewport
+          autoSize
+          autoSizeLayoutTransition={layoutTransition}
+          clipToBounds={false}
+          align="right"
+          measurement={<Text>measure</Text>}
+        >
+          <Text>12</Text>
+        </MorphViewport>
+      );
+    });
+
+    expect(renderer.root.findAllByType(View)[0].props.layout).toBeUndefined();
+
+    act(() => {
+      renderer.update(
+        <MorphViewport
+          autoSize
+          autoSizeLayoutTransition={layoutTransition}
+          clipToBounds={false}
+          align="right"
+          measurement={<Text>measure</Text>}
+        >
+          <Text>123</Text>
+        </MorphViewport>
+      );
+    });
+
+    expect(renderer.root.findAllByType(View)[0].props.layout).toBe(
+      layoutTransition
+    );
+  });
 });

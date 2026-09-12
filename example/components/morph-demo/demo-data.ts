@@ -34,19 +34,35 @@ export const transactionStates = [
   "Transaction Safe",
   "Transaction Warning",
 ] as const;
-export const confirmContinueWords = ["Continue", "Confirm"] as const;
-// export const buttonWords = ["Let's go", "Try Varse", "Continue"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
-export const slotValues = [
-  // "$0.08",
-  // "$147.29",
-  // "$2,943.61",
-  // "$12,884.90",
-  "0.05%",
-  "0%",
-  "3.66%",
-  "31.35%",
-  "43.83%",
+// Distinct black-price snapshots from number-ticker.mov, in source order.
+export const numberFlowValues = [
+  "$2,462.78",
+  "$2,465.45",
+  "$2,468.65",
+  "$2,465.06",
+  "$2,460.38",
+  "$2,462.03",
+  "$2,461.38",
+  "$2,465.09",
+  "$2,467.23",
+  "$2,466.99",
+  "$2,465.37",
+  "$2,465.73",
+  "$2,464.00",
+  "$2,463.44",
+  "$2,464.08",
+  "$2,462.15",
+  "$2,462.27",
+  "$2,461.34",
+  "$2,460.54",
+  "$2,461.66",
+  "$2,459.87",
+  "$2,459.28",
+  "$2,460.50",
+  "$2,460.74",
+  "$2,460.04",
+  "$2,458.63",
 ] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
 export const numberLaneValues = [
@@ -72,10 +88,8 @@ export const examplePages = [
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },
   { id: "transaction", label: "Transaction" },
-  { id: "confirmation", label: "Confirmation" },
-  { id: "pressableSplit", label: "Pressable Split" },
   { id: "numbers", label: "Numbers" },
-  { id: "slotValues", label: "Slot Values" },
+  { id: "numberFlow", label: "Number Flow" },
 ] as const;
 
 export const carouselItems: CarouselItem[] = examplePages.map(

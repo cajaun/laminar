@@ -4,6 +4,7 @@ import TestRenderer, { act } from "react-test-renderer";
 import type { MotionRecipe } from "../../src/types";
 import { NumberRun } from "../../src/view/number-run";
 import { SlotsRun } from "../../src/view/slots-run";
+import { TickerRun } from "../../src/view/ticker-run";
 import { TextRun } from "../../src/view/text-run";
 
 const enterTransition = jest.fn(() => ({
@@ -298,6 +299,105 @@ describe("rendered run contracts", () => {
 
     act(() => renderer.unmount());
     expect(driveNumber.mock.calls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("RUN-ST-007 SlotsRun does not restart unchanged lanes on direction changes", () => {
+    driveNumber.mockClear();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="12"
+          motionRecipe={motionRecipe}
+          align="left"
+          staggerMs={0}
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <SlotsRun
+          value="13"
+          motionRecipe={motionRecipe}
+          align="left"
+          staggerMs={0}
+        />
+      );
+    });
+    expect(driveNumber).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      renderer.update(
+        <SlotsRun
+          value="12"
+          motionRecipe={motionRecipe}
+          align="left"
+          staggerMs={0}
+        />
+      );
+    });
+    expect(driveNumber).toHaveBeenCalledTimes(2);
+  });
+
+  test("RUN-ST-008 TickerRun keeps pending values and moves stable lanes", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    const leading = <Text>up</Text>;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <TickerRun
+          value="$12.30"
+          motionRecipe={motionRecipe}
+          align="right"
+          staggerMs={0}
+          leading={leading}
+          leadingKey="up"
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <TickerRun
+          value="$12.40"
+          motionRecipe={motionRecipe}
+          align="right"
+          staggerMs={0}
+          leading={leading}
+          leadingKey="up"
+          ready={false}
+        />
+      );
+    });
+
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "3")
+    ).toBe(true);
+    expect(
+      renderer.root.findAllByType(Text).some((node) => node.props.children === "4")
+    ).toBe(false);
+
+    act(() => {
+      renderer.update(
+        <TickerRun
+          value="$12.40"
+          motionRecipe={motionRecipe}
+          align="right"
+          staggerMs={0}
+          leading={<Text>down</Text>}
+          leadingKey="down"
+          leadingGap={4}
+        />
+      );
+    });
+
+    const textValues = renderer.root.findAllByType(Text).map((node) => node.props.children);
+    expect(textValues).toContain("down");
+    expect(textValues).toContain("4");
+    expect(
+      renderer.root.findAllByType(View).some((node) => node.props.layout === motionRecipe.layoutTransition)
+    ).toBe(true);
   });
 
   test("RUN-PERF-001 SlotsRun reuses reels across equivalent style objects", () => {

@@ -4,7 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
 
 const DEFAULT_SHADOW_COLOR = "#ffffff";
-const DEFAULT_SHADOW_SIZE_RATIO = 0.16;
+// The reference digit viewport fades across roughly one third of its visible row.
+const DEFAULT_SHADOW_SIZE_RATIO = 0.28;
 
 const transparentColor = (color: string) => {
   const value = color.trim();
@@ -55,8 +56,8 @@ type SlotShadowProps = {
   readonly children: React.ReactElement;
 };
 
-// Keep the mask mounted for the lifetime of the reel. The gradient controls
-// the reel's alpha at the clipping edges instead of painting over its glyphs.
+// Keep the mask mounted for the lifetime of the viewport. The gradient controls
+// content alpha at the clipping edges instead of painting over the glyphs.
 export const SlotShadow = React.memo(function SlotShadow({
   slotHeight,
   viewportHeight,

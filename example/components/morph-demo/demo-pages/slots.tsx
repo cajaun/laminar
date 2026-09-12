@@ -19,6 +19,7 @@ function SlotsPage({ metrics, state }: DemoPageProps) {
             text={state.numberValue}
             variant="slots"
             animationPreset="smooth"
+            shadow
             autoSize
             clipToBounds={false}
             fontSize={state.fontSize}

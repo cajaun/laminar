@@ -183,6 +183,7 @@ function SlotColumn({
   const cumulativeRef = useRef(digit);
   const previousDigitRef = useRef(digit);
   const initialRef = useRef(true);
+  const drivenTargetRef = useRef<number | null>(null);
   const exitStateRef = useRef({
     digit,
     direction,
@@ -243,6 +244,7 @@ function SlotColumn({
       initialRef.current = false;
 
       if (!animateIn) {
+        drivenTargetRef.current = cumulativeRef.current;
         return;
       }
     }
@@ -265,6 +267,14 @@ function SlotColumn({
       motionRecipe,
       target,
     };
+
+    // A direction change can rerender every column even when this column's
+    // digit is unchanged. Keep the idle reel untouched in that case.
+    if (drivenTargetRef.current === target) {
+      return;
+    }
+
+    drivenTargetRef.current = target;
 
     current.value = motionRecipe.driveNumber(target, delayMs);
   }, [animateIn, current, delayMs, digit, direction, motionRecipe]);

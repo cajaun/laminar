@@ -9,6 +9,7 @@ describe("motion recipe resolution", () => {
     ["MP-EP-002 smooth", "smooth", 400],
     ["MP-EP-003 snappy", "snappy", 350],
     ["MP-EP-004 bouncy", "bouncy", 500],
+    ["MP-EP-005 ticker", "ticker", 300],
   ] as const)("%s resolves documented preset duration", (_id, preset, duration) => {
     expect(resolveMotionRecipe(preset).durationMs).toBe(duration);
   });
@@ -21,7 +22,7 @@ describe("motion recipe resolution", () => {
     expect(resolveMotionRecipe("snappy", 16.5).durationMs).toBe(16.5);
   });
 
-  test.each(["default", "smooth", "snappy", "bouncy"] as const)(
+  test.each(["default", "smooth", "snappy", "bouncy", "ticker"] as const)(
     "MP-DT-001 %s supplies every motion contract member",
     (preset) => {
       const recipe = resolveMotionRecipe(preset, 120);
@@ -54,6 +55,7 @@ describe("motion recipe resolution", () => {
       "default",
       "smooth",
       "snappy",
+      "ticker",
     ]);
 
     for (const preset of Object.values(MOTION_PRESETS)) {

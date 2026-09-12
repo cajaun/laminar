@@ -107,6 +107,25 @@ The `shadow` prop requires the app to provide the
 `@react-native-masked-view/masked-view` and `expo-linear-gradient` peer
 dependencies.
 
+### Number flow
+
+Use `numberMode="ticker"` with `variant="number"` for clean live-number flow.
+Changed digits refresh in place while unchanged digits remain perfectly still;
+this mode deliberately has no vertical reel or viewport mask:
+
+```tsx
+<Laminar
+  text="$2,459.70"
+  variant="number"
+  numberMode="ticker"
+  stagger={0}
+  style={{ color: "#000000" }}
+/>
+```
+
+Prefixes, grouping separators, decimals, and unchanged digits stay crisp. The
+`shadow` prop is intentionally reserved for `variant="slots"`.
+
 ### Inside a button with auto-sizing
 
 ```tsx
@@ -206,6 +225,7 @@ Use `autoSize={false}` when the parent already defines the space and you only wa
 type LaminarProps = {
   text: string | number;
   variant?: "text" | "number" | "slots";
+  numberMode?: "morph" | "ticker";
   fontSize?: number;
   color?: string;
   align?: "left" | "center" | "right";
@@ -217,7 +237,7 @@ type LaminarProps = {
   containerStyle?: StyleProp<ViewStyle>;
   fontStyle?: StyleProp<TextStyle>;
   animationDuration?: number;
-  animationPreset?: "default" | "smooth" | "snappy" | "bouncy";
+  animationPreset?: "default" | "smooth" | "snappy" | "bouncy" | "ticker";
   stagger?: number;
   autoSize?: boolean;
   clipToBounds?: boolean;
@@ -234,13 +254,14 @@ type LaminarProps = {
 | `leading`           | Undefined                                   | Optional inline element, or value-keyed leading content, rendered by every variant. |
 | `leadingKey`        | Undefined                                   | Advanced identity override for a direct leading element.                          |
 | `leadingGap`        | `0`                                         | Spacing between the leading element and the first text glyph.                      |
-| `shadow`            | `false`                                     | Softens the top and bottom clipping edges of `slots` reels. Accepts `true` or `{ color, size }`. |
+| `numberMode`        | `"morph"`                                   | With `variant="number"`, `"ticker"` uses crisp in-place digit flow instead of glyph morphs. |
+| `shadow`            | `false`                                     | Adds persistent top and bottom alpha fades to slot digit viewports. Accepts `true` or `{ color, size }`. |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
 | `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
 | `animationDuration` | Preset default                              | Duration override in milliseconds.                                                 |
-| `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe.                                                               |
-| `stagger`           | `0.02`                                      | Delay in seconds between numeric lane animations.                                  |
+| `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe; ticker mode defaults to the `ticker` preset.                |
+| `stagger`           | `0.02` (`0` for ticker mode)               | Delay in seconds between numeric lane replacements.                                  |
 | `autoSize`          | `true`                                      | Animate the outer width to the measured final text width.                          |
 | `clipToBounds`      | `false`                                     | Clip animated overflow to the viewport bounds.                                     |
 
@@ -254,11 +275,13 @@ type LaminarProps = {
 | `smooth`  | Spring with no bounce      | 400ms            |
 | `snappy`  | Spring with light bounce   | 350ms            |
 | `bouncy`  | Spring with more bounce    | 500ms            |
+| `ticker`  | In-place number-flow timing | 300ms            |
 
 ```tsx
 <Laminar text={word} animationPreset="smooth" />
 <Laminar text={count} variant="number" animationPreset="snappy" />
 <Laminar text={count} variant="slots" animationPreset="snappy" />
+<Laminar text={count} variant="number" numberMode="ticker" shadow />
 
 // Override duration
 <Laminar text={word} animationPreset="default" animationDuration={520} />

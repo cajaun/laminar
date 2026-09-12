@@ -21,6 +21,43 @@ describe("public Laminar API", () => {
     expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(0);
   });
 
+  test("API-DT-011 keeps number flow inline instead of rendering slot reels", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar
+          text="$2,459.70"
+          variant="number"
+          numberMode="ticker"
+          shadow
+          autoSize={false}
+        />
+      );
+    });
+
+    expect(renderer.root.findAllByType(MaskedView)).toHaveLength(0);
+
+    act(() => {
+      renderer.update(
+        <Laminar
+          text="$2,599.50"
+          variant="number"
+          numberMode="ticker"
+          shadow
+          autoSize={false}
+        />
+      );
+    });
+
+    const changedDigit = renderer.root
+      .findAllByType(Text)
+      .find((node) => node.props.children === "9");
+
+    expect(changedDigit).toBeDefined();
+    expect(changedDigit!.props.entering).toBeUndefined();
+    expect(changedDigit!.props.exiting).toBeUndefined();
+  });
+
   test("API-DT-006 reconciles a leading inline element with text updates", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
