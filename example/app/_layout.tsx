@@ -25,6 +25,8 @@ export default function RootLayout() {
       <KeyboardProvider>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="chart" options={{ headerShown: false }} />
+          <Stack.Screen name="laminar" options={{ headerShown: false }} />
         </Stack>
       </KeyboardProvider>
     </GestureHandlerRootView>
