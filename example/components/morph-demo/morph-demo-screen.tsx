@@ -18,6 +18,7 @@ import {
   NumberIdentityDemoPage,
   NumberFlowDemoPage,
   SlotsDemoPage,
+  SlotsNextDemoPage,
   TextIdentityDemoPage,
   TransactionDemoPage,
   WordsDemoPage,
@@ -165,6 +166,8 @@ export function DemoDetailScreen({
       <TransactionDemoPage width={width} height={height} />
     ) : page.id === "slots" ? (
       <SlotsDemoPage width={width} height={height} />
+    ) : page.id === "slotsNext" ? (
+      <SlotsNextDemoPage width={width} height={height} />
     ) : page.id === "numberFlow" ? (
       <NumberFlowDemoPage width={width} height={height} />
     ) : (

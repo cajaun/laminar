@@ -82,6 +82,7 @@ export const examplePages = [
   { id: "animationLayer", label: "Animation Layer" },
   { id: "autoSize", label: "Auto Size" },
   { id: "slots", label: "Slots" },
+  { id: "slotsNext", label: "Slots (Simple)" },
   { id: "editor", label: "Editor" },
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },

@@ -6,6 +6,7 @@ export { NumberIdentityDemoPage } from "./number-identity";
 export { NumbersDemoPage } from "./numbers";
 export { NumberFlowDemoPage } from "./number-flow";
 export { SlotsDemoPage } from "./slots";
+export { SlotsNextDemoPage } from "./slots-next";
 export { TextIdentityDemoPage } from "./text-identity";
 export { TransactionDemoPage } from "./transaction";
 export { WordsDemoPage } from "./words";
