@@ -2,13 +2,11 @@ import {
   type EntryExitAnimationFunction,
   type ExitAnimationsValues,
   type WithTimingConfig,
-  withDelay,
   withTiming,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 type TransitionParams = {
-  readonly delayMs?: number;
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
   readonly fromOpacity: number;
@@ -52,9 +50,9 @@ export const createLeadingEnterTransition = ({
   };
 };
 
-// one builder covers glyph opacity, travel, scale, and optional stagger timing
+// One builder covers glyph opacity, travel, and scale with one coordinated
+// timing path for every property.
 export const createShiftTransition = ({
-  delayMs = 0,
   durationMs,
   easing,
   fromOpacity,
@@ -69,18 +67,10 @@ export const createShiftTransition = ({
 
     // drive opacity and transforms from one timing path
     const animate = (toValue: number) =>
-      delayMs > 0
-        ? withDelay(
-            delayMs,
-            withTiming(toValue, {
-              duration: durationMs,
-              easing,
-            })
-          )
-        : withTiming(toValue, {
-            duration: durationMs,
-            easing,
-          });
+      withTiming(toValue, {
+        duration: durationMs,
+        easing,
+      });
 
     const initialValues: Record<string, unknown> = {
       opacity: fromOpacity,

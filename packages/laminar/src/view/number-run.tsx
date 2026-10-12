@@ -25,7 +25,6 @@ type NumberRunProps = {
   readonly align: LaminarAlign;
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
-  readonly staggerMs: number;
   readonly className?: string;
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;
@@ -41,7 +40,6 @@ export const NumberRun = React.memo(
     align,
     fontSize,
     textStyle,
-    staggerMs,
     className,
     leading,
     leadingKey,
@@ -137,7 +135,6 @@ export const NumberRun = React.memo(
                 tokenKey={laneKeys[index]}
                 isLead={inLead}
                 hasAnimated={hasAnimated}
-                delayMs={index * staggerMs}
                 direction={direction}
                 travelDistance={travelDistance}
                 motionRecipe={motionRecipe}

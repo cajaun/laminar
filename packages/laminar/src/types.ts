@@ -57,7 +57,7 @@ export type MotionRecipe = {
   readonly layoutTransition: ComplexAnimationBuilder;
   readonly enterTransition: EntryExitAnimationFunction;
   readonly exitTransition: EntryExitAnimationFunction;
-  readonly driveNumber: (toValue: number, delayMs?: number) => number;
+  readonly driveNumber: (toValue: number) => number;
 };
 
 export type MorphingTextProps = {
@@ -82,7 +82,6 @@ export type MorphingTextProps = {
   readonly fontStyle?: StyleProp<TextStyle>;
   readonly animationDuration?: number;
   readonly animationPreset?: MorphAnimationPresetName;
-  readonly stagger?: number;
   readonly autoSize?: boolean;
   readonly clipToBounds?: boolean;
 };

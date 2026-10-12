@@ -30,7 +30,6 @@ const PressableScale: React.FC<PressableScaleProps> = ({
   const ANIMATION_DURATION = 250;
 
   const gesture = Gesture.Tap()
-    .maxDuration(4000)
     .onBegin(() => {
       active.value = true;
     })

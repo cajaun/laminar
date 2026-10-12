@@ -32,7 +32,6 @@ export const Laminar = React.memo(function Laminar({
     fontStyle,
     animationDuration,
     animationPreset,
-    stagger,
     autoSize = true,
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
@@ -43,16 +42,13 @@ export const Laminar = React.memo(function Laminar({
       ? leadingMap[resolvedValue]
       : (leading as React.ReactNode);
     const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
-    const resolvedStagger =
-      stagger ?? (variant === "number" && numberMode === "ticker" ? 0 : 0.02);
     const useLayoutAutoSize =
       autoSize && variant === "number" && numberMode === "ticker";
-    const { motionRecipe, staggerMs } = useMorphMotion({
+    const { motionRecipe } = useMorphMotion({
       variant,
       numberMode,
       animationPreset,
       animationDuration,
-      stagger: resolvedStagger,
     });
     const { textStyle } = useMorphTextStyle({
       fontSize,
@@ -89,7 +85,6 @@ export const Laminar = React.memo(function Laminar({
     ]);
     const {
       captureLayout,
-      captureVisibleLayout,
       animatedWidthStyle,
       isReady: isAutoSizeReady,
       shouldMeasure,
@@ -120,7 +115,6 @@ export const Laminar = React.memo(function Laminar({
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
-        onVisibleLayout={autoSize ? captureVisibleLayout : undefined}
         measurement={
           shouldMeasure ? (
             <View
@@ -155,7 +149,6 @@ export const Laminar = React.memo(function Laminar({
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
@@ -170,7 +163,6 @@ export const Laminar = React.memo(function Laminar({
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
@@ -185,7 +177,6 @@ export const Laminar = React.memo(function Laminar({
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}

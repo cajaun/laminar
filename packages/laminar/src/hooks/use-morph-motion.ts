@@ -12,21 +12,19 @@ type Params = {
   readonly numberMode?: MorphNumberMode;
   readonly animationPreset?: MorphAnimationPresetName;
   readonly animationDuration?: number;
-  readonly stagger: number;
 };
 
 type MorphMotion = {
   readonly motionRecipe: MotionRecipe;
-  readonly staggerMs: number;
 };
 
-// resolve one motion recipe and one shared stagger unit for a render tree
+// Resolve one motion recipe for a render tree. Token timing is coordinated by
+// the renderer instead of creating one delayed animation per token.
 export const useMorphMotion = ({
   variant,
   numberMode,
   animationPreset,
   animationDuration,
-  stagger,
 }: Params): MorphMotion => {
   const isTicker = variant === "number" && numberMode === "ticker";
   // numeric variants need a quicker default because their lanes update often
@@ -43,8 +41,5 @@ export const useMorphMotion = ({
     [animationDuration, resolvedPreset]
   );
 
-  return {
-    motionRecipe,
-    staggerMs: Math.round(stagger * 1000),
-  };
+  return { motionRecipe };
 };

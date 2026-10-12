@@ -1,6 +1,5 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { Laminar } from "react-native-laminar";
 import type { RangeMeta } from "@/components/flux-chart/data/chart-data";
 import type { FluxAsset } from "@/components/flux-chart/ui/assets/asset-config";
 import { REFERENCE_GREEN } from "@/components/flux-chart/core/model/chart-config";
@@ -77,21 +76,12 @@ export function PriceOverview({
             {priceText}
           </Text>
         ) : (
-          <View className="relative h-9 w-38.75">
-            <Laminar
-              text={priceText}
-              variant="number"
-              numberMode="ticker"
-              align="left"
-              autoSize={false}
-              animationPreset="ticker"
-              stagger={0}
-              fontSize={30}
-              containerStyle={{ width: 155, height: 36 }}
-              className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
-              style={priceTextStyle}
-            />
-          </View>
+          <Text
+            className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
+            style={priceTextStyle}
+          >
+            {priceText}
+          </Text>
         )}
       </View>
       <View className="items-end pb-1.25">
@@ -119,28 +109,16 @@ export function PriceOverview({
             </Text>
           </View>
         ) : (
-          <View className="relative h-7.5 w-27.5">
-            <Laminar
-              text={percentText}
-              variant="number"
-              numberMode="ticker"
-              leading={
-                <SFIcon
-                  name="arrow.up"
-                  size={28}
-                  color={REFERENCE_GREEN}
-                  weight="bold"
-                  fallback="↑"
-                  fallbackSize={28}
-                />
-              }
-              leadingKey="percentage-arrow"
-              leadingGap={4}
-              align="right"
-              animationPreset="ticker"
-              stagger={0}
-              clipToBounds={false}
-              containerStyle={{ width: 110, height: 30 }}
+          <View className="h-7.5 w-27.5 flex-row items-center justify-end gap-1">
+            <SFIcon
+              name="arrow.up"
+              size={28}
+              color={REFERENCE_GREEN}
+              weight="bold"
+              fallback="↑"
+              fallbackSize={28}
+            />
+            <Text
               className="font-sf-bold text-[24px] leading-7.5 tracking-[-1.5px]"
               style={{
                 color: REFERENCE_GREEN,
@@ -148,7 +126,9 @@ export function PriceOverview({
                 fontWeight: "700",
                 lineHeight: 30,
               }}
-            />
+            >
+              {percentText}
+            </Text>
           </View>
         )}
       </View>

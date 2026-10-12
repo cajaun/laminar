@@ -1,7 +1,6 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
 import Animated, {
-  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -27,7 +26,6 @@ function LoadingSpinner() {
       false
     );
 
-    return () => cancelAnimation(rotation);
   }, [rotation]);
 
   const animatedStyle = useAnimatedStyle(() => ({

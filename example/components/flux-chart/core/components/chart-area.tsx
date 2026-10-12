@@ -7,8 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import { Laminar } from "react-native-laminar";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import type { CursorPoint } from "@/components/flux-chart/core/types";
 import type { RangeType } from "@/components/flux-chart/data/chart-data";
 import { CHART_HEIGHT } from "@/components/flux-chart/core/model/geometry";
@@ -119,27 +118,20 @@ export function ChartArea({
               onLayout={handleCursorPillLayout}
               style={animatedCursorPillStyle}
             >
-              <Laminar
-                text={cursorLabel}
-                autoSize
-                animationPreset="default"
-            
-                containerStyle={{
-                  minHeight: 26,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 999,
-                  backgroundColor: "#F6F7F7",
-                  paddingHorizontal: 8,
-                }}
-                className="font-sf-medium text-[14px] leading-4.25 text-[#999999]"
+              <Text
+                numberOfLines={1}
+                className="rounded-full bg-[#F6F7F7] px-2 font-sf-medium text-[14px] leading-4.25 text-[#999999]"
                 style={{
+                  minHeight: 26,
+                  paddingVertical: 4,
                   color: "#999999",
                   fontFamily: "Sf-medium",
                   fontSize: 14,
                   lineHeight: 17,
                 }}
-              />
+              >
+                {cursorLabel}
+              </Text>
             </Animated.View>
           </View>
         </GestureDetector>

@@ -118,7 +118,6 @@ this mode deliberately has no vertical reel or viewport mask:
   text="$2,459.70"
   variant="number"
   numberMode="ticker"
-  stagger={0}
   style={{ color: "#000000" }}
 />
 ```
@@ -238,7 +237,6 @@ type LaminarProps = {
   fontStyle?: StyleProp<TextStyle>;
   animationDuration?: number;
   animationPreset?: "default" | "smooth" | "snappy" | "bouncy" | "ticker";
-  stagger?: number;
   autoSize?: boolean;
   clipToBounds?: boolean;
 };
@@ -261,7 +259,6 @@ type LaminarProps = {
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
 | `animationDuration` | Preset default                              | Duration override in milliseconds.                                                 |
 | `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe; ticker mode defaults to the `ticker` preset.                |
-| `stagger`           | `0.02` (`0` for ticker mode)               | Delay in seconds between numeric lane replacements.                                  |
 | `autoSize`          | `true`                                      | Animate the outer width to the measured final text width.                          |
 | `clipToBounds`      | `false`                                     | Clip animated overflow to the viewport bounds.                                     |
 

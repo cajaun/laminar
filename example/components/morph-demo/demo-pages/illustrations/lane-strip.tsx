@@ -63,7 +63,6 @@ export function LaneStrip({ value }: { readonly value: string }) {
               autoSize={false}
               clipToBounds={false}
               fontSize={22}
-              stagger={0}
               containerStyle={{ alignSelf: "center" }}
               style={{
                 color: unit ? "#1c1c1e" : "#c7c7cc",

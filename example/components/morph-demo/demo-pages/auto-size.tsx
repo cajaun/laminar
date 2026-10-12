@@ -27,7 +27,6 @@ function AutoSizePage({ metrics, state }: DemoPageProps) {
               autoSize
               clipToBounds={false}
               fontSize={32}
-              stagger={0.035}
               style={[showcaseTextStyle, { fontSize: 32 }]}
             />
           </View>

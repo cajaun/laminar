@@ -153,7 +153,6 @@ const SlotReel = React.memo(function SlotReel({
 type SlotColumnProps = {
   readonly digit: number;
   readonly direction: NumericFlowDirection;
-  readonly delayMs: number;
   readonly animateIn: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly slotHeight: number;
@@ -165,7 +164,6 @@ type SlotColumnProps = {
 function SlotColumn({
   digit,
   direction,
-  delayMs,
   animateIn,
   motionRecipe,
   slotHeight,
@@ -276,8 +274,8 @@ function SlotColumn({
 
     drivenTargetRef.current = target;
 
-    current.value = motionRecipe.driveNumber(target, delayMs);
-  }, [animateIn, current, delayMs, digit, direction, motionRecipe]);
+    current.value = motionRecipe.driveNumber(target);
+  }, [animateIn, current, digit, direction, motionRecipe]);
 
   const reel = (
     <SlotReel
@@ -318,7 +316,6 @@ type SlotsRunProps = {
   readonly align: LaminarAlign;
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
-  readonly staggerMs: number;
   readonly className?: string;
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;
@@ -335,7 +332,6 @@ export const SlotsRun = React.memo(
     align,
     fontSize,
     textStyle,
-    staggerMs,
     className,
     leading,
     leadingKey,
@@ -408,8 +404,6 @@ export const SlotsRun = React.memo(
       lastValueRef.current = visibleValue;
     }
 
-    const digitCount = units.filter(isAsciiDigit).length;
-    let digitIndex = 0;
     const hasAnimated = hasAnimatedRef.current;
 
     return (
@@ -453,9 +447,6 @@ export const SlotsRun = React.memo(
               );
             }
 
-            const delayMs = (digitCount - 1 - digitIndex) * staggerMs;
-            digitIndex += 1;
-
             return (
               <Animated.View
                 key={laneKey}
@@ -470,7 +461,6 @@ export const SlotsRun = React.memo(
                 <SlotColumn
                   digit={Number(unit)}
                   direction={direction}
-                  delayMs={delayMs}
                   animateIn={hasAnimated}
                   motionRecipe={motionRecipe}
                   slotHeight={slotHeight}

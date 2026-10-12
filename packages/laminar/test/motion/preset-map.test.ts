@@ -32,7 +32,6 @@ describe("motion recipe resolution", () => {
       expect(typeof recipe.exitTransition).toBe("function");
       expect(typeof recipe.driveNumber).toBe("function");
       expect(recipe.driveNumber(42)).toBeDefined();
-      expect(recipe.driveNumber(42, 20)).toBeDefined();
     }
   );
 

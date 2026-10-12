@@ -5,7 +5,6 @@ import {
   type ComposedGesture,
 } from "react-native-gesture-handler";
 import {
-  cancelAnimation,
   Easing,
   runOnJS,
   type SharedValue,
@@ -99,8 +98,6 @@ export function useChartCursor({
   const startCursorEntry = useCallback(() => {
     "worklet";
 
-    cancelAnimation(cursorScale);
-    cancelAnimation(fadeProgress);
     cursorScale.value = CURSOR_SCALE_START;
     cursorScale.value = withSpring(1, CURSOR_ENTRY_SPRING);
     fadeProgress.value = 0;
@@ -178,8 +175,6 @@ export function useChartCursor({
     if (!cursorActive.value || fadeOutStarted.value) return;
 
     fadeOutStarted.value = 1;
-    cancelAnimation(cursorScale);
-    cancelAnimation(fadeProgress);
     cursorScale.value = withTiming(0, {
       duration: CURSOR_SCALE_DURATION,
       easing: Easing.in(Easing.quad),
@@ -239,7 +234,6 @@ export function useChartCursor({
         });
 
       const tap = Gesture.Tap()
-        .maxDuration(60_000)
         .onBegin((event) => {
           "worklet";
 

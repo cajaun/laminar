@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Laminar } from "react-native-laminar";
 import Animated, {
-  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -45,7 +44,6 @@ function TransactionSpinner({ color, ringColor }: { color: string; ringColor: st
       false
     );
 
-    return () => cancelAnimation(rotation);
   }, [rotation]);
 
   const animatedStyle = useAnimatedStyle(() => ({

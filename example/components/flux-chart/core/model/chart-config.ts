@@ -16,6 +16,7 @@ export const REFERENCE_GRAPH_EXTENT: Record<RangeType, number> = {
 
 export const CURSOR_FADE_DURATION = 250;
 export const CURSOR_SCALE_DURATION = 100;
+export const CHART_MORPH_DURATION = 250;
 export const CURSOR_SCALE_START = 0;
 export const CURSOR_ENTRY_SPRING = {
   stiffness: 2000,

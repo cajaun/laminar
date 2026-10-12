@@ -30,7 +30,6 @@ export function AutoSizeComparison({ value }: { readonly value: string }) {
               autoSize={false}
               clipToBounds={false}
               fontSize={17}
-              stagger={0}
               containerStyle={{ alignSelf: "center" }}
               style={{ color: "#8e8e93", fontFamily: "Sf-semibold", fontSize: 17, textAlign: "center" }}
             />

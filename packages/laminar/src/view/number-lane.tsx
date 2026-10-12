@@ -25,7 +25,6 @@ type NumberLaneProps = {
   readonly tokenKey: number;
   readonly isLead: boolean;
   readonly hasAnimated: boolean;
-  readonly delayMs: number;
   readonly direction: NumericFlowDirection;
   readonly travelDistance: number;
   readonly motionRecipe: MotionRecipe;
@@ -40,7 +39,6 @@ export const NumberLane = React.memo(
     tokenKey,
     isLead,
     hasAnimated,
-    delayMs,
     direction,
     travelDistance,
     motionRecipe,
@@ -59,7 +57,6 @@ export const NumberLane = React.memo(
     const enterTransition = useMemo(
       () =>
         createShiftTransition({
-          delayMs,
           durationMs: motionRecipe.durationMs,
           easing: motionRecipe.easing,
           fromOpacity: 0,
@@ -70,7 +67,6 @@ export const NumberLane = React.memo(
           toScale: 1,
         }),
       [
-        delayMs,
         motionRecipe.durationMs,
         motionRecipe.easing,
         usesDigitTravel,
@@ -81,7 +77,6 @@ export const NumberLane = React.memo(
     const exitTransition = useMemo(
       () =>
         createShiftTransition({
-          delayMs,
           durationMs: motionRecipe.durationMs,
           easing: motionRecipe.easing,
           fromOpacity: 1,
@@ -92,7 +87,6 @@ export const NumberLane = React.memo(
           toScale: 0.6,
         }),
       [
-        delayMs,
         motionRecipe.durationMs,
         motionRecipe.easing,
         usesDigitTravel,

@@ -28,7 +28,6 @@ const renderLane = (
         tokenKey={1}
         isLead={false}
         hasAnimated
-        delayMs={0}
         direction={1}
         travelDistance={10}
         motionRecipe={motionRecipe}

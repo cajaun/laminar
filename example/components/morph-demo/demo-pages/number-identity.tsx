@@ -25,7 +25,6 @@ function NumberIdentityPage({ metrics, state }: DemoPageProps) {
             autoSize
             clipToBounds={false}
             fontSize={54}
-            stagger={0}
             containerStyle={{ alignSelf: "center" }}
             style={[showcaseTextStyle, { fontSize: 54, fontVariant: ["tabular-nums"] }]}
           />

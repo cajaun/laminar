@@ -1,6 +1,5 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { CarouselPagination } from "@/components/ui/carousel";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 import type { DemoMetrics } from "./use-demo-metrics";
 
@@ -66,16 +65,6 @@ export const DemoFooter = React.memo(function DemoFooter({
         backgroundColor: "#ffffff",
       }}
     >
-      <View
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: metrics.controlStackGap,
-        }}
-      >
-        <CarouselPagination defaultDotColor="#d7d7d7" activeDotColor="#000000" />
-      </View>
-
       <View
         style={{
           width: "100%",

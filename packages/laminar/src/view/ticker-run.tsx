@@ -36,7 +36,6 @@ type TickerRunProps = {
   readonly align: LaminarAlign;
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
-  readonly staggerMs: number;
   readonly className?: string;
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;

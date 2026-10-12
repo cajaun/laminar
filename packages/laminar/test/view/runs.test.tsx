@@ -197,7 +197,7 @@ describe("rendered run contracts", () => {
     expect(nestedTextRows).toHaveLength(0);
   });
 
-  test("RUN-ST-002 NumberRun preserves lead text and staggers lane updates", () => {
+  test("RUN-ST-002 NumberRun preserves lead text and updates lanes", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
       renderer = TestRenderer.create(
@@ -205,7 +205,6 @@ describe("rendered run contracts", () => {
           value="$12"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={15}
         />
       );
     });
@@ -217,7 +216,6 @@ describe("rendered run contracts", () => {
           value="$13"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={15}
         />
       );
     });
@@ -232,7 +230,6 @@ describe("rendered run contracts", () => {
           value="$1.2"
           motionRecipe={motionRecipe}
           align="center"
-          staggerMs={10}
         />
       );
     });
@@ -258,7 +255,6 @@ describe("rendered run contracts", () => {
           align="left"
           fontSize={1}
           textStyle={{ lineHeight: 8 }}
-          staggerMs={0}
         />
       );
     });
@@ -281,7 +277,6 @@ describe("rendered run contracts", () => {
           value="8"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -291,11 +286,10 @@ describe("rendered run contracts", () => {
           value="9"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
-    expect(driveNumber).toHaveBeenCalledWith(expect.any(Number), 0);
+    expect(driveNumber).toHaveBeenCalledWith(expect.any(Number));
 
     act(() => renderer.unmount());
     expect(driveNumber.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -310,7 +304,6 @@ describe("rendered run contracts", () => {
           value="12"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -321,7 +314,6 @@ describe("rendered run contracts", () => {
           value="13"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -333,7 +325,6 @@ describe("rendered run contracts", () => {
           value="12"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -350,7 +341,6 @@ describe("rendered run contracts", () => {
           value="$12.30"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={leading}
           leadingKey="up"
         />
@@ -363,7 +353,6 @@ describe("rendered run contracts", () => {
           value="$12.40"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={leading}
           leadingKey="up"
           ready={false}
@@ -384,7 +373,6 @@ describe("rendered run contracts", () => {
           value="$12.40"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={<Text>down</Text>}
           leadingKey="down"
           leadingGap={4}
@@ -411,7 +399,6 @@ describe("rendered run contracts", () => {
           fontSize,
           fontVariant: ["tabular-nums"],
         }}
-        staggerMs={0}
       />
     );
 

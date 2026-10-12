@@ -26,7 +26,6 @@ function TextIdentityPage({ metrics, state }: DemoPageProps) {
             autoSize
             clipToBounds={false}
             fontSize={56}
-            stagger={0.04}
             containerStyle={{ alignSelf: "center" }}
             style={[showcaseTextStyle, { fontSize: 56 }]}
           />
@@ -42,7 +41,6 @@ function TextIdentityPage({ metrics, state }: DemoPageProps) {
               autoSize
               clipToBounds={false}
               fontSize={56}
-              stagger={0.04}
               containerStyle={{ alignSelf: "center" }}
               style={[showcaseTextStyle, { fontSize: 56 }]}
             />

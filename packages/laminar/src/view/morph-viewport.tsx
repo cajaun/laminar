@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import type { LayoutChangeEvent, StyleProp, ViewStyle } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { ComplexAnimationBuilder } from "react-native-reanimated";
@@ -55,7 +55,6 @@ type MorphViewportProps = {
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
   /** optional layout-driven auto-size path for content that needs an aligned anchor */
   readonly autoSizeLayoutTransition?: ComplexAnimationBuilder;
-  readonly onVisibleLayout?: (event: LayoutChangeEvent) => void;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -69,7 +68,6 @@ export const MorphViewport = React.memo(
     containerStyle,
     animatedWidthStyle,
     autoSizeLayoutTransition,
-    onVisibleLayout,
     measurement,
     children,
   }: MorphViewportProps) => {
@@ -111,7 +109,7 @@ export const MorphViewport = React.memo(
           >
             {measurement}
           </View>
-          <Animated.View onLayout={onVisibleLayout} style={resolvedViewportStyle}>
+          <Animated.View style={resolvedViewportStyle}>
             {children}
           </Animated.View>
         </Animated.View>
@@ -132,7 +130,6 @@ export const MorphViewport = React.memo(
               {measurement}
             </View>
             <Animated.View
-              onLayout={onVisibleLayout}
               style={[resolvedViewportStyle, animatedWidthStyle]}
             >
               {children}

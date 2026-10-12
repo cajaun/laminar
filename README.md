@@ -92,7 +92,6 @@ strings.
   text="$12,480.50"
   variant="number"
   align="right"
-  stagger={0.015}
 />
 ```
 
@@ -112,7 +111,6 @@ the transition-local number mode:
   text="$2,459.70"
   variant="number"
   numberMode="ticker"
-  stagger={0}
 />
 ```
 
@@ -210,7 +208,6 @@ icon replacement transition:
 | `containerStyle` | `StyleProp<ViewStyle>` | `undefined` | Outer shell style |
 | `animationDuration` | `number` | preset duration | Duration override in milliseconds |
 | `animationPreset` | `"default" \| "smooth" \| "snappy" \| "bouncy" \| "ticker"` | variant default | Motion recipe |
-| `stagger` | `number` | `0.02` (`0` for ticker mode) | Delay between numeric lane replacements in seconds |
 | `autoSize` | `boolean` | `true` | Measure and animate the inline width |
 | `clipToBounds` | `boolean` | `false` | Hide content outside the viewport |
 

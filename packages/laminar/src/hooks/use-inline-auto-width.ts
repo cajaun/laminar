@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
@@ -14,14 +8,10 @@ type Params = {
   measurementKey: string;
 };
 
-type PendingProbe = {
-  key: string;
-  width: number;
-};
-
 const WIDTH_CACHE_LIMIT = 64;
 
-// measure each content signature once and drive later changes through one width value
+// Measure each content signature once. Layout events update the shared width
+// directly so measurement never needs a timer or a React readiness render.
 export const useInlineAutoWidth = ({
   enabled,
   driveToWidth,
@@ -32,28 +22,7 @@ export const useInlineAutoWidth = ({
   const measuredWidthRef = useRef<number | null>(null);
   const bootstrappedRef = useRef(false);
   const widthCacheRef = useRef(new Map<string, number>());
-  const firstEnabledMeasurementKeyRef = useRef<string | null>(null);
-  const hasCapturedVisibleLayoutRef = useRef(false);
-  const initialMeasurementKeyRef = useRef<string | null>(null);
-  const firstProbeRef = useRef<PendingProbe | null>(null);
-  const latestProbeRef = useRef<PendingProbe | null>(null);
-  const bootstrapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [readyMeasurementKey, setReadyMeasurementKey] = useState<string | null>(
-    null
-  );
 
-  // latch the first enabled key so a pending visible layout cannot use a later key
-  if (enabled && firstEnabledMeasurementKeyRef.current === null) {
-    firstEnabledMeasurementKeyRef.current = measurementKey;
-  }
-
-  const markMeasurementReady = useCallback((key: string) => {
-    setReadyMeasurementKey((currentKey) =>
-      currentKey === key ? currentKey : key
-    );
-  }, []);
-
-  // the first measurement establishes the shell without animating from zero
   const applyWidth = useCallback(
     (nextWidth: number) => {
       if (measuredWidthRef.current === nextWidth) {
@@ -69,97 +38,11 @@ export const useInlineAutoWidth = ({
         return;
       }
 
+      // Assigning a new animation naturally interrupts and continues from the
+      // current value; no explicit cancellation is required.
       widthValue.value = driveToWidth(nextWidth);
     },
-    [driveToWidth, widthValue]
-  );
-
-  const bootstrapFromProbe = useCallback(() => {
-    bootstrapTimerRef.current = null;
-
-    if (hasCapturedVisibleLayoutRef.current) {
-      return;
-    }
-
-    const firstProbe = firstProbeRef.current;
-    if (!firstProbe) {
-      return;
-    }
-
-    // The visible layout did not arrive in time, so use the first probe as a
-    // safe fallback. A later probe can still animate from this baseline.
-    hasCapturedVisibleLayoutRef.current = true;
-    initialMeasurementKeyRef.current = firstProbe.key;
-    applyWidth(firstProbe.width);
-
-    const latestProbe = latestProbeRef.current;
-    if (latestProbe && latestProbe.key !== firstProbe.key) {
-      // The target width is already cached. Defer its animation until the
-      // ready render so the shell and the new glyph row start together.
-      markMeasurementReady(latestProbe.key);
-    } else {
-      markMeasurementReady(firstProbe.key);
-    }
-  }, [applyWidth, markMeasurementReady]);
-
-  const captureVisibleLayout = useCallback(
-    (event: LayoutChangeEvent) => {
-      if (!enabled || hasCapturedVisibleLayoutRef.current) {
-        return;
-      }
-
-      if (bootstrapTimerRef.current !== null) {
-        clearTimeout(bootstrapTimerRef.current);
-        bootstrapTimerRef.current = null;
-      }
-
-      hasCapturedVisibleLayoutRef.current = true;
-      // bootstrap from the visible tree so the first explicit width matches
-      // the geometry that was already painted to the user
-      const nextWidth = Math.max(0, event.nativeEvent.layout.width);
-      const firstEnabledMeasurementKey =
-        firstEnabledMeasurementKeyRef.current;
-      const visibleKeyMatchesInitialKey =
-        firstEnabledMeasurementKey === null ||
-        firstEnabledMeasurementKey === measurementKey;
-      const firstProbe = firstProbeRef.current;
-
-      if (!visibleKeyMatchesInitialKey) {
-        // ignore a visible layout from the initial row when the key has changed
-        const currentProbeWidth =
-          firstProbe?.key === measurementKey
-            ? firstProbe.width
-            : widthCacheRef.current.get(measurementKey);
-
-        if (currentProbeWidth !== undefined) {
-          initialMeasurementKeyRef.current = measurementKey;
-          applyWidth(currentProbeWidth);
-          markMeasurementReady(measurementKey);
-        } else if (firstProbe) {
-          // use the old probe as the shell baseline until the current key is measured
-          initialMeasurementKeyRef.current = firstProbe.key;
-          applyWidth(firstProbe.width);
-        }
-
-        return;
-      }
-
-      // retain the visible width for the initial key so a later cache hit does
-      // not reintroduce the probe-to-visible mismatch
-      widthCacheRef.current.delete(measurementKey);
-      widthCacheRef.current.set(measurementKey, nextWidth);
-      if (firstProbe && firstProbe.key !== measurementKey) {
-        initialMeasurementKeyRef.current = firstProbe.key;
-        applyWidth(firstProbe.width);
-        markMeasurementReady(measurementKey);
-        return;
-      }
-
-      initialMeasurementKeyRef.current = measurementKey;
-      applyWidth(nextWidth);
-      markMeasurementReady(measurementKey);
-    },
-    [applyWidth, enabled, markMeasurementReady, measurementKey]
+    [driveToWidth, hasBootstrappedWidth, widthValue]
   );
 
   const captureLayout = useCallback(
@@ -168,88 +51,38 @@ export const useInlineAutoWidth = ({
         return;
       }
 
-      // round up so fractional native measurements cannot clip the final glyph
       const nextWidth = Math.max(0, Math.ceil(event.nativeEvent.layout.width));
+      const cache = widthCacheRef.current;
 
-      const isInitialMeasurement =
-        initialMeasurementKeyRef.current === measurementKey;
-
-      if (!isInitialMeasurement) {
-        // delete before setting so a repeated key moves to the most recent position
-        widthCacheRef.current.delete(measurementKey);
-
-        if (widthCacheRef.current.size >= WIDTH_CACHE_LIMIT) {
-          // map insertion order gives the lru entry at the front
-          const oldestKey = widthCacheRef.current.keys().next().value;
-
-          if (oldestKey !== undefined) {
-            widthCacheRef.current.delete(oldestKey);
-          }
+      // Delete before setting so a repeated key becomes the newest entry.
+      cache.delete(measurementKey);
+      if (cache.size >= WIDTH_CACHE_LIMIT) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey !== undefined) {
+          cache.delete(oldestKey);
         }
-
-        widthCacheRef.current.set(measurementKey, nextWidth);
       }
+      cache.set(measurementKey, nextWidth);
 
-      const probe = { key: measurementKey, width: nextWidth };
-      if (!firstProbeRef.current) {
-        firstProbeRef.current = probe;
-      }
-      latestProbeRef.current = probe;
-
-      if (
-        !hasCapturedVisibleLayoutRef.current &&
-        bootstrapTimerRef.current === null
-      ) {
-        bootstrapTimerRef.current = setTimeout(bootstrapFromProbe, 0);
-      }
-
-      // Do not let the initial probe override the visible first frame.
-      if (hasCapturedVisibleLayoutRef.current && !isInitialMeasurement) {
-        // captureLayout only records the target. The cache effect applies the
-        // animation during the render that releases the new glyph row.
-        markMeasurementReady(measurementKey);
-      }
+      // The visible row is already rendered. Drive the shell from the probe
+      // without scheduling a second React render.
+      applyWidth(nextWidth);
     },
-    [
-      applyWidth,
-      bootstrapFromProbe,
-      enabled,
-      markMeasurementReady,
-      measurementKey,
-    ]
+    [applyWidth, enabled, measurementKey]
   );
 
   const cachedWidth = widthCacheRef.current.get(measurementKey);
 
-  // a cached width can restore the shell before the hidden probe renders again
   useLayoutEffect(() => {
-    if (
-      enabled &&
-      cachedWidth !== undefined &&
-      hasCapturedVisibleLayoutRef.current
-    ) {
-      // promote cache hits so active states stay available longer
-      widthCacheRef.current.delete(measurementKey);
-      widthCacheRef.current.set(measurementKey, cachedWidth);
-      applyWidth(cachedWidth);
-      markMeasurementReady(measurementKey);
+    if (!enabled || cachedWidth === undefined) {
+      return;
     }
-  }, [
-    applyWidth,
-    cachedWidth,
-    enabled,
-    markMeasurementReady,
-    measurementKey,
-  ]);
 
-  useEffect(
-    () => () => {
-      if (bootstrapTimerRef.current !== null) {
-        clearTimeout(bootstrapTimerRef.current);
-      }
-    },
-    []
-  );
+    const cache = widthCacheRef.current;
+    cache.delete(measurementKey);
+    cache.set(measurementKey, cachedWidth);
+    applyWidth(cachedWidth);
+  }, [applyWidth, cachedWidth, enabled, measurementKey]);
 
   const animatedWidthStyle = useAnimatedStyle(
     () =>
@@ -258,17 +91,14 @@ export const useInlineAutoWidth = ({
             width: widthValue.value,
           }
         : {},
-    [enabled]
+    [enabled, hasBootstrappedWidth, widthValue]
   );
 
   return {
     captureLayout,
-    captureVisibleLayout,
     animatedWidthStyle,
-    isReady:
-      !enabled ||
-      cachedWidth !== undefined ||
-      readyMeasurementKey === measurementKey,
+    // Content is never held behind a timer-driven readiness gate.
+    isReady: true,
     shouldMeasure: enabled && cachedWidth === undefined,
   };
 };

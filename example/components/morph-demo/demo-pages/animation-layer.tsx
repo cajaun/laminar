@@ -29,7 +29,6 @@ function AnimationLayerPage({ metrics, state }: DemoPageProps) {
               autoSize
               clipToBounds={false}
               fontSize={62}
-              stagger={0}
               containerStyle={{ alignSelf: "center" }}
               style={[showcaseTextStyle, { fontSize: 62, fontVariant: ["tabular-nums"] }]}
             />

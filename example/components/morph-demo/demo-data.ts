@@ -1,5 +1,3 @@
-import type { CarouselItem } from "@/components/ui/carousel";
-
 export const fontSizes = [32, 40, 48] as const;
 
 export const fontWeights = [
@@ -91,10 +89,6 @@ export const examplePages = [
   { id: "numbers", label: "Numbers" },
   { id: "numberFlow", label: "Number Flow" },
 ] as const;
-
-export const carouselItems: CarouselItem[] = examplePages.map(
-  (_, index) => index,
-);
 
 export const stepForward = (index: number, length: number) =>
   (index + 1) % length;

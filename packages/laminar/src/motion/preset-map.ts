@@ -3,7 +3,6 @@ import {
   LinearTransition,
   type EntryExitAnimationFunction,
   type WithTimingConfig,
-  withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -97,14 +96,12 @@ export const resolveMotionRecipe = (
       ),
       enterTransition: createOpacityTransition(0, 1, durationMs, easing),
       exitTransition: createOpacityTransition(1, 0, durationMs, easing),
-      driveNumber: (toValue, delayMs = 0) => {
-        const animation = withSpring(toValue, {
+      driveNumber: (toValue) => {
+        return withSpring(toValue, {
           duration: durationMs,
           dampingRatio,
           overshootClamping: preset.bounce === 0,
         });
-
-        return delayMs > 0 ? withDelay(delayMs, animation) : animation;
       },
     };
   }
@@ -124,13 +121,11 @@ export const resolveMotionRecipe = (
     ),
     enterTransition: createOpacityTransition(0, 1, durationMs, easing),
     exitTransition: createOpacityTransition(1, 0, durationMs, easing),
-    driveNumber: (toValue, delayMs = 0) => {
-      const animation = withTiming(toValue, {
+    driveNumber: (toValue) => {
+      return withTiming(toValue, {
         duration: durationMs,
         easing,
       });
-
-      return delayMs > 0 ? withDelay(delayMs, animation) : animation;
     },
   };
 };

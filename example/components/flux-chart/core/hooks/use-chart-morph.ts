@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import {
-  cancelAnimation,
   Easing,
   runOnUI,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { CHART_MORPH_DURATION } from "@/components/flux-chart/core/model/chart-config";
 
 type UseChartMorphOptions = {
   initialYValues: number[];
@@ -47,8 +47,6 @@ export function useChartMorph({
       runOnUI((toValues: number[], toWidth: number) => {
         "worklet";
 
-        cancelAnimation(morphProgress);
-
         const currentFrom = morphFrom.value;
         const currentTo = morphTo.value;
         const currentProgress = morphProgress.value;
@@ -66,7 +64,7 @@ export function useChartMorph({
         graphWidthTo.value = toWidth;
         morphProgress.value = 0;
         morphProgress.value = withTiming(1, {
-          duration: 250,
+          duration: CHART_MORPH_DURATION,
           easing: Easing.out(Easing.cubic),
         });
       })(nextYValues, nextGraphWidth);
