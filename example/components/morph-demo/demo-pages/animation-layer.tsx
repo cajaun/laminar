@@ -6,18 +6,27 @@ import {
   MechanismFrame,
   settingsRow,
   TeachingLabel,
-  sameMetrics,
   showcaseTextStyle,
   teachingBlue,
   teachingDurationMs,
 } from "./shared";
 import { NoProbeDigit } from "./illustrations";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useAnimationLayerDemoState,
+} from "../use-demo-state";
 
-function AnimationLayerPage({ metrics, state }: DemoPageProps) {
+function AnimationLayerPage({ height, width }: DemoPageProps) {
+  const state = useAnimationLayerDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <View style={{ borderWidth: 1.5, borderStyle: "dashed", borderColor: teachingBlue, borderRadius: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: "#f7fbff" }}>
@@ -55,10 +64,4 @@ function AnimationLayerPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const AnimationLayerDemoPage = React.memo(
-  AnimationLayerPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.animationLayerValue === next.state.animationLayerValue &&
-    previous.state.morph === next.state.morph
-);
+export const AnimationLayerDemoPage = React.memo(AnimationLayerPage);

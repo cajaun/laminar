@@ -6,17 +6,26 @@ import {
   MechanismFrame,
   settingsRow,
   TeachingLabel,
-  sameMetrics,
   showcaseTextStyle,
   teachingDurationMs,
 } from "./shared";
 import { NoLcsLaminar } from "./illustrations";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useTextIdentityDemoState,
+} from "../use-demo-state";
 
-function TextIdentityPage({ metrics, state }: DemoPageProps) {
+function TextIdentityPage({ height, width }: DemoPageProps) {
+  const state = useTextIdentityDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <Laminar
@@ -58,10 +67,4 @@ function TextIdentityPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const TextIdentityDemoPage = React.memo(
-  TextIdentityPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.textIdentityWord === next.state.textIdentityWord &&
-    previous.state.morph === next.state.morph
-);
+export const TextIdentityDemoPage = React.memo(TextIdentityPage);

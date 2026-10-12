@@ -10,8 +10,12 @@ import Animated, {
 import Svg, { Circle, Path } from "react-native-svg";
 import { SymbolView } from "expo-symbols";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useTransactionDemoState,
+} from "../use-demo-state";
 
 const TRANSACTION_COLORS = {
   "Analyzing Transaction": {
@@ -77,13 +81,18 @@ function TransactionSpinner({ color, ringColor }: { color: string; ringColor: st
   );
 }
 
-function TransactionPage({ metrics, state }: DemoPageProps) {
+function TransactionPage({ height, width }: DemoPageProps) {
+  const state = useTransactionDemoState();
   const transactionState = state.transactionState;
   const colors = TRANSACTION_COLORS[transactionState];
 
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <PressableScale
           onPress={state.cycleTransaction}
@@ -148,10 +157,4 @@ function TransactionPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const TransactionDemoPage = React.memo(
-  TransactionPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.transactionState === next.state.transactionState &&
-    previous.state.cycleTransaction === next.state.cycleTransaction
-);
+export const TransactionDemoPage = React.memo(TransactionPage);

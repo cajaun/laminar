@@ -1,12 +1,22 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useNumberFlowDemoState,
+} from "../use-demo-state";
 
-function NumberFlowPage({ metrics, state }: DemoPageProps) {
+function NumberFlowPage({ height, width }: DemoPageProps) {
+  const state = useNumberFlowDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <Laminar
@@ -41,13 +51,4 @@ function NumberFlowPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const NumberFlowDemoPage = React.memo(
-  NumberFlowPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.numberFlowValue === next.state.numberFlowValue &&
-    previous.state.previousNumberFlowValue ===
-      next.state.previousNumberFlowValue &&
-    previous.state.nextNumberFlowValue === next.state.nextNumberFlowValue &&
-    previous.state.cycleNumberFlow === next.state.cycleNumberFlow
-);
+export const NumberFlowDemoPage = React.memo(NumberFlowPage);

@@ -1,12 +1,19 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import { useWordsDemoState } from "../use-demo-state";
 
-function WordsPage({ metrics, state }: DemoPageProps) {
+function WordsPage({ height, width }: DemoPageProps) {
+  const state = useWordsDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={state.fontSize}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <Laminar
           text={state.standaloneWord}
@@ -29,12 +36,4 @@ function WordsPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const WordsDemoPage = React.memo(
-  WordsPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.standaloneWord === next.state.standaloneWord &&
-    previous.state.fontSize === next.state.fontSize &&
-    previous.state.fontWeight === next.state.fontWeight &&
-    previous.state.cycleStandaloneWord === next.state.cycleStandaloneWord
-);
+export const WordsDemoPage = React.memo(WordsPage);

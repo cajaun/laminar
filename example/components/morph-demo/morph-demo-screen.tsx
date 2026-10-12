@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { examplePages, type ExamplePageId } from "./demo-data";
-import { DemoFooter, DemoPageScroll } from "./demo-chrome";
 import {
   AnimationLayerDemoPage,
   AutoSizeDemoPage,
@@ -23,8 +22,6 @@ import {
   TransactionDemoPage,
   WordsDemoPage,
 } from "./demo-pages";
-import { useDemoMetrics } from "./use-demo-metrics";
-import { useDemoState } from "./use-demo-state";
 
 const catalogContentStyle = {
   paddingHorizontal: 20,
@@ -147,37 +144,31 @@ export function DemoDetailScreen({
     (page) => page.id === pageId,
   );
   const pageIndex = requestedPageIndex >= 0 ? requestedPageIndex : 0;
-  const state = useDemoState(pageIndex);
-  const metrics = useDemoMetrics({
-    height,
-    width,
-    fontSize: state.fontSize,
-  });
   const page = examplePages[pageIndex] ?? examplePages[0];
 
   const content =
     page.id === "textIdentity" ? (
-      <TextIdentityDemoPage metrics={metrics} state={state} />
+      <TextIdentityDemoPage width={width} height={height} />
     ) : page.id === "numberIdentity" ? (
-      <NumberIdentityDemoPage metrics={metrics} state={state} />
+      <NumberIdentityDemoPage width={width} height={height} />
     ) : page.id === "animationLayer" ? (
-      <AnimationLayerDemoPage metrics={metrics} state={state} />
+      <AnimationLayerDemoPage width={width} height={height} />
     ) : page.id === "autoSize" ? (
-      <AutoSizeDemoPage metrics={metrics} state={state} />
+      <AutoSizeDemoPage width={width} height={height} />
     ) : page.id === "editor" ? (
-      <EditorDemoPage metrics={metrics} state={state} />
+      <EditorDemoPage width={width} height={height} />
     ) : page.id === "words" ? (
-      <WordsDemoPage metrics={metrics} state={state} />
+      <WordsDemoPage width={width} height={height} />
     ) : page.id === "button" ? (
-      <ButtonDemoPage metrics={metrics} state={state} />
+      <ButtonDemoPage width={width} height={height} />
     ) : page.id === "transaction" ? (
-      <TransactionDemoPage metrics={metrics} state={state} />
+      <TransactionDemoPage width={width} height={height} />
     ) : page.id === "slots" ? (
-      <SlotsDemoPage metrics={metrics} state={state} />
+      <SlotsDemoPage width={width} height={height} />
     ) : page.id === "numberFlow" ? (
-      <NumberFlowDemoPage metrics={metrics} state={state} />
+      <NumberFlowDemoPage width={width} height={height} />
     ) : (
-      <NumbersDemoPage metrics={metrics} state={state} />
+      <NumbersDemoPage width={width} height={height} />
     );
 
   return (
@@ -185,7 +176,7 @@ export function DemoDetailScreen({
       <View
         style={{
           height: 58,
-          paddingHorizontal: metrics.horizontalInset,
+          paddingHorizontal: 24,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
@@ -221,15 +212,7 @@ export function DemoDetailScreen({
         <View style={{ width: 48 }} />
       </View>
 
-      <View style={{ flex: 1 }}>
-        <DemoPageScroll metrics={metrics}>{content}</DemoPageScroll>
-      </View>
-
-      <DemoFooter
-        metrics={metrics}
-        onReverse={state.reverse}
-        onMorph={state.morph}
-      />
+      <View style={{ flex: 1 }}>{content}</View>
     </SafeAreaView>
   );
 }

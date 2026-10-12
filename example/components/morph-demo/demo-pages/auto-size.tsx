@@ -5,18 +5,27 @@ import {
   DemoPageLayout,
   settingsRow,
   TeachingLabel,
-  sameMetrics,
   showcaseTextStyle,
   teachingDurationMs,
   teachingBlue,
 } from "./shared";
 import { AutoSizeComparison } from "./illustrations";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useAutoSizeDemoState,
+} from "../use-demo-state";
 
-function AutoSizePage({ metrics, state }: DemoPageProps) {
+function AutoSizePage({ height, width }: DemoPageProps) {
+  const state = useAutoSizeDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <View style={{ borderWidth: 1, borderStyle: "dashed", borderColor: teachingBlue, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 12 }}>
@@ -45,10 +54,4 @@ function AutoSizePage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const AutoSizeDemoPage = React.memo(
-  AutoSizePage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.autoSizeValue === next.state.autoSizeValue &&
-    previous.state.morph === next.state.morph
-);
+export const AutoSizeDemoPage = React.memo(AutoSizePage);

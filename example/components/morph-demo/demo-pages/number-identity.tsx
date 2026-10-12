@@ -4,17 +4,26 @@ import {
   DemoPageLayout,
   settingsRow,
   TeachingLabel,
-  sameMetrics,
   showcaseTextStyle,
   teachingDurationMs,
 } from "./shared";
 import { LaneStrip } from "./illustrations";
 import type { DemoPageProps } from "./types";
+import {
+  DEFAULT_DEMO_FONT_SIZE,
+  useNumberIdentityDemoState,
+} from "../use-demo-state";
 
-function NumberIdentityPage({ metrics, state }: DemoPageProps) {
+function NumberIdentityPage({ height, width }: DemoPageProps) {
+  const state = useNumberIdentityDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={DEFAULT_DEMO_FONT_SIZE}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <Laminar
@@ -43,10 +52,4 @@ function NumberIdentityPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const NumberIdentityDemoPage = React.memo(
-  NumberIdentityPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.numberLaneValue === next.state.numberLaneValue &&
-    previous.state.morph === next.state.morph
-);
+export const NumberIdentityDemoPage = React.memo(NumberIdentityPage);

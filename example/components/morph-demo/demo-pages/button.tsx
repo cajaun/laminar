@@ -9,9 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
 import { SymbolView } from "expo-symbols";
+import { useButtonDemoState } from "../use-demo-state";
 
 function LoadingSpinner() {
   const rotation = useSharedValue(0);
@@ -60,10 +61,16 @@ function LoadingSpinner() {
   );
 }
 
-function ButtonPage({ metrics, state }: DemoPageProps) {
+function ButtonPage({ height, width }: DemoPageProps) {
+  const state = useButtonDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={state.fontSize}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <PressableScale
           onPress={state.cycleButtonWord}
@@ -118,11 +125,4 @@ function ButtonPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const ButtonDemoPage = React.memo(
-  ButtonPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.buttonWord === next.state.buttonWord &&
-    previous.state.fontSize === next.state.fontSize &&
-    previous.state.cycleButtonWord === next.state.cycleButtonWord,
-);
+export const ButtonDemoPage = React.memo(ButtonPage);

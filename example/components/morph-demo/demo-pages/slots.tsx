@@ -3,16 +3,22 @@ import { Laminar } from "react-native-laminar";
 import {
   DemoPageLayout,
   TeachingLabel,
-  sameMetrics,
   settingsRow,
 } from "./shared";
 import { SlotMechanism } from "./illustrations";
 import type { DemoPageProps } from "./types";
+import { useSlotsDemoState } from "../use-demo-state";
 
-function SlotsPage({ metrics, state }: DemoPageProps) {
+function SlotsPage({ height, width }: DemoPageProps) {
+  const state = useSlotsDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={state.fontSize}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <>
           <Laminar
@@ -45,12 +51,4 @@ function SlotsPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const SlotsDemoPage = React.memo(
-  SlotsPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.numberValue === next.state.numberValue &&
-    previous.state.previousNumberValue === next.state.previousNumberValue &&
-    previous.state.nextNumberValue === next.state.nextNumberValue &&
-    previous.state.cycleNumber === next.state.cycleNumber
-);
+export const SlotsDemoPage = React.memo(SlotsPage);

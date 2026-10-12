@@ -2,9 +2,12 @@ import React from "react";
 import { Text, View } from "react-native";
 import type { TextStyle } from "react-native";
 import { Section as FormSection, Text as FormText } from "@/components/ui/form";
-import { PreviewStage } from "../demo-chrome";
-import type { DemoMetrics } from "../use-demo-metrics";
-import type { DemoPageProps } from "./types";
+import {
+  DemoFooter,
+  DemoPageScroll,
+  PreviewStage,
+} from "../demo-chrome";
+import { useDemoMetrics, type DemoMetrics } from "../use-demo-metrics";
 
 export const showcaseTextStyle: TextStyle = {
   color: "#000000",
@@ -56,19 +59,37 @@ export function settingsRow({ label, value, onPress }: SettingsRowOptions) {
 }
 
 export function DemoPageLayout({
-  metrics,
+  height,
+  width,
+  fontSize,
+  onReverse,
+  onMorph,
   preview,
   settings,
-}: Pick<DemoPageProps, "metrics"> & {
+}: {
+  readonly height: number;
+  readonly width: number;
+  readonly fontSize: number;
+  readonly onReverse: () => void;
+  readonly onMorph: () => void;
   readonly preview: React.ReactNode;
   readonly settings: React.ReactNode;
 }) {
+  const metrics = useDemoMetrics({ height, width, fontSize });
+
   return (
-    <>
-      <PreviewStage metrics={metrics}>{preview}</PreviewStage>
-      <View style={{ flex: 1 }} />
-      <SettingsSection metrics={metrics}>{settings}</SettingsSection>
-    </>
+    <View style={{ flex: 1 }}>
+      <DemoPageScroll metrics={metrics}>
+        <PreviewStage metrics={metrics}>{preview}</PreviewStage>
+        <View style={{ flex: 1 }} />
+        <SettingsSection metrics={metrics}>{settings}</SettingsSection>
+      </DemoPageScroll>
+      <DemoFooter
+        metrics={metrics}
+        onReverse={onReverse}
+        onMorph={onMorph}
+      />
+    </View>
   );
 }
 
@@ -92,8 +113,4 @@ export function MechanismFrame({ children }: { readonly children: React.ReactNod
   return (
     <View style={{ marginTop: 12, alignItems: "center" }}>{children}</View>
   );
-}
-
-export function sameMetrics(previous: DemoPageProps, next: DemoPageProps) {
-  return previous.metrics === next.metrics;
 }

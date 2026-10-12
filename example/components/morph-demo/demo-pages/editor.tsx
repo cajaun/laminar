@@ -1,12 +1,19 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import { useEditorDemoState } from "../use-demo-state";
 
-function EditorPage({ metrics, state }: DemoPageProps) {
+function EditorPage({ height, width }: DemoPageProps) {
+  const state = useEditorDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={state.fontSize}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <Laminar
           text={state.editorWord}
@@ -29,14 +36,4 @@ function EditorPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const EditorDemoPage = React.memo(
-  EditorPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.editorWord === next.state.editorWord &&
-    previous.state.fontSize === next.state.fontSize &&
-    previous.state.fontWeight === next.state.fontWeight &&
-    previous.state.cycleEditorWord === next.state.cycleEditorWord &&
-    previous.state.cycleFontSize === next.state.cycleFontSize &&
-    previous.state.cycleFontWeight === next.state.cycleFontWeight
-);
+export const EditorDemoPage = React.memo(EditorPage);

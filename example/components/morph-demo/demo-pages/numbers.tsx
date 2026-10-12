@@ -1,12 +1,19 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, sameMetrics, settingsRow } from "./shared";
+import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
+import { useNumbersDemoState } from "../use-demo-state";
 
-function NumbersPage({ metrics, state }: DemoPageProps) {
+function NumbersPage({ height, width }: DemoPageProps) {
+  const state = useNumbersDemoState();
+
   return (
     <DemoPageLayout
-      metrics={metrics}
+      height={height}
+      width={width}
+      fontSize={state.fontSize}
+      onReverse={state.reverse}
+      onMorph={state.morph}
       preview={
         <Laminar
           text={state.numberValue}
@@ -29,12 +36,4 @@ function NumbersPage({ metrics, state }: DemoPageProps) {
   );
 }
 
-export const NumbersDemoPage = React.memo(
-  NumbersPage,
-  (previous, next) =>
-    sameMetrics(previous, next) &&
-    previous.state.numberValue === next.state.numberValue &&
-    previous.state.previousNumberValue === next.state.previousNumberValue &&
-    previous.state.nextNumberValue === next.state.nextNumberValue &&
-    previous.state.cycleNumber === next.state.cycleNumber
-);
+export const NumbersDemoPage = React.memo(NumbersPage);
