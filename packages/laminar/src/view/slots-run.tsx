@@ -404,6 +404,18 @@ export const SlotsRun = React.memo(
         Math.ceil(resolvedLineHeight ?? (resolvedFontSize ?? 16) * 1.18)
       );
     }, [fontSize, textStyle]);
+    // Prefixes and punctuation must share the reel's line box so their glyph
+    // centers remain aligned on native fonts with different ascender metrics.
+    const slotTextStyle: StyleProp<TextStyle> = useMemo(
+      () => [
+        textStyle,
+        {
+          height: slotHeight,
+          lineHeight: slotHeight,
+        },
+      ],
+      [slotHeight, textStyle]
+    );
 
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
@@ -445,7 +457,7 @@ export const SlotsRun = React.memo(
                     hasAnimated ? motionRecipe.layoutTransition : undefined
                   }
                   exiting={!inLead ? motionRecipe.exitTransition : undefined}
-                  style={textStyle}
+                  style={slotTextStyle}
                   className={className}
                 >
                   {unit}
@@ -470,7 +482,7 @@ export const SlotsRun = React.memo(
                   animateIn={hasAnimated}
                   motionRecipe={motionRecipe}
                   slotHeight={slotHeight}
-                  textStyle={textStyle}
+                  textStyle={slotTextStyle}
                   className={className}
                   shadow={shadow}
                 />

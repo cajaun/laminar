@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import type { MotionRecipe } from "../../src/types";
 import { NumberRun } from "../../src/view/number-run";
@@ -266,6 +266,32 @@ describe("rendered run contracts", () => {
     expect(probe!.props.style).toEqual(
       expect.arrayContaining([expect.objectContaining({ lineHeight: 12 })])
     );
+  });
+
+  test("RUN-BVA-002 SlotsRun aligns prefixes and punctuation to the reel frame", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="$1,234"
+          motionRecipe={motionRecipe}
+          align="left"
+          fontSize={40}
+        />
+      );
+    });
+
+    for (const value of ["$", ","] as const) {
+      const glyph = renderer.root
+        .findAllByType(Text)
+        .find((node) => node.props.children === value);
+
+      expect(glyph).toBeDefined();
+      expect(StyleSheet.flatten(glyph!.props.style)).toMatchObject({
+        height: 48,
+        lineHeight: 48,
+      });
+    }
   });
 
   test("RUN-ST-003 SlotsRun drives changed digits and cleanup through recipe", () => {
