@@ -331,6 +331,33 @@ describe("rendered run contracts", () => {
     expect(driveNumber).toHaveBeenCalledTimes(2);
   });
 
+  test("RUN-ST-009 SlotsRun installs changed reel targets before paint", () => {
+    driveNumber.mockClear();
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="$1,234"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <SlotsRun
+          value="$12,345"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    expect(driveNumber).toHaveBeenCalled();
+  });
+
   test("RUN-ST-008 TickerRun keeps pending values and moves stable lanes", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     const leading = <Text>up</Text>;

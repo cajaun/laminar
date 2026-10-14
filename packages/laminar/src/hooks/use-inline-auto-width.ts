@@ -22,6 +22,17 @@ export const useInlineAutoWidth = ({
   const measuredWidthRef = useRef<number | null>(null);
   const bootstrappedRef = useRef(false);
   const widthCacheRef = useRef(new Map<string, number>());
+  const previousMeasurementKeyRef = useRef(measurementKey);
+  const measurementGenerationRef = useRef(0);
+  const enabledRef = useRef(enabled);
+
+  if (previousMeasurementKeyRef.current !== measurementKey) {
+    previousMeasurementKeyRef.current = measurementKey;
+    measurementGenerationRef.current += 1;
+  }
+
+  enabledRef.current = enabled;
+  const measurementGeneration = measurementGenerationRef.current;
 
   const applyWidth = useCallback(
     (nextWidth: number) => {
@@ -47,7 +58,12 @@ export const useInlineAutoWidth = ({
 
   const captureLayout = useCallback(
     (event: LayoutChangeEvent) => {
-      if (!enabled) {
+      // Native layout events can arrive after the probe that produced them has
+      // been replaced. Only the current generation may update the width.
+      if (
+        !enabledRef.current ||
+        measurementGeneration !== measurementGenerationRef.current
+      ) {
         return;
       }
 
@@ -68,7 +84,7 @@ export const useInlineAutoWidth = ({
       // without scheduling a second React render.
       applyWidth(nextWidth);
     },
-    [applyWidth, enabled, measurementKey]
+    [applyWidth, measurementGeneration, measurementKey]
   );
 
   const cachedWidth = widthCacheRef.current.get(measurementKey);

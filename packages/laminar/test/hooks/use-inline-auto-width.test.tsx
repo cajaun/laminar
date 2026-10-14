@@ -75,6 +75,29 @@ describe("useInlineAutoWidth", () => {
     expect(driveToWidth).not.toHaveBeenCalled();
   });
 
+  test("HAW-ST-003 ignores layout events from replaced measurement probes", () => {
+    const driveToWidth = jest.fn((value: number) => value);
+    const hook = renderHook(
+      ({ measurementKey }: { measurementKey: string }) =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey,
+        }),
+      { measurementKey: "A" },
+    );
+
+    const firstCapture = hook.result.captureLayout;
+    act(() => firstCapture(layoutEvent(20)));
+
+    hook.rerender({ measurementKey: "B" });
+    act(() => firstCapture(layoutEvent(999)));
+    expect(driveToWidth).not.toHaveBeenCalledWith(999);
+
+    act(() => hook.result.captureLayout(layoutEvent(30)));
+    expect(driveToWidth).toHaveBeenCalledWith(30);
+  });
+
   test("HAW-ST-002 evicts the least recently used width after promoting a hit", () => {
     const driveToWidth = jest.fn((value: number) => value);
     const hook = renderHook(

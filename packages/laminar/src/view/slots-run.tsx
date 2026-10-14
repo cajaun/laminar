@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, type ReactNode } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react";
 import {
   StyleSheet,
   Text,
@@ -236,7 +242,7 @@ function SlotColumn({
     };
   }, [current]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // keep the reel bounded by recentring after enough cumulative turns
     if (initialRef.current) {
       initialRef.current = false;

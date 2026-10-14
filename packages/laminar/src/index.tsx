@@ -43,7 +43,9 @@ export const Laminar = React.memo(function Laminar({
       : (leading as React.ReactNode);
     const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
     const useLayoutAutoSize =
-      autoSize && variant === "number" && numberMode === "ticker";
+      autoSize &&
+      (variant === "slots" ||
+        (variant === "number" && numberMode === "ticker"));
     const { motionRecipe } = useMorphMotion({
       variant,
       numberMode,
@@ -90,7 +92,7 @@ export const Laminar = React.memo(function Laminar({
       shouldMeasure,
     } =
       useInlineAutoWidth({
-        enabled: autoSize,
+        enabled: autoSize && !useLayoutAutoSize,
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
       });
