@@ -2,36 +2,67 @@ import React from "react";
 import { Laminar } from "react-native-laminar";
 import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
-import { useNumbersDemoState } from "../use-demo-state";
+import {
+  useCyclicValueStoreSnapshot,
+  useNumbersDemoStore,
+} from "../use-demo-state";
+
+type NumbersStore = ReturnType<typeof useNumbersDemoStore>;
+
+const NumbersPreview = React.memo(function NumbersPreview({
+  store,
+}: {
+  readonly store: NumbersStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <Laminar
+      text={state.value}
+      variant="number"
+      animationPreset="default"
+      fontSize={40}
+      clipToBounds={false}
+      containerStyle={{ alignSelf: "center" }}
+      style={{
+        color: "#000000",
+        fontFamily: "Sf-semibold",
+        fontSize: 40,
+        fontVariant: ["tabular-nums"],
+        textAlign: "center",
+      }}
+    />
+  );
+});
+
+const NumbersSettings = React.memo(function NumbersSettings({
+  store,
+}: {
+  readonly store: NumbersStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
+      {settingsRow({ label: "Reverse", value: state.previousValue })}
+      {settingsRow({ label: "Morph", value: state.nextValue })}
+    </>
+  );
+});
 
 function NumbersPage({ height, width }: DemoPageProps) {
-  const state = useNumbersDemoState();
+  const store = useNumbersDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={state.fontSize}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <Laminar
-          text={state.numberValue}
-          variant="number"
-          animationPreset="default"
-          fontSize={state.fontSize}
-          clipToBounds={false}
-          containerStyle={{ alignSelf: "center" }}
-          style={{ color: "#000000", fontFamily: "Sf-semibold", fontSize: state.fontSize, fontVariant: ["tabular-nums"], textAlign: "center" }}
-        />
-      }
-      settings={
-        <>
-          {settingsRow({ label: "Number", value: state.numberValue, onPress: state.cycleNumber })}
-          {settingsRow({ label: "Reverse", value: state.previousNumberValue })}
-          {settingsRow({ label: "Morph", value: state.nextNumberValue })}
-        </>
-      }
+      fontSize={40}
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<NumbersPreview store={store} />}
+      settings={<NumbersSettings store={store} />}
     />
   );
 }

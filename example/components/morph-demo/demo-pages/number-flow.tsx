@@ -4,49 +4,67 @@ import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
-  useNumberFlowDemoState,
+  useCyclicValueStoreSnapshot,
+  useNumberFlowDemoStore,
 } from "../use-demo-state";
 
+type NumberFlowStore = ReturnType<typeof useNumberFlowDemoStore>;
+
+const NumberFlowPreview = React.memo(function NumberFlowPreview({
+  store,
+}: {
+  readonly store: NumberFlowStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <Laminar
+      text={state.value}
+      variant="number"
+      numberMode="ticker"
+      fontSize={32}
+      autoSize
+      align="left"
+      style={{
+        color: "#000000",
+        fontFamily: "Sf-semibold",
+      }}
+    />
+  );
+});
+
+const NumberFlowSettings = React.memo(function NumberFlowSettings({
+  store,
+}: {
+  readonly store: NumberFlowStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({
+        label: "Number Flow",
+        value: state.value,
+        onPress: store.next,
+      })}
+      {settingsRow({ label: "Reverse", value: state.previousValue })}
+      {settingsRow({ label: "Next", value: state.nextValue })}
+    </>
+  );
+});
+
 function NumberFlowPage({ height, width }: DemoPageProps) {
-  const state = useNumberFlowDemoState();
+  const store = useNumberFlowDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
       fontSize={DEFAULT_DEMO_FONT_SIZE}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <>
-          <Laminar
-            text={state.numberFlowValue}
-            variant="number"
-            numberMode="ticker"
-            fontSize={32}
-            autoSize
-            align="left"
-            style={{
-              color: "#000000",
-              fontFamily: "Sf-semibold",
-            }}
-          />
-        </>
-      }
-      settings={
-        <>
-          {settingsRow({
-            label: "Number Flow",
-            value: state.numberFlowValue,
-            onPress: state.cycleNumberFlow,
-          })}
-          {settingsRow({
-            label: "Reverse",
-            value: state.previousNumberFlowValue,
-          })}
-          {settingsRow({ label: "Next", value: state.nextNumberFlowValue })}
-        </>
-      }
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<NumberFlowPreview store={store} />}
+      settings={<NumberFlowSettings store={store} />}
     />
   );
 }

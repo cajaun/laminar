@@ -2,36 +2,78 @@ import React from "react";
 import { Laminar } from "react-native-laminar";
 import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
-import { useEditorDemoState } from "../use-demo-state";
+import {
+  useCyclicValueStoreSnapshot,
+  useEditorDemoStore,
+} from "../use-demo-state";
+
+type EditorStore = ReturnType<typeof useEditorDemoStore>;
+
+const EditorPreview = React.memo(function EditorPreview({
+  store,
+}: {
+  readonly store: EditorStore;
+}) {
+  const word = useCyclicValueStoreSnapshot(store.word);
+  const fontSize = useCyclicValueStoreSnapshot(store.fontSize);
+  const fontWeight = useCyclicValueStoreSnapshot(store.fontWeight);
+
+  return (
+    <Laminar
+      text={word.value}
+      autoSize={false}
+      animationPreset="smooth"
+      fontSize={fontSize.value}
+      clipToBounds={false}
+      align="center"
+      style={{
+        color: "#000000",
+        fontFamily: fontWeight.value.fontFamily,
+        fontSize: fontSize.value,
+      }}
+    />
+  );
+});
+
+const EditorSettings = React.memo(function EditorSettings({
+  store,
+}: {
+  readonly store: EditorStore;
+}) {
+  const word = useCyclicValueStoreSnapshot(store.word);
+  const fontSize = useCyclicValueStoreSnapshot(store.fontSize);
+  const fontWeight = useCyclicValueStoreSnapshot(store.fontWeight);
+
+  return (
+    <>
+      {settingsRow({ label: "Word", value: word.value, onPress: store.word.next })}
+      {settingsRow({
+        label: "Font Size",
+        value: `${fontSize.value}pt`,
+        onPress: store.fontSize.next,
+      })}
+      {settingsRow({
+        label: "Font Weight",
+        value: fontWeight.value.label,
+        onPress: store.fontWeight.next,
+      })}
+    </>
+  );
+});
 
 function EditorPage({ height, width }: DemoPageProps) {
-  const state = useEditorDemoState();
+  const store = useEditorDemoStore();
+  const fontSize = useCyclicValueStoreSnapshot(store.fontSize).value;
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={state.fontSize}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <Laminar
-          text={state.editorWord}
-          autoSize={false}
-          animationPreset="smooth"
-          fontSize={state.fontSize}
-          clipToBounds={false}
-          align="center"
-          style={{ color: "#000000", fontFamily: state.fontWeight.fontFamily, fontSize: state.fontSize }}
-        />
-      }
-      settings={
-        <>
-          {settingsRow({ label: "Word", value: state.editorWord, onPress: state.cycleEditorWord })}
-          {settingsRow({ label: "Font Size", value: `${state.fontSize}pt`, onPress: state.cycleFontSize })}
-          {settingsRow({ label: "Font Weight", value: state.fontWeight.label, onPress: state.cycleFontWeight })}
-        </>
-      }
+      fontSize={fontSize}
+      onReverse={store.word.previous}
+      onMorph={store.word.next}
+      preview={<EditorPreview store={store} />}
+      settings={<EditorSettings store={store} />}
     />
   );
 }

@@ -2,44 +2,69 @@ import React from "react";
 import { Laminar } from "react-native-laminar";
 import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
-import { useSlotsDemoState } from "../use-demo-state";
+import {
+  useCyclicValueStoreSnapshot,
+  useSlotsDemoStore,
+} from "../use-demo-state";
+
+type SlotsStore = ReturnType<typeof useSlotsDemoStore>;
+
+const SlotsNextPreview = React.memo(function SlotsNextPreview({
+  store,
+}: {
+  readonly store: SlotsStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <Laminar
+      text={state.value}
+      variant="slots"
+      animationPreset="smooth"
+      shadow={{ color: "#FFFFFF", size: 12 }}
+      autoSize
+      clipToBounds={false}
+      fontSize={40}
+      containerStyle={{ alignSelf: "center" }}
+      style={{
+        color: "#000000",
+        fontFamily: "Sf-semibold",
+        fontSize: 40,
+        fontVariant: ["tabular-nums"],
+        textAlign: "center",
+      }}
+    />
+  );
+});
+
+const SlotsNextSettings = React.memo(function SlotsNextSettings({
+  store,
+}: {
+  readonly store: SlotsStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
+      {settingsRow({ label: "Reverse", value: state.previousValue })}
+      {settingsRow({ label: "Next", value: state.nextValue })}
+    </>
+  );
+});
 
 function SlotsNextPage({ height, width }: DemoPageProps) {
-  const state = useSlotsDemoState();
+  const store = useSlotsDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={state.fontSize}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <Laminar
-          text={state.numberValue}
-          variant="slots"
-          animationPreset="smooth"
-          shadow={{ color: "#FFFFFF", size: 12 }}
-          autoSize
-          clipToBounds={false}
-          fontSize={state.fontSize}
-          containerStyle={{ alignSelf: "center" }}
-          style={{
-            color: "#000000",
-            fontFamily: "Sf-semibold",
-            fontSize: state.fontSize,
-            fontVariant: ["tabular-nums"],
-            textAlign: "center",
-          }}
-        />
-      }
-      settings={
-        <>
-          {settingsRow({ label: "Number", value: state.numberValue, onPress: state.cycleNumber })}
-          {settingsRow({ label: "Reverse", value: state.previousNumberValue })}
-          {settingsRow({ label: "Next", value: state.nextNumberValue })}
-        </>
-      }
+      fontSize={40}
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<SlotsNextPreview store={store} />}
+      settings={<SlotsNextSettings store={store} />}
     />
   );
 }

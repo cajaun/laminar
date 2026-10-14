@@ -58,7 +58,7 @@ export function settingsRow({ label, value, onPress }: SettingsRowOptions) {
   );
 }
 
-export function DemoPageLayout({
+export const DemoPageLayout = React.memo(function DemoPageLayout({
   height,
   width,
   fontSize,
@@ -91,7 +91,7 @@ export function DemoPageLayout({
       />
     </View>
   );
-}
+});
 
 export function TeachingLabel({ children }: { readonly children: React.ReactNode }) {
   return (

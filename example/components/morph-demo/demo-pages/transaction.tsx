@@ -14,7 +14,8 @@ import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
-  useTransactionDemoState,
+  useCyclicValueStoreSnapshot,
+  useTransactionDemoStore,
 } from "../use-demo-state";
 
 const TRANSACTION_COLORS = {
@@ -47,7 +48,6 @@ function TransactionSpinner({ color, ringColor }: { color: string; ringColor: st
       -1,
       false
     );
-
   }, [rotation]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -81,78 +81,99 @@ function TransactionSpinner({ color, ringColor }: { color: string; ringColor: st
   );
 }
 
-function TransactionPage({ height, width }: DemoPageProps) {
-  const state = useTransactionDemoState();
-  const transactionState = state.transactionState;
+type TransactionStore = ReturnType<typeof useTransactionDemoStore>;
+
+const TransactionPreview = React.memo(function TransactionPreview({
+  store,
+}: {
+  readonly store: TransactionStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+  const transactionState = state.value;
   const colors = TRANSACTION_COLORS[transactionState];
+
+  return (
+    <PressableScale
+      onPress={store.next}
+      style={{
+        alignSelf: "center",
+        height: 56,
+        borderRadius: 36,
+        backgroundColor: colors.background,
+        paddingHorizontal: 32 * 0.9,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Laminar
+        text={transactionState}
+        autoSize
+        leading={{
+          "Analyzing Transaction": (
+            <TransactionSpinner
+              color={colors.color}
+              ringColor={colors.ring}
+            />
+          ),
+          "Transaction Safe": (
+            <SymbolView
+              name="checkmark.circle.fill"
+              size={32}
+              tintColor={colors.color}
+            />
+          ),
+          "Transaction Warning": (
+            <SymbolView
+              name="exclamationmark.triangle.fill"
+              size={32}
+              tintColor={colors.color}
+            />
+          ),
+        }}
+        leadingGap={12}
+        animationPreset="default"
+        style={{
+          color: colors.color,
+          fontFamily: "Sf-semibold",
+          fontSize: 28,
+        }}
+      />
+    </PressableScale>
+  );
+});
+
+const TransactionSettings = React.memo(function TransactionSettings({
+  store,
+}: {
+  readonly store: TransactionStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({
+        label: "Button Text",
+        value: state.value,
+        onPress: store.next,
+      })}
+      {settingsRow({ label: "Surface", value: "Pressable" })}
+      {settingsRow({ label: "Auto Size", value: "On" })}
+    </>
+  );
+});
+
+function TransactionPage({ height, width }: DemoPageProps) {
+  const store = useTransactionDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
       fontSize={DEFAULT_DEMO_FONT_SIZE}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <PressableScale
-          onPress={state.cycleTransaction}
-          style={{
-            alignSelf: "center",
-            height: 56,
-            borderRadius: 36,
-            backgroundColor: colors.background,
-            paddingHorizontal: 32 * 0.9,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Laminar
-            text={transactionState}
-            autoSize
-            leading={{
-              "Analyzing Transaction": (
-                <TransactionSpinner
-                  color={colors.color}
-                  ringColor={colors.ring}
-                />
-              ),
-              "Transaction Safe": (
-                <SymbolView
-                  name="checkmark.circle.fill"
-                  size={32}
-                  tintColor={colors.color}
-                />
-              ),
-              "Transaction Warning": (
-                <SymbolView
-                  name="exclamationmark.triangle.fill"
-                  size={32}
-                  tintColor={colors.color}
-
-                />
-              ),
-            }}
-            leadingGap={12}
-            animationPreset="default"
-            style={{
-              color: colors.color,
-              fontFamily: "Sf-semibold",
-              fontSize: 28,
-            }}
-          />
-        </PressableScale>
-      }
-      settings={
-        <>
-          {settingsRow({
-            label: "Button Text",
-            value: transactionState,
-            onPress: state.cycleTransaction,
-          })}
-          {settingsRow({ label: "Surface", value: "Pressable" })}
-          {settingsRow({ label: "Auto Size", value: "On" })}
-        </>
-      }
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<TransactionPreview store={store} />}
+      settings={<TransactionSettings store={store} />}
     />
   );
 }

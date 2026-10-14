@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import {
   animationLayerValues,
   autoSizeValues,
@@ -18,166 +18,125 @@ import {
 
 export const DEFAULT_DEMO_FONT_SIZE = fontSizes[1];
 
-type CyclicValue<T> = {
-  readonly value: T;
-  readonly previousValue: T;
-  readonly nextValue: T;
-  readonly next: () => void;
-  readonly previous: () => void;
-};
+export type CyclicValueSnapshot<T> = Readonly<{
+  value: T;
+  previousValue: T;
+  nextValue: T;
+}>;
 
-function useCyclicValue<T>(
+export type CyclicValueStore<T> = Readonly<{
+  getSnapshot: () => CyclicValueSnapshot<T>;
+  subscribe: (listener: () => void) => () => void;
+  next: () => void;
+  previous: () => void;
+}>;
+
+function createCyclicValueStore<T>(
   values: readonly T[],
   initialIndex = 0,
-): CyclicValue<T> {
-  const [index, setIndex] = useState(initialIndex);
-  const next = useCallback(() => {
-    setIndex((currentIndex) => stepForward(currentIndex, values.length));
-  }, [values.length]);
-  const previous = useCallback(() => {
-    setIndex((currentIndex) => stepBackward(currentIndex, values.length));
-  }, [values.length]);
+): CyclicValueStore<T> {
+  let index = initialIndex;
+  let snapshot = createSnapshot();
+  const listeners = new Set<() => void>();
+
+  function createSnapshot(): CyclicValueSnapshot<T> {
+    return {
+      value: values[index] ?? values[0]!,
+      previousValue:
+        values[stepBackward(index, values.length)] ?? values[0]!,
+      nextValue: values[stepForward(index, values.length)] ?? values[0]!,
+    };
+  }
+
+  function setIndex(nextIndex: number) {
+    if (nextIndex === index) {
+      return;
+    }
+
+    index = nextIndex;
+    snapshot = createSnapshot();
+    listeners.forEach((listener) => listener());
+  }
 
   return {
-    value: values[index] ?? values[0]!,
-    previousValue:
-      values[stepBackward(index, values.length)] ?? values[0]!,
-    nextValue: values[stepForward(index, values.length)] ?? values[0]!,
-    next,
-    previous,
+    getSnapshot: () => snapshot,
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => listeners.delete(listener);
+    },
+    next: () => setIndex(stepForward(index, values.length)),
+    previous: () => setIndex(stepBackward(index, values.length)),
   };
 }
 
-export function useTextIdentityDemoState() {
-  const text = useCyclicValue(textIdentityWords);
+export function useCyclicValueStore<T>(
+  values: readonly T[],
+  initialIndex = 0,
+): CyclicValueStore<T> {
+  const storeRef = useRef<CyclicValueStore<T> | null>(null);
 
+  if (storeRef.current === null) {
+    storeRef.current = createCyclicValueStore(values, initialIndex);
+  }
+
+  return storeRef.current;
+}
+
+export function useCyclicValueStoreSnapshot<T>(
+  store: CyclicValueStore<T>,
+): CyclicValueSnapshot<T> {
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot,
+  );
+}
+
+export function useTextIdentityDemoStore() {
+  return useCyclicValueStore(textIdentityWords);
+}
+
+export function useNumberIdentityDemoStore() {
+  return useCyclicValueStore(numberLaneValues);
+}
+
+export function useAnimationLayerDemoStore() {
+  return useCyclicValueStore(animationLayerValues);
+}
+
+export function useAutoSizeDemoStore() {
+  return useCyclicValueStore(autoSizeValues);
+}
+
+export function useEditorDemoStore() {
   return {
-    textIdentityWord: text.value,
-    morph: text.next,
-    reverse: text.previous,
+    word: useCyclicValueStore(editorWords),
+    fontSize: useCyclicValueStore(fontSizes, 1),
+    fontWeight: useCyclicValueStore(fontWeights, 1),
   };
 }
 
-export function useNumberIdentityDemoState() {
-  const number = useCyclicValue(numberLaneValues);
-
-  return {
-    numberLaneValue: number.value,
-    morph: number.next,
-    reverse: number.previous,
-  };
+export function useWordsDemoStore() {
+  return useCyclicValueStore(standaloneWords);
 }
 
-export function useAnimationLayerDemoState() {
-  const digit = useCyclicValue(animationLayerValues);
-
-  return {
-    animationLayerValue: digit.value,
-    morph: digit.next,
-    reverse: digit.previous,
-  };
+export function useButtonDemoStore() {
+  return useCyclicValueStore(buttonWords);
 }
 
-export function useAutoSizeDemoState() {
-  const text = useCyclicValue(autoSizeValues);
-
-  return {
-    autoSizeValue: text.value,
-    morph: text.next,
-    reverse: text.previous,
-  };
+export function useTransactionDemoStore() {
+  return useCyclicValueStore(transactionStates);
 }
 
-export function useEditorDemoState() {
-  const word = useCyclicValue(editorWords);
-  const fontSize = useCyclicValue(fontSizes, 1);
-  const fontWeight = useCyclicValue(fontWeights, 1);
-
-  return {
-    editorWord: word.value,
-    fontSize: fontSize.value,
-    fontWeight: fontWeight.value,
-    cycleEditorWord: word.next,
-    cycleFontSize: fontSize.next,
-    cycleFontWeight: fontWeight.next,
-    morph: word.next,
-    reverse: word.previous,
-  };
+export function useNumbersDemoStore() {
+  return useCyclicValueStore(numericValues);
 }
 
-export function useWordsDemoState() {
-  const word = useCyclicValue(standaloneWords);
-
-  return {
-    standaloneWord: word.value,
-    fontSize: DEFAULT_DEMO_FONT_SIZE,
-    fontWeight: fontWeights[1],
-    cycleStandaloneWord: word.next,
-    morph: word.next,
-    reverse: word.previous,
-  };
+export function useSlotsDemoStore() {
+  return useCyclicValueStore(numericValues);
 }
 
-export function useButtonDemoState() {
-  const word = useCyclicValue(buttonWords);
-
-  return {
-    buttonWord: word.value,
-    fontSize: DEFAULT_DEMO_FONT_SIZE,
-    cycleButtonWord: word.next,
-    morph: word.next,
-    reverse: word.previous,
-  };
-}
-
-export function useTransactionDemoState() {
-  const transaction = useCyclicValue(transactionStates);
-
-  return {
-    transactionState: transaction.value,
-    cycleTransaction: transaction.next,
-    morph: transaction.next,
-    reverse: transaction.previous,
-  };
-}
-
-export function useNumbersDemoState() {
-  const number = useCyclicValue(numericValues);
-
-  return {
-    numberValue: number.value,
-    previousNumberValue: number.previousValue,
-    nextNumberValue: number.nextValue,
-    fontSize: DEFAULT_DEMO_FONT_SIZE,
-    cycleNumber: number.next,
-    morph: number.next,
-    reverse: number.previous,
-  };
-}
-
-export function useSlotsDemoState() {
-  const number = useCyclicValue(numericValues);
-
-  return {
-    numberValue: number.value,
-    previousNumberValue: number.previousValue,
-    nextNumberValue: number.nextValue,
-    fontSize: DEFAULT_DEMO_FONT_SIZE,
-    cycleNumber: number.next,
-    morph: number.next,
-    reverse: number.previous,
-  };
-}
-
-export function useNumberFlowDemoState() {
-  const number = useCyclicValue(numberFlowValues);
-
-  return {
-    numberFlowValue: number.value,
-    previousNumberFlowValue: number.previousValue,
-    nextNumberFlowValue: number.nextValue,
-    cycleNumberFlow: number.next,
-    morph: number.next,
-    reverse: number.previous,
-  };
+export function useNumberFlowDemoStore() {
+  return useCyclicValueStore(numberFlowValues);
 }

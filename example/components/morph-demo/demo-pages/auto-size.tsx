@@ -13,43 +13,66 @@ import { AutoSizeComparison } from "./illustrations";
 import type { DemoPageProps } from "./types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
-  useAutoSizeDemoState,
+  useAutoSizeDemoStore,
+  useCyclicValueStoreSnapshot,
 } from "../use-demo-state";
 
+type AutoSizeStore = ReturnType<typeof useAutoSizeDemoStore>;
+
+const AutoSizePreview = React.memo(function AutoSizePreview({
+  store,
+}: {
+  readonly store: AutoSizeStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      <View style={{ borderWidth: 1, borderStyle: "dashed", borderColor: teachingBlue, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 12 }}>
+        <Laminar
+          text={state.value}
+          animationDuration={teachingDurationMs}
+          animationPreset="smooth"
+          autoSize
+          clipToBounds={false}
+          fontSize={32}
+          style={[showcaseTextStyle, { fontSize: 32 }]}
+        />
+      </View>
+      <TeachingLabel>autoSize animates this dashed border</TeachingLabel>
+      <AutoSizeComparison value={state.value} />
+    </>
+  );
+});
+
+const AutoSizeSettings = React.memo(function AutoSizeSettings({
+  store,
+}: {
+  readonly store: AutoSizeStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({ label: "String", value: state.value, onPress: store.next })}
+      {settingsRow({ label: "Auto Size", value: "On" })}
+      {settingsRow({ label: "Container", value: "Measured" })}
+    </>
+  );
+});
+
 function AutoSizePage({ height, width }: DemoPageProps) {
-  const state = useAutoSizeDemoState();
+  const store = useAutoSizeDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
       fontSize={DEFAULT_DEMO_FONT_SIZE}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <>
-          <View style={{ borderWidth: 1, borderStyle: "dashed", borderColor: teachingBlue, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 12 }}>
-            <Laminar
-              text={state.autoSizeValue}
-              animationDuration={teachingDurationMs}
-              animationPreset="smooth"
-              autoSize
-              clipToBounds={false}
-              fontSize={32}
-              style={[showcaseTextStyle, { fontSize: 32 }]}
-            />
-          </View>
-          <TeachingLabel>autoSize animates this dashed border</TeachingLabel>
-          <AutoSizeComparison value={state.autoSizeValue} />
-        </>
-      }
-      settings={
-        <>
-          {settingsRow({ label: "String", value: state.autoSizeValue, onPress: state.morph })}
-          {settingsRow({ label: "Auto Size", value: "On" })}
-          {settingsRow({ label: "Container", value: "Measured" })}
-        </>
-      }
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<AutoSizePreview store={store} />}
+      settings={<AutoSizeSettings store={store} />}
     />
   );
 }

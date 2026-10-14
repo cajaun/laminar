@@ -12,7 +12,10 @@ import { PressableScale } from "@/shared/ui/pressable-scale";
 import { DemoPageLayout, settingsRow } from "./shared";
 import type { DemoPageProps } from "./types";
 import { SymbolView } from "expo-symbols";
-import { useButtonDemoState } from "../use-demo-state";
+import {
+  useButtonDemoStore,
+  useCyclicValueStoreSnapshot,
+} from "../use-demo-state";
 
 function LoadingSpinner() {
   const rotation = useSharedValue(0);
@@ -26,7 +29,6 @@ function LoadingSpinner() {
       -1,
       false
     );
-
   }, [rotation]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -61,66 +63,87 @@ function LoadingSpinner() {
   );
 }
 
+type ButtonStore = ReturnType<typeof useButtonDemoStore>;
+
+const ButtonPreview = React.memo(function ButtonPreview({
+  store,
+}: {
+  readonly store: ButtonStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <PressableScale
+      onPress={store.next}
+      style={{
+        alignSelf: "center",
+        height: 56,
+        borderRadius: 36,
+        backgroundColor: "#007aff",
+        paddingHorizontal: 40 * 0.72,
+        paddingVertical: 40 * 0.22,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Laminar
+        text={state.value}
+        autoSize
+        leading={{
+          "Running Simulation": <LoadingSpinner />,
+          "Simulation Done!": (
+            <SymbolView
+              name="checkmark.circle.fill"
+              size={32}
+              tintColor="#ffffff"
+            />
+          ),
+        }}
+        leadingGap={4}
+        animationPreset="default"
+        clipToBounds={false}
+        style={{
+          color: "#ffffff",
+          fontFamily: "Sf-semibold",
+          fontSize: 32,
+        }}
+      />
+    </PressableScale>
+  );
+});
+
+const ButtonSettings = React.memo(function ButtonSettings({
+  store,
+}: {
+  readonly store: ButtonStore;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <>
+      {settingsRow({
+        label: "Button Text",
+        value: state.value,
+        onPress: store.next,
+      })}
+      {settingsRow({ label: "Surface", value: "Pressable" })}
+      {settingsRow({ label: "Auto Size", value: "On" })}
+    </>
+  );
+});
+
 function ButtonPage({ height, width }: DemoPageProps) {
-  const state = useButtonDemoState();
+  const store = useButtonDemoStore();
 
   return (
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={state.fontSize}
-      onReverse={state.reverse}
-      onMorph={state.morph}
-      preview={
-        <PressableScale
-          onPress={state.cycleButtonWord}
-          style={{
-            alignSelf: "center",
-            height: 56,
-            borderRadius: 36,
-            backgroundColor: "#007aff",
-            paddingHorizontal: state.fontSize * 0.72,
-            paddingVertical: state.fontSize * 0.22,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Laminar
-            text={state.buttonWord}
-            autoSize
-            leading={{
-              "Running Simulation": <LoadingSpinner />,
-
-              "Simulation Done!": (
-                <SymbolView
-                  name="checkmark.circle.fill"
-                  size={32}
-                  tintColor="#ffffff"
-                />
-              ),
-            }}
-            leadingGap={4}
-            animationPreset="default"
-            clipToBounds={false}
-            style={{
-              color: "#ffffff",
-              fontFamily: "Sf-semibold",
-              fontSize: 32,
-            }}
-          />
-        </PressableScale>
-      }
-      settings={
-        <>
-          {settingsRow({
-            label: "Button Text",
-            value: state.buttonWord,
-            onPress: state.cycleButtonWord,
-          })}
-          {settingsRow({ label: "Surface", value: "Pressable" })}
-          {settingsRow({ label: "Auto Size", value: "On" })}
-        </>
-      }
+      fontSize={40}
+      onReverse={store.previous}
+      onMorph={store.next}
+      preview={<ButtonPreview store={store} />}
+      settings={<ButtonSettings store={store} />}
     />
   );
 }
