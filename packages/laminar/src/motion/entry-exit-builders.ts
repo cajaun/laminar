@@ -50,8 +50,7 @@ export const createLeadingEnterTransition = ({
   };
 };
 
-// One builder covers glyph opacity, travel, and scale with one coordinated
-// timing path for every property.
+// combine opacity travel and scale on one timing path
 export const createShiftTransition = ({
   durationMs,
   easing,

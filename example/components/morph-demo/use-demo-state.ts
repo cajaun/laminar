@@ -3,6 +3,7 @@ import {
   animationLayerValues,
   autoSizeValues,
   buttonWords,
+  confirmContinueWords,
   editorWords,
   fontSizes,
   fontWeights,
@@ -24,9 +25,12 @@ export type CyclicValueSnapshot<T> = Readonly<{
   nextValue: T;
 }>;
 
-export type CyclicValueStore<T> = Readonly<{
+export type DemoSnapshotStore<T> = Readonly<{
   getSnapshot: () => CyclicValueSnapshot<T>;
   subscribe: (listener: () => void) => () => void;
+}>;
+
+export type CyclicValueStore<T> = DemoSnapshotStore<T> & Readonly<{
   next: () => void;
   previous: () => void;
 }>;
@@ -84,7 +88,7 @@ export function useCyclicValueStore<T>(
 }
 
 export function useCyclicValueStoreSnapshot<T>(
-  store: CyclicValueStore<T>,
+  store: DemoSnapshotStore<T>,
 ): CyclicValueSnapshot<T> {
   return useSyncExternalStore(
     store.subscribe,
@@ -110,10 +114,57 @@ export function useAutoSizeDemoStore() {
 }
 
 export function useEditorDemoStore() {
+  const word = useCyclicValueStore(editorWords);
+  const fontSize = useCyclicValueStore(fontSizes, 1);
+  const fontWeight = useCyclicValueStore(fontWeights, 1);
+  const settingsStoreRef = useRef<DemoSnapshotStore<EditorSettingsValue> | null>(null);
+
+  if (settingsStoreRef.current === null) {
+    const stores = [word, fontSize, fontWeight];
+    let snapshot = createEditorSettingsSnapshot(word, fontSize, fontWeight);
+    const listeners = new Set<() => void>();
+
+    stores.forEach((store) => {
+      store.subscribe(() => {
+        snapshot = createEditorSettingsSnapshot(word, fontSize, fontWeight);
+        listeners.forEach((listener) => listener());
+      });
+    });
+
+    settingsStoreRef.current = {
+      getSnapshot: () => snapshot,
+      subscribe: (listener) => {
+        listeners.add(listener);
+
+        return () => listeners.delete(listener);
+      },
+    };
+  }
+
+  return { word, fontSize, fontWeight, settings: settingsStoreRef.current };
+}
+
+type EditorSettingsValue = Readonly<{
+  word: CyclicValueSnapshot<(typeof editorWords)[number]>;
+  fontSize: CyclicValueSnapshot<(typeof fontSizes)[number]>;
+  fontWeight: CyclicValueSnapshot<(typeof fontWeights)[number]>;
+}>;
+
+function createEditorSettingsSnapshot(
+  word: CyclicValueStore<(typeof editorWords)[number]>,
+  fontSize: CyclicValueStore<(typeof fontSizes)[number]>,
+  fontWeight: CyclicValueStore<(typeof fontWeights)[number]>,
+): CyclicValueSnapshot<EditorSettingsValue> {
+  const value = {
+    word: word.getSnapshot(),
+    fontSize: fontSize.getSnapshot(),
+    fontWeight: fontWeight.getSnapshot(),
+  };
+
   return {
-    word: useCyclicValueStore(editorWords),
-    fontSize: useCyclicValueStore(fontSizes, 1),
-    fontWeight: useCyclicValueStore(fontWeights, 1),
+    value,
+    previousValue: value,
+    nextValue: value,
   };
 }
 
@@ -127,6 +178,10 @@ export function useButtonDemoStore() {
 
 export function useTransactionDemoStore() {
   return useCyclicValueStore(transactionStates);
+}
+
+export function useConfirmationDemoStore() {
+  return useCyclicValueStore(confirmContinueWords);
 }
 
 export function useNumbersDemoStore() {

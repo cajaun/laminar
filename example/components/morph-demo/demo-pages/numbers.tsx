@@ -35,22 +35,6 @@ const NumbersPreview = React.memo(function NumbersPreview({
   );
 });
 
-const NumbersSettings = React.memo(function NumbersSettings({
-  store,
-}: {
-  readonly store: NumbersStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Reverse", value: state.previousValue })}
-      {settingsRow({ label: "Morph", value: state.nextValue })}
-    </>
-  );
-});
-
 function NumbersPage({ height, width }: DemoPageProps) {
   const store = useNumbersDemoStore();
 
@@ -62,7 +46,14 @@ function NumbersPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumbersPreview store={store} />}
-      settings={<NumbersSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Reverse", value: state.previousValue })}
+          {settingsRow({ label: "Morph", value: state.nextValue })}
+        </>
+      )}
     />
   );
 }

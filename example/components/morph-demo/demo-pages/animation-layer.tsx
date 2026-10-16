@@ -55,22 +55,6 @@ const AnimationLayerPreview = React.memo(function AnimationLayerPreview({
   );
 });
 
-const AnimationLayerSettings = React.memo(function AnimationLayerSettings({
-  store,
-}: {
-  readonly store: AnimationLayerStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Digit", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Layer", value: "Space + digit" })}
-      {settingsRow({ label: "Speed", value: "Readable" })}
-    </>
-  );
-});
-
 function AnimationLayerPage({ height, width }: DemoPageProps) {
   const store = useAnimationLayerDemoStore();
 
@@ -82,7 +66,14 @@ function AnimationLayerPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<AnimationLayerPreview store={store} />}
-      settings={<AnimationLayerSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Digit", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Layer", value: "Space + digit" })}
+          {settingsRow({ label: "Speed", value: "Readable" })}
+        </>
+      )}
     />
   );
 }

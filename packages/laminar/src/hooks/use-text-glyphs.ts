@@ -19,15 +19,14 @@ type TextGlyphUnit = {
   readonly value: string;
 };
 
-// build text glyphs independently, then prepend a separately keyed leading token
+// build text glyphs independently then prepend a separately keyed leading token
 export const useTextGlyphs = (
   value: string,
   namespace: string,
   leading?: ReactNode,
   leadingKey?: string | number
 ): readonly GlyphToken[] => {
-  // Reconcile text independently so inserting/removing a leading token cannot
-  // change which repeated text glyphs the LCS ledger preserves.
+  // reconcile text apart from leading content to preserve repeated glyphs
   const textUnits = useMemo<readonly TextGlyphUnit[]>(
     () => [
       ...splitDisplayUnits(value).map((unit) => ({
@@ -73,8 +72,7 @@ export const useTextGlyphs = (
 
   const glyphKeys = ledgerRef.current.glyphKeys;
 
-  // normalize spaces at the edge where tokens become renderable glyphs, then
-  // prepend the leading token with an identity that is independent of text
+  // normalize spaces before adding a leading token with stable identity
   return useMemo(
     () => {
       const textGlyphs = textUnits.map((unit, index) => ({

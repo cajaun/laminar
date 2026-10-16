@@ -33,22 +33,6 @@ const WordsPreview = React.memo(function WordsPreview({
   );
 });
 
-const WordsSettings = React.memo(function WordsSettings({
-  store,
-}: {
-  readonly store: WordsStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Word", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Variant", value: "Text" })}
-      {settingsRow({ label: "Auto Size", value: "Off" })}
-    </>
-  );
-});
-
 function WordsPage({ height, width }: DemoPageProps) {
   const store = useWordsDemoStore();
 
@@ -60,7 +44,14 @@ function WordsPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<WordsPreview store={store} />}
-      settings={<WordsSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Word", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Variant", value: "Text" })}
+          {settingsRow({ label: "Auto Size", value: "Off" })}
+        </>
+      )}
     />
   );
 }

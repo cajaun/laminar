@@ -58,22 +58,6 @@ const TextIdentityPreview = React.memo(function TextIdentityPreview({
   );
 });
 
-const TextIdentitySettings = React.memo(function TextIdentitySettings({
-  store,
-}: {
-  readonly store: TextIdentityStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Text", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Identity", value: "LCS" })}
-      {settingsRow({ label: "Speed", value: "Readable" })}
-    </>
-  );
-});
-
 function TextIdentityPage({ height, width }: DemoPageProps) {
   const store = useTextIdentityDemoStore();
 
@@ -85,7 +69,14 @@ function TextIdentityPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<TextIdentityPreview store={store} />}
-      settings={<TextIdentitySettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Text", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Identity", value: "LCS" })}
+          {settingsRow({ label: "Speed", value: "Readable" })}
+        </>
+      )}
     />
   );
 }

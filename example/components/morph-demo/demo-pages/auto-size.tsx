@@ -45,22 +45,6 @@ const AutoSizePreview = React.memo(function AutoSizePreview({
   );
 });
 
-const AutoSizeSettings = React.memo(function AutoSizeSettings({
-  store,
-}: {
-  readonly store: AutoSizeStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "String", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Auto Size", value: "On" })}
-      {settingsRow({ label: "Container", value: "Measured" })}
-    </>
-  );
-});
-
 function AutoSizePage({ height, width }: DemoPageProps) {
   const store = useAutoSizeDemoStore();
 
@@ -72,7 +56,14 @@ function AutoSizePage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<AutoSizePreview store={store} />}
-      settings={<AutoSizeSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "String", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Auto Size", value: "On" })}
+          {settingsRow({ label: "Container", value: "Measured" })}
+        </>
+      )}
     />
   );
 }

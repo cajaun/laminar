@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export type DemoMetrics = {
   readonly width: number;
@@ -27,12 +26,13 @@ export function useDemoMetrics({
   width,
   fontSize,
 }: UseDemoMetricsProps): DemoMetrics {
-  const { bottom } = useSafeAreaInsets();
-
   return useMemo(
     () => {
       const buttonHeight = 50;
-      const footerPaddingBottom = bottom * 1.5;
+      // DemoDetailScreen is already wrapped in SafeAreaView. Adding the
+      // device bottom inset here double-counts the safe area and pushes the
+      // footer too far above the bottom edge.
+      const footerPaddingBottom = 0;
 
       return {
         width,
@@ -49,6 +49,6 @@ export function useDemoMetrics({
         previewMinHeight: Math.max(height * 0.24, fontSize * 2.1),
       };
     },
-    [bottom, fontSize, height, width]
+    [fontSize, height, width]
   );
 }

@@ -1,7 +1,9 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Platform, View } from "react-native";
 import "../global.css";
 
 
@@ -23,12 +25,34 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="chart" options={{ headerShown: false }} />
-          <Stack.Screen name="laminar" options={{ headerShown: false }} />
-          <Stack.Screen name="laminar-demo/[demo]" options={{ headerShown: false }} />
-        </Stack>
+        <View style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
+          <Stack
+            screenOptions={{
+              headerTitleAlign: "center",
+              headerTransparent: true,
+              headerBlurEffect: "light",
+              headerTintColor: "#111318",
+              headerTitleStyle: { fontFamily: "Sf-semibold" },
+              headerStyle: {
+                backgroundColor: Platform.select({
+                  ios: undefined,
+                  android: "#F5F5F5",
+                }),
+              },
+              headerShadowVisible: false,
+              headerBackButtonDisplayMode: "generic",
+              gestureEnabled: true,
+              gestureDirection: "horizontal",
+              fullScreenGestureEnabled: isLiquidGlassAvailable() ? false : true,
+              contentStyle: { backgroundColor: "#F5F5F5" },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="chart" />
+            <Stack.Screen name="laminar" />
+            <Stack.Screen name="laminar-demo/[demo]" />
+          </Stack>
+        </View>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );

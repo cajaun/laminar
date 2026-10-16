@@ -142,26 +142,6 @@ const TransactionPreview = React.memo(function TransactionPreview({
   );
 });
 
-const TransactionSettings = React.memo(function TransactionSettings({
-  store,
-}: {
-  readonly store: TransactionStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({
-        label: "Button Text",
-        value: state.value,
-        onPress: store.next,
-      })}
-      {settingsRow({ label: "Surface", value: "Pressable" })}
-      {settingsRow({ label: "Auto Size", value: "On" })}
-    </>
-  );
-});
-
 function TransactionPage({ height, width }: DemoPageProps) {
   const store = useTransactionDemoStore();
 
@@ -173,7 +153,18 @@ function TransactionPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<TransactionPreview store={store} />}
-      settings={<TransactionSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({
+            label: "Button Text",
+            value: state.value,
+            onPress: store.next,
+          })}
+          {settingsRow({ label: "Surface", value: "Pressable" })}
+          {settingsRow({ label: "Auto Size", value: "On" })}
+        </>
+      )}
     />
   );
 }

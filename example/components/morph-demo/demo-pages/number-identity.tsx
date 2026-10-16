@@ -43,22 +43,6 @@ const NumberIdentityPreview = React.memo(function NumberIdentityPreview({
   );
 });
 
-const NumberIdentitySettings = React.memo(function NumberIdentitySettings({
-  store,
-}: {
-  readonly store: NumberIdentityStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Direction", value: "Up / Down" })}
-      {settingsRow({ label: "Lanes", value: "Fixed width" })}
-    </>
-  );
-});
-
 function NumberIdentityPage({ height, width }: DemoPageProps) {
   const store = useNumberIdentityDemoStore();
 
@@ -70,7 +54,14 @@ function NumberIdentityPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumberIdentityPreview store={store} />}
-      settings={<NumberIdentitySettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Direction", value: "Up / Down" })}
+          {settingsRow({ label: "Lanes", value: "Fixed width" })}
+        </>
+      )}
     />
   );
 }

@@ -50,22 +50,6 @@ const SlotsPreview = React.memo(function SlotsPreview({
   );
 });
 
-const SlotsSettings = React.memo(function SlotsSettings({
-  store,
-}: {
-  readonly store: SlotsStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Slots", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Reverse", value: state.previousValue })}
-      {settingsRow({ label: "Morph", value: state.nextValue })}
-    </>
-  );
-});
-
 function SlotsPage({ height, width }: DemoPageProps) {
   const store = useSlotsDemoStore();
 
@@ -77,7 +61,14 @@ function SlotsPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<SlotsPreview store={store} />}
-      settings={<SlotsSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Slots", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Reverse", value: state.previousValue })}
+          {settingsRow({ label: "Morph", value: state.nextValue })}
+        </>
+      )}
     />
   );
 }

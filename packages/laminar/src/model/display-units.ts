@@ -20,7 +20,7 @@ export const splitDisplayUnits = (input: string): string[] => {
 export const normalizeDisplayUnit = (unit: string) =>
   unit === " " ? NBSP : unit;
 
-// numeric lanes only treat ascii digits as place-value columns
+// numeric lanes only treat ascii digits as place value columns
 export const isAsciiDigit = (unit: string) => unit >= "0" && unit <= "9";
 
 // leading symbols and punctuation stay attached to the left side of a number

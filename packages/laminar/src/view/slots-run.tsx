@@ -272,8 +272,7 @@ function SlotColumn({
       target,
     };
 
-    // A direction change can rerender every column even when this column's
-    // digit is unchanged. Keep the idle reel untouched in that case.
+    // keep unchanged reels still during direction changes
     if (drivenTargetRef.current === target) {
       return;
     }
@@ -404,8 +403,7 @@ export const SlotsRun = React.memo(
         Math.ceil(resolvedLineHeight ?? (resolvedFontSize ?? 16) * 1.18)
       );
     }, [fontSize, textStyle]);
-    // Prefixes and punctuation must share the reel's line box so their glyph
-    // centers remain aligned on native fonts with different ascender metrics.
+    // share the reel line box so prefixes align with native digit glyphs
     const slotTextStyle: StyleProp<TextStyle> = useMemo(
       () => [
         textStyle,

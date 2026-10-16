@@ -2,7 +2,7 @@ import React, { useMemo, useRef } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import type { ComplexAnimationBuilder } from "react-native-reanimated";
+import type { BaseAnimationBuilder } from "react-native-reanimated";
 import type { LaminarAlign } from "../types";
 
 const shellStyle = {
@@ -53,8 +53,8 @@ type MorphViewportProps = {
   readonly align: LaminarAlign;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
-  /** optional layout-driven auto-size path for content that needs an aligned anchor */
-  readonly autoSizeLayoutTransition?: ComplexAnimationBuilder;
+  // optional layout driven auto size path for aligned content
+  readonly autoSizeLayoutTransition?: BaseAnimationBuilder;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -76,7 +76,7 @@ export const MorphViewport = React.memo(
       autoSizeLayoutTransition !== undefined && hasRenderedRef.current;
     hasRenderedRef.current = true;
 
-    // compute alignment once so the animated shell and its child share one layout contract
+    // compute alignment once so the shell and child share one layout contract
     const resolvedViewportStyle = useMemo(
       () => [
         viewportStyle,
@@ -86,11 +86,9 @@ export const MorphViewport = React.memo(
       [align, clipToBounds]
     );
 
-    // keep measurement outside the visible viewport so it cannot affect accessibility or layout
+    // keep measurement outside the viewport so it cannot affect layout or accessibility
     if (autoSizeLayoutTransition) {
-      // Layout animation owns both width and the shell's aligned x-position.
-      // This is important for center/right auto-size: animating only a child
-      // width leaves the parent anchor at its old position.
+      // animate width and anchor position together for centered and right aligned content
       return (
         <Animated.View
           layout={

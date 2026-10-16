@@ -112,26 +112,6 @@ const ButtonPreview = React.memo(function ButtonPreview({
   );
 });
 
-const ButtonSettings = React.memo(function ButtonSettings({
-  store,
-}: {
-  readonly store: ButtonStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({
-        label: "Button Text",
-        value: state.value,
-        onPress: store.next,
-      })}
-      {settingsRow({ label: "Surface", value: "Pressable" })}
-      {settingsRow({ label: "Auto Size", value: "On" })}
-    </>
-  );
-});
-
 function ButtonPage({ height, width }: DemoPageProps) {
   const store = useButtonDemoStore();
 
@@ -143,7 +123,18 @@ function ButtonPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<ButtonPreview store={store} />}
-      settings={<ButtonSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({
+            label: "Button Text",
+            value: state.value,
+            onPress: store.next,
+          })}
+          {settingsRow({ label: "Surface", value: "Pressable" })}
+          {settingsRow({ label: "Auto Size", value: "On" })}
+        </>
+      )}
     />
   );
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import type {
-  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
   EntryExitAnimationFunction,
   WithTimingConfig,
 } from "react-native-reanimated";
@@ -20,9 +20,9 @@ export type LaminarAlign = "left" | "center" | "right";
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 export type LaminarShadowOptions = {
-  /** surface color used by the alpha mask when a platform requires it */
+  // surface color used by the alpha mask when a platform requires it
   readonly color?: string;
-  /** fade depth in pixels; defaults to roughly one third of the viewport */
+  // fade depth in pixels defaults to roughly one third of the viewport
   readonly size?: number;
 };
 
@@ -54,7 +54,7 @@ export type MotionRecipe = {
   // every variant consumes the same timing and layout contract
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
-  readonly layoutTransition: ComplexAnimationBuilder;
+  readonly layoutTransition: BaseAnimationBuilder;
   readonly enterTransition: EntryExitAnimationFunction;
   readonly exitTransition: EntryExitAnimationFunction;
   readonly driveNumber: (toValue: number) => number;
@@ -63,19 +63,19 @@ export type MotionRecipe = {
 export type MorphingTextProps = {
   readonly text: string | number;
   readonly variant?: MorphContentVariant;
-  /** number-only renderer mode; ticker uses crisp in-place digit flow */
+  // number mode selects the numeric renderer
   readonly numberMode?: MorphNumberMode;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
-  /** optional inline element reconciled and animated before the rendered value */
+  // leading content appears before the value
   readonly leading?: ReactNode | LaminarLeadingMap;
-  /** identity for swapping one leading element for another */
+  // leading key identifies a replacement
   readonly leadingKey?: string | number;
-  /** spacing between the leading element and the first text glyph */
+  // leading gap separates content from the value
   readonly leadingGap?: number;
-  /** opt-in top and bottom fades for slot reels */
+  // shadow adds fades to slot reels
   readonly shadow?: LaminarShadow;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;

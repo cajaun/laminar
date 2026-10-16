@@ -32,7 +32,7 @@ type NumberLaneProps = {
   readonly className?: string;
 };
 
-// render one place-value lane with a hidden layout probe and an animated token
+// render one place value lane with a hidden layout probe and an animated token
 export const NumberLane = React.memo(
   ({
     unit,
@@ -45,7 +45,7 @@ export const NumberLane = React.memo(
     textStyle,
     className,
   }: NumberLaneProps) => {
-    // punctuation stays in place while digits travel by the shared numeric direction
+    // keep punctuation in place while digits follow the shared numeric direction
     const usesDigitTravel = isAsciiDigit(unit);
     const verticalOffset =
       direction > 0
@@ -94,7 +94,7 @@ export const NumberLane = React.memo(
       ]
     );
 
-    // prefix units do not need an absolute lane or a duplicate probe
+    // keep prefix units in flow without an absolute lane or a duplicate probe
     if (isLead) {
       return <Text style={textStyle} className={className}>{unit}</Text>;
     }

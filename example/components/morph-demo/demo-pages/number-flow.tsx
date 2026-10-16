@@ -33,26 +33,6 @@ const NumberFlowPreview = React.memo(function NumberFlowPreview({
   );
 });
 
-const NumberFlowSettings = React.memo(function NumberFlowSettings({
-  store,
-}: {
-  readonly store: NumberFlowStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({
-        label: "Number Flow",
-        value: state.value,
-        onPress: store.next,
-      })}
-      {settingsRow({ label: "Reverse", value: state.previousValue })}
-      {settingsRow({ label: "Next", value: state.nextValue })}
-    </>
-  );
-});
-
 function NumberFlowPage({ height, width }: DemoPageProps) {
   const store = useNumberFlowDemoStore();
 
@@ -64,7 +44,18 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumberFlowPreview store={store} />}
-      settings={<NumberFlowSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({
+            label: "Number Flow",
+            value: state.value,
+            onPress: store.next,
+          })}
+          {settingsRow({ label: "Reverse", value: state.previousValue })}
+          {settingsRow({ label: "Next", value: state.nextValue })}
+        </>
+      )}
     />
   );
 }

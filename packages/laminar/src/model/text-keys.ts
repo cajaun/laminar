@@ -56,7 +56,7 @@ type ReconciledTextGlyphState = {
   readonly nextSeed: number;
 };
 
-// reuse prefix, suffix, and lcs matches before allocating keys for new glyphs
+// reuse prefix suffix and lcs matches before allocating keys for new glyphs
 export const reconcileTextGlyphKeys = (
   previousUnits: readonly string[],
   nextUnits: readonly string[],

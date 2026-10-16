@@ -29,27 +29,11 @@ const SlotsNextPreview = React.memo(function SlotsNextPreview({
       style={{
         color: "#000000",
         fontFamily: "Sf-semibold",
-        fontSize: 40,
+        fontSize: 80,
         fontVariant: ["tabular-nums"],
         textAlign: "center",
       }}
     />
-  );
-});
-
-const SlotsNextSettings = React.memo(function SlotsNextSettings({
-  store,
-}: {
-  readonly store: SlotsStore;
-}) {
-  const state = useCyclicValueStoreSnapshot(store);
-
-  return (
-    <>
-      {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
-      {settingsRow({ label: "Reverse", value: state.previousValue })}
-      {settingsRow({ label: "Next", value: state.nextValue })}
-    </>
   );
 });
 
@@ -64,7 +48,14 @@ function SlotsNextPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<SlotsNextPreview store={store} />}
-      settings={<SlotsNextSettings store={store} />}
+      settingsStore={store}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({ label: "Number", value: state.value, onPress: store.next })}
+          {settingsRow({ label: "Reverse", value: state.previousValue })}
+          {settingsRow({ label: "Next", value: state.nextValue })}
+        </>
+      )}
     />
   );
 }

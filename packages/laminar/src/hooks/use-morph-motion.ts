@@ -18,8 +18,7 @@ type MorphMotion = {
   readonly motionRecipe: MotionRecipe;
 };
 
-// Resolve one motion recipe for a render tree. Token timing is coordinated by
-// the renderer instead of creating one delayed animation per token.
+// resolve one recipe for coordinated token timing
 export const useMorphMotion = ({
   variant,
   numberMode,

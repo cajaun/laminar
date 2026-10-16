@@ -32,6 +32,7 @@ export const transactionStates = [
   "Transaction Safe",
   "Transaction Warning",
 ] as const;
+export const confirmContinueWords = ["Continue", "Confirm"] as const;
 export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 // Distinct black-price snapshots from number-ticker.mov, in source order.
 export const numberFlowValues = [
@@ -87,6 +88,7 @@ export const examplePages = [
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },
   { id: "transaction", label: "Transaction" },
+  { id: "confirmation", label: "Confirmation" },
   { id: "numbers", label: "Numbers" },
   { id: "numberFlow", label: "Number Flow" },
 ] as const;

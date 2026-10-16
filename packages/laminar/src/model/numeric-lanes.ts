@@ -21,7 +21,7 @@ type ReconciledLaneState = {
   readonly direction: NumericFlowDirection;
 };
 
-// preserve right-aligned place values while allowing prefixes to grow or shrink
+// preserve right aligned place values while allowing prefixes to grow or shrink
 export const reconcileNumericLanes = (
   previousValue: string,
   nextValue: string,

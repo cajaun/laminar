@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@/helpers/use-header-height";
 import type { DataSourceOption, RangeType } from "@/components/flux-chart/data";
 import { USDC_CHART_DATA } from "@/components/flux-chart/data";
 import { ChartArea, useFluxChartController } from "@/components/flux-chart/core";
@@ -30,7 +31,8 @@ export function FluxChart({
   showFill = false,
   source = "Revenue",
 }: FluxChartProps = {}) {
-  const insets = useSafeAreaInsets();
+  const { bottom } = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { width: screenWidth } = useWindowDimensions();
   const contentWidth = Math.min(560, Math.max(320, screenWidth - 48));
   const assetConfig = FLUX_ASSET_CONFIG[asset];
@@ -64,8 +66,8 @@ export function FluxChart({
       contentContainerStyle={{
         alignItems: "center",
         backgroundColor: "#FFFFFF",
-        paddingTop: Math.max(18, insets.top - 5),
-        paddingBottom: Math.max(24, insets.bottom + 24),
+          paddingTop: headerHeight + 18,
+          paddingBottom: Math.max(24, bottom + 24),
       }}
     >
       <StatusBar style="dark" />

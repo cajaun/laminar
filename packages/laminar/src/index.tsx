@@ -59,7 +59,7 @@ export const Laminar = React.memo(function Laminar({
       style,
     });
 
-    // invalidate the probe when text style, leading content, or leading spacing changes
+    // invalidate the probe when text style leading content or leading spacing changes
     const measurementKey = React.useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
 
@@ -206,7 +206,7 @@ export const Laminar = React.memo(function Laminar({
 function isLeadingMap(
   value: MorphingTextProps["leading"]
 ): value is LaminarLeadingMap {
-  // react elements are objects too, so exclude them before treating a value as a map
+  // react elements are objects too so exclude them before treating a value as a map
   return (
     typeof value === "object" &&
     value !== null &&

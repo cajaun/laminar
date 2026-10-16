@@ -19,7 +19,7 @@ type TextRunProps = {
   readonly className?: string;
 };
 
-// connect text identity, leading transitions, and glyph layout into one run
+// connect text identity leading transitions and glyph layout into one run
 export const TextRun = React.memo(
   ({
     value,

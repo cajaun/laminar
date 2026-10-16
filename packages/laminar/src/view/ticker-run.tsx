@@ -17,9 +17,7 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
-// The wrapper owns the changing layout box. Keeping the Text itself out of
-// the layout transition prevents a newly rendered glyph from being clipped by
-// the previous glyph's narrower bounds.
+// keep the layout transition on the wrapper so new glyphs keep their width
 const glyphSlotStyle = {
   alignSelf: "flex-start",
 } as const;
@@ -41,13 +39,11 @@ type TickerRunProps = {
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
   readonly ready?: boolean;
-  /** accepted for API compatibility; flow values stay crisp and unmasked */
+  // keep shadow for api compatibility while ticker values stay crisp
   readonly shadow?: LaminarShadow;
 };
 
-// Render the data-ticker behavior from the reference: stable inline lanes and
-// crisp in-place replacements. There is deliberately no reel, vertical travel,
-// opacity fade, or viewport mask in this renderer.
+// keep ticker lanes inline with crisp replacements
 export const TickerRun = React.memo(
   ({
     value,
@@ -140,11 +136,7 @@ export const TickerRun = React.memo(
 
             return (
               <Animated.View
-                // Keep each digit lane mounted across updates. Replacing the
-                // node here makes the glyph snap to its new width; a stable
-                // lane lets Reanimated interpolate that width and the
-                // positions of the following glyphs, which is the subtle
-                // horizontal movement in the reference ticker.
+                // keep each lane mounted so width changes move following digits
                 key={unitKey}
                 layout={
                   hasAnimated ? motionRecipe.layoutTransition : undefined

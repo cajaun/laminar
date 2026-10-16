@@ -35,32 +35,6 @@ const EditorPreview = React.memo(function EditorPreview({
   );
 });
 
-const EditorSettings = React.memo(function EditorSettings({
-  store,
-}: {
-  readonly store: EditorStore;
-}) {
-  const word = useCyclicValueStoreSnapshot(store.word);
-  const fontSize = useCyclicValueStoreSnapshot(store.fontSize);
-  const fontWeight = useCyclicValueStoreSnapshot(store.fontWeight);
-
-  return (
-    <>
-      {settingsRow({ label: "Word", value: word.value, onPress: store.word.next })}
-      {settingsRow({
-        label: "Font Size",
-        value: `${fontSize.value}pt`,
-        onPress: store.fontSize.next,
-      })}
-      {settingsRow({
-        label: "Font Weight",
-        value: fontWeight.value.label,
-        onPress: store.fontWeight.next,
-      })}
-    </>
-  );
-});
-
 function EditorPage({ height, width }: DemoPageProps) {
   const store = useEditorDemoStore();
   const fontSize = useCyclicValueStoreSnapshot(store.fontSize).value;
@@ -73,7 +47,26 @@ function EditorPage({ height, width }: DemoPageProps) {
       onReverse={store.word.previous}
       onMorph={store.word.next}
       preview={<EditorPreview store={store} />}
-      settings={<EditorSettings store={store} />}
+      settingsStore={store.settings}
+      renderSettings={(state) => (
+        <>
+          {settingsRow({
+            label: "Word",
+            value: state.value.word.value,
+            onPress: store.word.next,
+          })}
+          {settingsRow({
+            label: "Font Size",
+            value: `${state.value.fontSize.value}pt`,
+            onPress: store.fontSize.next,
+          })}
+          {settingsRow({
+            label: "Font Weight",
+            value: state.value.fontWeight.value.label,
+            onPress: store.fontWeight.next,
+          })}
+        </>
+      )}
     />
   );
 }
