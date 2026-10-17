@@ -17,10 +17,6 @@ import {
 } from "../../use-demo-state";
 import { useDemoTheme } from "../../demo-theme";
 
-const autoSizeContainerStyle = {
-  alignSelf: "center" as const,
-};
-
 type AutoSizeStore = ReturnType<typeof useAutoSizeDemoStore>;
 
 const AutoSizeValue = React.memo(function AutoSizeValue({
@@ -47,7 +43,6 @@ const AutoSizeValue = React.memo(function AutoSizeValue({
       clipToBounds={false}
       fontSize={32}
       style={previewTextStyle}
-      containerStyle={autoSizeContainerStyle}
     />
   );
 });

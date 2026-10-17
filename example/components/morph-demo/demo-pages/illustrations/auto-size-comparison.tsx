@@ -5,10 +5,6 @@ import { Laminar } from "react-native-laminar";
 import { teachingBlue } from "../shared";
 import { useDemoTheme } from "../../demo-theme";
 
-const comparisonContainerStyle = {
-  alignSelf: "center" as const,
-};
-
 export function AutoSizeComparison({ value }: { readonly value: string }) {
   const theme = useDemoTheme();
   const comparisonTextStyle = React.useMemo(
@@ -104,7 +100,6 @@ export function AutoSizeComparison({ value }: { readonly value: string }) {
               autoSize
               clipToBounds={false}
               fontSize={18}
-              containerStyle={comparisonContainerStyle}
               style={comparisonTextStyle}
             />
           </View>
