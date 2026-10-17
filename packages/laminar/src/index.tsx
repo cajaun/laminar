@@ -42,9 +42,13 @@ export const Laminar = React.memo(function Laminar({
       ? leadingMap[resolvedValue]
       : (leading as React.ReactNode);
     const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
+    const flattenedContainerStyle = StyleSheet.flatten(containerStyle);
+    const isCenteredStandaloneShell =
+      flattenedContainerStyle?.alignSelf === "center";
     const useLayoutAutoSize =
       autoSize &&
-      (variant === "slots" ||
+      ((variant === "text" && !leading && isCenteredStandaloneShell) ||
+        variant === "slots" ||
         (variant === "number" && numberMode === "ticker"));
     const { motionRecipe } = useMorphMotion({
       variant,
