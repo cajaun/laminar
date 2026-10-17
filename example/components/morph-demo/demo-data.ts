@@ -39,6 +39,7 @@ export const transactionStates = [
   "Transaction Warning",
 ] as const;
 export const confirmContinueWords = ["Continue", "Confirm"] as const;
+export const numberValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 // Distinct black-price snapshots from number-ticker.mov, in source order.
 export const numberFlowValues = [
   "$2,462.78",
@@ -86,7 +87,7 @@ export const examplePages = [
   { id: "textIdentity", label: "Text" },
   { id: "animationLayer", label: "Number" },
   { id: "autoSize", label: "Auto Size" },
-  { id: "slots", label: "Slots" },
+  { id: "slotsMechanism", label: "Slots" },
   { id: "singleIcon", label: "Single Icon" },
   { id: "multiIcon", label: "Multiple Icons" },
   { id: "editor", label: "Editor" },
@@ -94,6 +95,8 @@ export const examplePages = [
   { id: "button", label: "Button" },
   { id: "transaction", label: "Transaction" },
   { id: "confirmation", label: "Confirmation" },
+  { id: "numbers", label: "Numbers" },
+  { id: "slots", label: "Slots" },
   { id: "numberFlow", label: "Number Flow" },
 ] as const;
 
@@ -106,6 +109,8 @@ export const demoTabGroups = [
     id: "examples",
     label: "Examples",
     pageIds: [
+      "numbers",
+      "slots",
       "editor",
       "words",
       "button",
@@ -122,7 +127,7 @@ export const demoTabGroups = [
       "textIdentity",
       "animationLayer",
       "autoSize",
-      "slots",
+      "slotsMechanism",
       "singleIcon",
       "multiIcon",
     ],

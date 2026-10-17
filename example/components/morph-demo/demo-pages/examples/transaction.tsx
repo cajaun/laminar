@@ -1,4 +1,10 @@
 import React, { useEffect } from "react";
+import {
+  FormItem,
+  Section as FormSection,
+  Spacer,
+  Text as FormText,
+} from "@/components/ui/form";
 import { Laminar } from "react-native-laminar";
 import Animated, {
   Easing,
@@ -11,6 +17,7 @@ import Svg, { Circle, Path } from "react-native-svg";
 import { SymbolView } from "expo-symbols";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoMetrics } from "../../use-demo-metrics";
 import type { DemoPageProps } from "../types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
@@ -164,6 +171,51 @@ const TransactionPreview = React.memo(function TransactionPreview({
   );
 });
 
+const TransactionValueRow = React.memo(function TransactionValueRow({
+  store,
+  theme,
+}: {
+  readonly store: TransactionStore;
+  readonly theme: ReturnType<typeof useDemoTheme>;
+  readonly custom?: boolean;
+}) {
+  const state = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <FormItem>
+      <FormText bold onPress={store.next} style={{ color: theme.tertiary }}>
+        Button Text
+      </FormText>
+      <Spacer />
+      <FormText bold numberOfLines={1} style={{ color: theme.accent }}>
+        {state.value}
+      </FormText>
+    </FormItem>
+  );
+});
+
+const TransactionSettings = React.memo(function TransactionSettings({
+  metrics,
+  store,
+}: {
+  readonly metrics: DemoMetrics;
+  readonly store: TransactionStore;
+}) {
+  const theme = useDemoTheme();
+
+  return (
+    <FormSection
+      outerStyle={{ paddingHorizontal: 0 }}
+      style={{ backgroundColor: theme.panel, borderRadius: metrics.panelRadius }}
+      separatorInset="content"
+    >
+      <TransactionValueRow store={store} theme={theme} custom />
+      {settingsRow({ label: "Surface", value: "Pressable", theme })}
+      {settingsRow({ label: "Auto Size", value: "On", theme })}
+    </FormSection>
+  );
+});
+
 function TransactionPage({ height, width }: DemoPageProps) {
   const store = useTransactionDemoStore();
 
@@ -176,17 +228,8 @@ function TransactionPage({ height, width }: DemoPageProps) {
       onMorph={store.next}
       preview={<TransactionPreview store={store} />}
       settingsStore={store}
-      renderSettings={(state, theme) => (
-        <>
-          {settingsRow({
-            label: "Button Text",
-            value: state.value,
-            onPress: store.next,
-            theme,
-          })}
-          {settingsRow({ label: "Surface", value: "Pressable", theme })}
-          {settingsRow({ label: "Auto Size", value: "On", theme })}
-        </>
+      renderSettingsSection={(metrics) => (
+        <TransactionSettings metrics={metrics} store={store} />
       )}
     />
   );

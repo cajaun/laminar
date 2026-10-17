@@ -14,6 +14,8 @@ import {
   ConfirmationDemoPage,
   EditorDemoPage,
   NumberFlowDemoPage,
+  NumbersDemoPage,
+  SlotsExampleDemoPage,
   TransactionDemoPage,
   WordsDemoPage,
 } from "./examples";
@@ -25,7 +27,7 @@ export const demoPageComponents: Record<
   textIdentity: TextIdentityDemoPage,
   animationLayer: AnimationLayerDemoPage,
   autoSize: AutoSizeDemoPage,
-  slots: SlotsDemoPage,
+  slotsMechanism: SlotsDemoPage,
   singleIcon: SingleIconDemoPage,
   multiIcon: MultiIconDemoPage,
   editor: EditorDemoPage,
@@ -33,5 +35,7 @@ export const demoPageComponents: Record<
   button: ButtonDemoPage,
   transaction: TransactionDemoPage,
   confirmation: ConfirmationDemoPage,
+  numbers: NumbersDemoPage,
+  slots: SlotsExampleDemoPage,
   numberFlow: NumberFlowDemoPage,
 };

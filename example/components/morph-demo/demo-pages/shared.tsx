@@ -119,6 +119,7 @@ type DemoPageLayoutProps<T> = {
   readonly onMorph: () => void;
   readonly preview: React.ReactNode;
   readonly settingsStore: DemoSnapshotStore<T>;
+  readonly renderSettingsSection?: (metrics: DemoMetrics) => React.ReactNode;
   readonly renderSettings?: (
     state: CyclicValueSnapshot<T>,
     theme: DemoTheme,
@@ -134,6 +135,7 @@ function DemoPageLayoutImpl<T>({
   onMorph,
   preview,
   settingsStore,
+  renderSettingsSection,
   renderSettings,
   renderStaticSettings,
 }: DemoPageLayoutProps<T>) {
@@ -144,7 +146,9 @@ function DemoPageLayoutImpl<T>({
       <DemoPageScroll metrics={metrics}>
         <PreviewStage metrics={metrics}>{preview}</PreviewStage>
         <View style={{ flex: 1, minHeight: metrics.controlStackGap }} />
-        {renderStaticSettings ? (
+        {renderSettingsSection ? (
+          renderSettingsSection(metrics)
+        ) : renderStaticSettings ? (
           <StaticSettingsSection
             metrics={metrics}
             renderSettings={renderStaticSettings}

@@ -8,6 +8,7 @@ import {
   fontSizes,
   fontWeights,
   multiIconValues,
+  numberValues,
   numberFlowValues,
   slotMechanismValues,
   standaloneWords,
@@ -195,4 +196,12 @@ export function useSlotMechanismDemoStore() {
 
 export function useNumberFlowDemoStore() {
   return useCyclicValueStore(numberFlowValues);
+}
+
+export function useNumbersDemoStore() {
+  return useCyclicValueStore(numberValues);
+}
+
+export function useSlotsDemoStore() {
+  return useCyclicValueStore(numberValues);
 }
