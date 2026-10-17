@@ -82,7 +82,7 @@ const REFERENCE_SERIES: Record<RangeType, number[]> = {
 
 const metadata: Record<DataSourceOption, Record<RangeType, RangeMeta>> = {
   Revenue: {
-    "1H": { totalValue: 2_502.3, percentChange: -0.39, periodLabel: "last hour" },
+    "1H": { totalValue: 2_417.71, percentChange: 0.03, periodLabel: "last hour" },
     "1D": { totalValue: 2_502.3, percentChange: 0, periodLabel: "last day" },
     "1W": { totalValue: 2_502.3, percentChange: 3.61, periodLabel: "last week" },
     "1M": { totalValue: 2_502.3, percentChange: 30.9, periodLabel: "last month" },

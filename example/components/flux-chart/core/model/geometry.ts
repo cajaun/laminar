@@ -2,7 +2,7 @@ import { Dimensions } from "react-native";
 
 const { width: windowWidth } = Dimensions.get("window");
 
-export const CHART_HEIGHT = 380;
+export const CHART_HEIGHT = 236;
 export const CHART_WIDTH = Math.min(520, Math.max(280, windowWidth - 40));
 export const CHART_PADDING_TOP = 0.08;
 export const CHART_PADDING_BOTTOM = 0.08;

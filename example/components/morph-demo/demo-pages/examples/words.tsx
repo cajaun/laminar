@@ -1,11 +1,12 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, settingsRow } from "./shared";
-import type { DemoPageProps } from "./types";
+import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoPageProps } from "../types";
 import {
   useCyclicValueStoreSnapshot,
   useWordsDemoStore,
-} from "../use-demo-state";
+} from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
 
 type WordsStore = ReturnType<typeof useWordsDemoStore>;
 
@@ -15,6 +16,7 @@ const WordsPreview = React.memo(function WordsPreview({
   readonly store: WordsStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
+  const theme = useDemoTheme();
 
   return (
     <Laminar
@@ -25,7 +27,7 @@ const WordsPreview = React.memo(function WordsPreview({
       clipToBounds={false}
       align="center"
       style={{
-        color: "#000000",
+        color: theme.primary,
         fontFamily: "Sf-semibold",
         fontSize: 40,
       }}
@@ -45,11 +47,11 @@ function WordsPage({ height, width }: DemoPageProps) {
       onMorph={store.next}
       preview={<WordsPreview store={store} />}
       settingsStore={store}
-      renderSettings={(state) => (
+      renderSettings={(state, theme) => (
         <>
-          {settingsRow({ label: "Word", value: state.value, onPress: store.next })}
-          {settingsRow({ label: "Variant", value: "Text" })}
-          {settingsRow({ label: "Auto Size", value: "Off" })}
+          {settingsRow({ label: "Word", value: state.value, onPress: store.next, theme })}
+          {settingsRow({ label: "Variant", value: "Text", theme })}
+          {settingsRow({ label: "Auto Size", value: "Off", theme })}
         </>
       )}
     />
@@ -57,3 +59,4 @@ function WordsPage({ height, width }: DemoPageProps) {
 }
 
 export const WordsDemoPage = React.memo(WordsPage);
+

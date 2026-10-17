@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import * as Haptics from "expo-haptics";
 import React from "react";
-import { Platform, TouchableOpacity } from "react-native";
+import { Platform, TouchableOpacity, useColorScheme } from "react-native";
 
 type NavigationHeaderActionProps = {
   readonly accessibilityLabel: string;
@@ -16,6 +16,7 @@ export const NavigationHeaderAction = React.memo(
     icon,
     onPress,
   }: NavigationHeaderActionProps) {
+    const isDark = useColorScheme() === "dark";
     const isLiquidGlass = isLiquidGlassAvailable();
 
     return (
@@ -41,7 +42,7 @@ export const NavigationHeaderAction = React.memo(
         <Ionicons
           name={icon}
           size={20}
-          color="#111318"
+          color={isDark ? "#F5F5F5" : "#111318"}
         />
       </TouchableOpacity>
     );

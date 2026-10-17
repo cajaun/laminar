@@ -3,18 +3,15 @@ import { SymbolView } from "expo-symbols";
 import { View } from "react-native";
 import { Laminar } from "react-native-laminar";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-import { DemoPageLayout, settingsRow } from "./shared";
-import type { DemoPageProps } from "./types";
+import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoPageProps } from "../types";
 import {
   useConfirmationDemoStore,
   useCyclicValueStoreSnapshot,
-} from "../use-demo-state";
+} from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
 
 type ConfirmationStore = ReturnType<typeof useConfirmationDemoStore>;
-
-const confirmationLeading = {
-  Confirm: <SymbolView name="faceid" size={23} tintColor="#FFFFFF" />,
-} as const;
 
 const ConfirmationPreview = React.memo(function ConfirmationPreview({
   store,
@@ -22,6 +19,7 @@ const ConfirmationPreview = React.memo(function ConfirmationPreview({
   readonly store: ConfirmationStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
+  const theme = useDemoTheme();
 
   return (
     <View style={{ width: "70%", alignItems: "center" }}>
@@ -33,12 +31,16 @@ const ConfirmationPreview = React.memo(function ConfirmationPreview({
           borderRadius: 28,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#000000",
+          backgroundColor: theme.primary,
         }}
       >
         <Laminar
           text={state.value}
-          leading={confirmationLeading}
+          leading={{
+            Confirm: (
+              <SymbolView name="faceid" size={23} tintColor={theme.inverse} />
+            ),
+          }}
           leadingGap={5}
           autoSize={false}
           align="center"
@@ -46,7 +48,7 @@ const ConfirmationPreview = React.memo(function ConfirmationPreview({
           clipToBounds={false}
           containerStyle={{ width: "100%" }}
           style={{
-            color: "#FFFFFF",
+            color: theme.inverse,
             fontFamily: "Sf-bold",
             fontSize: 24,
             textAlign: "center",
@@ -69,18 +71,20 @@ function ConfirmationPage({ height, width }: DemoPageProps) {
       onMorph={store.next}
       preview={<ConfirmationPreview store={store} />}
       settingsStore={store}
-      renderSettings={(state) => (
+      renderSettings={(state, theme) => (
         <>
           {settingsRow({
             label: "Button Text",
             value: state.value,
             onPress: store.next,
+            theme,
           })}
           {settingsRow({
             label: "Leading Icon",
             value: state.value === "Confirm" ? "Face ID" : "None",
+            theme,
           })}
-          {settingsRow({ label: "Auto Size", value: "Off" })}
+          {settingsRow({ label: "Auto Size", value: "Off", theme })}
         </>
       )}
     />
@@ -88,3 +92,4 @@ function ConfirmationPage({ height, width }: DemoPageProps) {
 }
 
 export const ConfirmationDemoPage = React.memo(ConfirmationPage);
+

@@ -3,6 +3,7 @@
 export { FluxChart } from "./flux-chart";
 export type { FluxChartProps } from "./flux-chart";
 export { FluxChartScreen } from "./flux-chart-screen";
+export type { FluxAsset } from "./ui";
 export type {
   ChartDataBySource,
   DataSourceOption,

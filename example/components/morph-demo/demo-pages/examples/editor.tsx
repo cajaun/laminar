@@ -1,11 +1,12 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import { DemoPageLayout, settingsRow } from "./shared";
-import type { DemoPageProps } from "./types";
+import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoPageProps } from "../types";
 import {
   useCyclicValueStoreSnapshot,
   useEditorDemoStore,
-} from "../use-demo-state";
+} from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
 
 type EditorStore = ReturnType<typeof useEditorDemoStore>;
 
@@ -17,19 +18,22 @@ const EditorPreview = React.memo(function EditorPreview({
   const word = useCyclicValueStoreSnapshot(store.word);
   const fontSize = useCyclicValueStoreSnapshot(store.fontSize);
   const fontWeight = useCyclicValueStoreSnapshot(store.fontWeight);
+  const theme = useDemoTheme();
+  const currentFontSize = fontSize.value;
+  const currentFontFamily = fontWeight.value.fontFamily;
 
   return (
     <Laminar
       text={word.value}
       autoSize={false}
       animationPreset="smooth"
-      fontSize={fontSize.value}
+      fontSize={currentFontSize}
       clipToBounds={false}
       align="center"
       style={{
-        color: "#000000",
-        fontFamily: fontWeight.value.fontFamily,
-        fontSize: fontSize.value,
+        color: theme.primary,
+        fontFamily: currentFontFamily,
+        fontSize: currentFontSize,
       }}
     />
   );
@@ -48,21 +52,24 @@ function EditorPage({ height, width }: DemoPageProps) {
       onMorph={store.word.next}
       preview={<EditorPreview store={store} />}
       settingsStore={store.settings}
-      renderSettings={(state) => (
+      renderSettings={(state, theme) => (
         <>
           {settingsRow({
             label: "Word",
             value: state.value.word.value,
             onPress: store.word.next,
+            theme,
           })}
           {settingsRow({
             label: "Font Size",
             value: `${state.value.fontSize.value}pt`,
             onPress: store.fontSize.next,
+            theme,
           })}
           {settingsRow({
             label: "Font Weight",
             value: state.value.fontWeight.value.label,
+            theme,
             onPress: store.fontWeight.next,
           })}
         </>
@@ -72,3 +79,4 @@ function EditorPage({ height, width }: DemoPageProps) {
 }
 
 export const EditorDemoPage = React.memo(EditorPage);
+

@@ -1,67 +1,15 @@
 import React from "react";
 import { Laminar } from "react-native-laminar";
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
-import Svg, { Circle, Path } from "react-native-svg";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-import { DemoPageLayout, settingsRow } from "./shared";
-import type { DemoPageProps } from "./types";
+import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoPageProps } from "../types";
 import { SymbolView } from "expo-symbols";
 import {
   useButtonDemoStore,
   useCyclicValueStoreSnapshot,
-} from "../use-demo-state";
-
-function LoadingSpinner() {
-  const rotation = useSharedValue(0);
-
-  React.useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(360, {
-        duration: 400,
-        easing: Easing.linear,
-      }),
-      -1,
-      false
-    );
-  }, [rotation]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
-
-  return (
-    <Animated.View style={animatedStyle}>
-      <Svg
-        width={32}
-        height={32}
-        viewBox="0 0 18 18"
-        fill="none"
-        accessibilityLabel="Loading Spinner"
-      >
-        <Circle
-          cx="9"
-          cy="9"
-          r="7"
-          stroke="#ffffff"
-          strokeOpacity={0.2}
-          strokeWidth="2.5"
-        />
-        <Path
-          d="M16 9C16 5.13401 12.866 2 9 2"
-          stroke="#ffffff"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-      </Svg>
-    </Animated.View>
-  );
-}
+} from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
+import { LoadingSpinner } from "../illustrations/loading-spinner";
 
 type ButtonStore = ReturnType<typeof useButtonDemoStore>;
 
@@ -71,6 +19,7 @@ const ButtonPreview = React.memo(function ButtonPreview({
   readonly store: ButtonStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
+  const theme = useDemoTheme();
 
   return (
     <PressableScale
@@ -79,7 +28,7 @@ const ButtonPreview = React.memo(function ButtonPreview({
         alignSelf: "center",
         height: 56,
         borderRadius: 36,
-        backgroundColor: "#007aff",
+        backgroundColor: theme.accent,
         paddingHorizontal: 40 * 0.72,
         paddingVertical: 40 * 0.22,
         alignItems: "center",
@@ -90,12 +39,14 @@ const ButtonPreview = React.memo(function ButtonPreview({
         text={state.value}
         autoSize
         leading={{
-          "Running Simulation": <LoadingSpinner />,
+          "Running Simulation": (
+            <LoadingSpinner color={theme.accentForeground} />
+          ),
           "Simulation Done!": (
             <SymbolView
               name="checkmark.circle.fill"
               size={32}
-              tintColor="#ffffff"
+              tintColor={theme.accentForeground}
             />
           ),
         }}
@@ -103,7 +54,7 @@ const ButtonPreview = React.memo(function ButtonPreview({
         animationPreset="default"
         clipToBounds={false}
         style={{
-          color: "#ffffff",
+          color: theme.accentForeground,
           fontFamily: "Sf-semibold",
           fontSize: 32,
         }}
@@ -124,15 +75,16 @@ function ButtonPage({ height, width }: DemoPageProps) {
       onMorph={store.next}
       preview={<ButtonPreview store={store} />}
       settingsStore={store}
-      renderSettings={(state) => (
+      renderSettings={(state, theme) => (
         <>
           {settingsRow({
             label: "Button Text",
             value: state.value,
             onPress: store.next,
+            theme,
           })}
-          {settingsRow({ label: "Surface", value: "Pressable" })}
-          {settingsRow({ label: "Auto Size", value: "On" })}
+          {settingsRow({ label: "Surface", value: "Pressable", theme })}
+          {settingsRow({ label: "Auto Size", value: "On", theme })}
         </>
       )}
     />
@@ -140,3 +92,4 @@ function ButtonPage({ height, width }: DemoPageProps) {
 }
 
 export const ButtonDemoPage = React.memo(ButtonPage);
+

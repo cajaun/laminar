@@ -27,13 +27,18 @@ export const buttonWords = [
   "Running Simulation",
   "Simulation Done!",
 ] as const;
+export const singleIconValues = ["Continue", "Confirm"] as const;
+export const multiIconValues = [
+  "Run Simulation",
+  "Running Simulation",
+  "Simulation Done!",
+] as const;
 export const transactionStates = [
   "Analyzing Transaction",
   "Transaction Safe",
   "Transaction Warning",
 ] as const;
 export const confirmContinueWords = ["Continue", "Confirm"] as const;
-export const numericValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 // Distinct black-price snapshots from number-ticker.mov, in source order.
 export const numberFlowValues = [
   "$2,462.78",
@@ -64,34 +69,74 @@ export const numberFlowValues = [
   "$2,458.63",
 ] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
-export const numberLaneValues = [
+export const slotMechanismValues = [
   "$1,234",
-  "$12,345",
   "$1,089",
-  "$980",
+  "$1,980",
+  "$1,305",
 ] as const;
-export const animationLayerValues = ["4", "9", "2", "7"] as const;
+export const animationLayerValues = ["$1,234", "$1,089", "$1,980", "$1,305"] as const;
 export const autoSizeValues = [
-  "Send Request",
-  "Sending Request",
-  "Request Sent!",
+  "Run Simulation",
+  "Running Simulation",
+  "Simulation Done!",
 ] as const;
 
 export const examplePages = [
-  { id: "textIdentity", label: "Text Identity" },
-  { id: "numberIdentity", label: "Number Identity" },
-  { id: "animationLayer", label: "Animation Layer" },
+  { id: "textIdentity", label: "Text" },
+  { id: "animationLayer", label: "Number" },
   { id: "autoSize", label: "Auto Size" },
   { id: "slots", label: "Slots" },
-  { id: "slotsNext", label: "Slots (Simple)" },
+  { id: "singleIcon", label: "Single Icon" },
+  { id: "multiIcon", label: "Multiple Icons" },
   { id: "editor", label: "Editor" },
   { id: "words", label: "Words" },
   { id: "button", label: "Button" },
   { id: "transaction", label: "Transaction" },
   { id: "confirmation", label: "Confirmation" },
-  { id: "numbers", label: "Numbers" },
   { id: "numberFlow", label: "Number Flow" },
 ] as const;
+
+export const componentPages = [
+  { id: "ethereum", label: "Ethereum" },
+] as const;
+
+export const demoTabGroups = [
+  {
+    id: "examples",
+    label: "Examples",
+    pageIds: [
+      "editor",
+      "words",
+      "button",
+      "transaction",
+      "confirmation",
+      "numberFlow",
+    ],
+    componentIds: [],
+  },
+  {
+    id: "howItWorks",
+    label: "How it works",
+    pageIds: [
+      "textIdentity",
+      "animationLayer",
+      "autoSize",
+      "slots",
+      "singleIcon",
+      "multiIcon",
+    ],
+    componentIds: [],
+  },
+  {
+    id: "components",
+    label: "Components",
+    pageIds: [],
+    componentIds: ["ethereum"],
+  },
+] as const;
+
+export type DemoTabGroup = (typeof demoTabGroups)[number];
 
 export const stepForward = (index: number, length: number) =>
   (index + 1) % length;
@@ -101,3 +146,5 @@ export const stepBackward = (index: number, length: number) =>
 
 export type ExamplePage = (typeof examplePages)[number];
 export type ExamplePageId = (typeof examplePages)[number]["id"];
+export type ComponentPage = (typeof componentPages)[number];
+export type ComponentPageId = (typeof componentPages)[number]["id"];

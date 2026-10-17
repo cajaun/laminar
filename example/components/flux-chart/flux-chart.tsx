@@ -4,17 +4,16 @@ import { ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@/helpers/use-header-height";
 import type { DataSourceOption, RangeType } from "@/components/flux-chart/data";
-import { USDC_CHART_DATA } from "@/components/flux-chart/data";
 import { ChartArea, useFluxChartController } from "@/components/flux-chart/core";
 import type { FluxAsset } from "@/components/flux-chart/ui";
 import {
   AssetHeader,
-  DescriptionSection,
   FLUX_ASSET_CONFIG,
+  LinksSection,
   OwnedByCard,
   PortfolioSummary,
   PriceOverview,
-  UsdcActions,
+  StatsSection,
 } from "@/components/flux-chart/ui";
 
 export type FluxChartProps = {
@@ -27,7 +26,7 @@ export type FluxChartProps = {
 /** Public chart feature: page composition only; behavior lives in the controller and hooks. */
 export function FluxChart({
   asset = "ethereum",
-  initialRange = "1M",
+  initialRange = "1H",
   showFill = false,
   source = "Revenue",
 }: FluxChartProps = {}) {
@@ -54,7 +53,6 @@ export function FluxChart({
     selected,
   } = useFluxChartController({
     chartWidth,
-    chartData: asset === "usdc" ? USDC_CHART_DATA : undefined,
     initialRange,
     source,
   });
@@ -66,8 +64,8 @@ export function FluxChart({
       contentContainerStyle={{
         alignItems: "center",
         backgroundColor: "#FFFFFF",
-          paddingTop: headerHeight + 18,
-          paddingBottom: Math.max(24, bottom + 24),
+        paddingTop: headerHeight + 8,
+        paddingBottom: Math.max(24, bottom + 24),
       }}
     >
       <StatusBar style="dark" />
@@ -103,11 +101,8 @@ export function FluxChart({
       />
       <PortfolioSummary asset={asset} width={contentWidth} />
       <OwnedByCard asset={asset} width={contentWidth} />
-      {asset === "usdc" ? (
-        <UsdcActions width={contentWidth} />
-      ) : (
-        <DescriptionSection width={contentWidth} />
-      )}
+      <LinksSection width={contentWidth} />
+      <StatsSection width={contentWidth} />
     </ScrollView>
   );
 }

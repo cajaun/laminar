@@ -5,7 +5,6 @@ export {
   CHART_DATA_SETS,
   RANGE_METADATA,
 } from "./chart-data";
-export { USDC_CHART_DATA } from "./usdc-chart-data";
 export type {
   ChartDataBySource,
   DataSourceOption,

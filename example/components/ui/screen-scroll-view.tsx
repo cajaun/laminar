@@ -3,6 +3,7 @@ import {
   ScrollView,
   type ScrollViewProps,
   type StyleProp,
+  useColorScheme,
   type ViewStyle,
 } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
@@ -23,11 +24,11 @@ export function ScreenScrollView({
 }: React.PropsWithChildren<ScreenScrollViewProps>) {
   const { bottom } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const backgroundColor = useColorScheme() === "dark" ? "#111318" : "#F2F2F7";
 
   return (
     <AnimatedScrollView
-      {...props}
-      style={[{ flex: 1, backgroundColor: "#F5F5F5" }, style]}
+      style={[{ flex: 1, backgroundColor }, style]}
       contentContainerStyle={[
         {
           paddingHorizontal: 20,
@@ -37,6 +38,7 @@ export function ScreenScrollView({
         contentContainerStyle,
       ]}
       showsVerticalScrollIndicator={false}
+      {...props}
     >
       {children}
     </AnimatedScrollView>

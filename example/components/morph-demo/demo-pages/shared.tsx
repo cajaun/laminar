@@ -13,20 +13,26 @@ import {
   type CyclicValueSnapshot,
   type DemoSnapshotStore,
 } from "../use-demo-state";
+import { useDemoTheme } from "../demo-theme";
+import type { DemoTheme } from "../demo-theme";
 
-export const showcaseTextStyle: TextStyle = {
-  color: "#000000",
-  fontFamily: "Sf-semibold",
-  textAlign: "center",
-};
+export function showcaseTextStyle(theme: DemoTheme): TextStyle {
+  return {
+    color: theme.primary,
+    fontFamily: "Sf-semibold",
+    textAlign: "center",
+  };
+}
 
 export const teachingBlue = "#007aff";
-export const teachingDurationMs = 700;
 
 type SettingsSectionProps<T> = {
   readonly metrics: DemoMetrics;
   readonly store: DemoSnapshotStore<T>;
-  readonly renderSettings: (state: CyclicValueSnapshot<T>) => React.ReactNode;
+  readonly renderSettings: (
+    state: CyclicValueSnapshot<T>,
+    theme: DemoTheme,
+  ) => React.ReactNode;
 };
 
 export function SettingsSection<T>({
@@ -35,39 +41,74 @@ export function SettingsSection<T>({
   renderSettings,
 }: SettingsSectionProps<T>) {
   const state = useCyclicValueStoreSnapshot(store);
+  const theme = useDemoTheme();
 
   return (
     <FormSection
       outerStyle={{ paddingHorizontal: 0 }}
-      style={{ backgroundColor: "#f8f8f8", borderRadius: metrics.panelRadius }}
+      style={{ backgroundColor: theme.panel, borderRadius: metrics.panelRadius }}
       separatorInset="content"
     >
-      {renderSettings(state)}
+      {renderSettings(state, theme)}
     </FormSection>
   );
 }
 
 type SettingsRowOptions = {
   readonly label: string;
-  readonly value: string;
+  readonly value: React.ReactNode;
   readonly onPress?: () => void;
+  readonly theme: DemoTheme;
 };
 
-export function settingsRow({ label, value, onPress }: SettingsRowOptions) {
+export function settingsRow({ label, value, onPress, theme }: SettingsRowOptions) {
+  const hint =
+    typeof value === "string" ? (
+      <FormText bold numberOfLines={1} style={{ color: theme.accent }}>
+        {value}
+      </FormText>
+    ) : (
+      value
+    );
+
   return (
     <FormText
       bold
       onPress={onPress}
-      style={{ color: "#989898" }}
-      hint={
-        <FormText bold numberOfLines={1} style={{ color: "#007aff" }}>
-          {value}
-        </FormText>
-      }
+      style={{ color: theme.tertiary }}
+      hint={hint}
     >
       {label}
     </FormText>
   );
+}
+
+type SettingsValueProps<T> = {
+  readonly store: DemoSnapshotStore<T>;
+  readonly select: (snapshot: CyclicValueSnapshot<T>) => string;
+  readonly theme: DemoTheme;
+};
+
+const SettingsValue = React.memo(function SettingsValue<T>({
+  store,
+  select,
+  theme,
+}: SettingsValueProps<T>) {
+  const snapshot = useCyclicValueStoreSnapshot(store);
+
+  return (
+    <FormText bold numberOfLines={1} style={{ color: theme.accent }}>
+      {select(snapshot)}
+    </FormText>
+  );
+}) as <T>(props: SettingsValueProps<T>) => React.ReactElement;
+
+export function settingsValue<T>({
+  store,
+  select,
+  theme,
+}: SettingsValueProps<T>) {
+  return <SettingsValue store={store} select={select} theme={theme} />;
 }
 
 type DemoPageLayoutProps<T> = {
@@ -78,7 +119,11 @@ type DemoPageLayoutProps<T> = {
   readonly onMorph: () => void;
   readonly preview: React.ReactNode;
   readonly settingsStore: DemoSnapshotStore<T>;
-  readonly renderSettings: (state: CyclicValueSnapshot<T>) => React.ReactNode;
+  readonly renderSettings?: (
+    state: CyclicValueSnapshot<T>,
+    theme: DemoTheme,
+  ) => React.ReactNode;
+  readonly renderStaticSettings?: (theme: DemoTheme) => React.ReactNode;
 };
 
 function DemoPageLayoutImpl<T>({
@@ -90,6 +135,7 @@ function DemoPageLayoutImpl<T>({
   preview,
   settingsStore,
   renderSettings,
+  renderStaticSettings,
 }: DemoPageLayoutProps<T>) {
   const metrics = useDemoMetrics({ height, width, fontSize });
 
@@ -97,12 +143,19 @@ function DemoPageLayoutImpl<T>({
     <View style={{ flex: 1 }}>
       <DemoPageScroll metrics={metrics}>
         <PreviewStage metrics={metrics}>{preview}</PreviewStage>
-        <View style={{ flex: 1 }} />
-        <SettingsSection
-          metrics={metrics}
-          store={settingsStore}
-          renderSettings={renderSettings}
-        />
+        <View style={{ flex: 1, minHeight: metrics.controlStackGap }} />
+        {renderStaticSettings ? (
+          <StaticSettingsSection
+            metrics={metrics}
+            renderSettings={renderStaticSettings}
+          />
+        ) : renderSettings ? (
+          <SettingsSection
+            metrics={metrics}
+            store={settingsStore}
+            renderSettings={renderSettings}
+          />
+        ) : null}
       </DemoPageScroll>
       <DemoFooter
         metrics={metrics}
@@ -117,12 +170,38 @@ export const DemoPageLayout = React.memo(
   DemoPageLayoutImpl
 ) as typeof DemoPageLayoutImpl;
 
-export function TeachingLabel({ children }: { readonly children: React.ReactNode }) {
+function StaticSettingsSection({
+  metrics,
+  renderSettings,
+}: {
+  readonly metrics: DemoMetrics;
+  readonly renderSettings: (theme: DemoTheme) => React.ReactNode;
+}) {
+  const theme = useDemoTheme();
+
+  return (
+    <FormSection
+      outerStyle={{ paddingHorizontal: 0 }}
+      style={{ backgroundColor: theme.panel, borderRadius: metrics.panelRadius }}
+      separatorInset="content"
+    >
+      {renderSettings(theme)}
+    </FormSection>
+  );
+}
+
+export const TeachingLabel = React.memo(function TeachingLabel({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) {
+  const theme = useDemoTheme();
+
   return (
     <Text
       style={{
         marginTop: 16,
-        color: teachingBlue,
+        color: theme.accent,
         fontFamily: "Sf-semibold",
         fontSize: 17,
         textAlign: "center",
@@ -131,7 +210,7 @@ export function TeachingLabel({ children }: { readonly children: React.ReactNode
       {children}
     </Text>
   );
-}
+});
 
 export function MechanismFrame({ children }: { readonly children: React.ReactNode }) {
   return (

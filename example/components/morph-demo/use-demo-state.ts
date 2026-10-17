@@ -7,10 +7,11 @@ import {
   editorWords,
   fontSizes,
   fontWeights,
+  multiIconValues,
   numberFlowValues,
-  numberLaneValues,
-  numericValues,
+  slotMechanismValues,
   standaloneWords,
+  singleIconValues,
   stepBackward,
   stepForward,
   textIdentityWords,
@@ -101,10 +102,6 @@ export function useTextIdentityDemoStore() {
   return useCyclicValueStore(textIdentityWords);
 }
 
-export function useNumberIdentityDemoStore() {
-  return useCyclicValueStore(numberLaneValues);
-}
-
 export function useAnimationLayerDemoStore() {
   return useCyclicValueStore(animationLayerValues);
 }
@@ -176,6 +173,14 @@ export function useButtonDemoStore() {
   return useCyclicValueStore(buttonWords);
 }
 
+export function useSingleIconDemoStore() {
+  return useCyclicValueStore(singleIconValues);
+}
+
+export function useMultiIconDemoStore() {
+  return useCyclicValueStore(multiIconValues);
+}
+
 export function useTransactionDemoStore() {
   return useCyclicValueStore(transactionStates);
 }
@@ -184,12 +189,8 @@ export function useConfirmationDemoStore() {
   return useCyclicValueStore(confirmContinueWords);
 }
 
-export function useNumbersDemoStore() {
-  return useCyclicValueStore(numericValues);
-}
-
-export function useSlotsDemoStore() {
-  return useCyclicValueStore(numericValues);
+export function useSlotMechanismDemoStore() {
+  return useCyclicValueStore(slotMechanismValues);
 }
 
 export function useNumberFlowDemoStore() {

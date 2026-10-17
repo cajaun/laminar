@@ -10,15 +10,16 @@ import Animated, {
 import Svg, { Circle, Path } from "react-native-svg";
 import { SymbolView } from "expo-symbols";
 import { PressableScale } from "@/shared/ui/pressable-scale";
-import { DemoPageLayout, settingsRow } from "./shared";
-import type { DemoPageProps } from "./types";
+import { DemoPageLayout, settingsRow } from "../shared";
+import type { DemoPageProps } from "../types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
   useCyclicValueStoreSnapshot,
   useTransactionDemoStore,
-} from "../use-demo-state";
+} from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
 
-const TRANSACTION_COLORS = {
+const LIGHT_TRANSACTION_COLORS = {
   "Analyzing Transaction": {
     background: "#E5F4FF",
     color: "#4DAFFF",
@@ -32,6 +33,24 @@ const TRANSACTION_COLORS = {
   "Transaction Warning": {
     background: "#FDE5E5",
     color: "#FF3F3F",
+    ring: "#FF3F3F",
+  },
+} as const;
+
+const DARK_TRANSACTION_COLORS = {
+  "Analyzing Transaction": {
+    background: "#173149",
+    color: "#64B5FF",
+    ring: "#2F86D8",
+  },
+  "Transaction Safe": {
+    background: "#17352A",
+    color: "#64D98A",
+    ring: "#34C759",
+  },
+  "Transaction Warning": {
+    background: "#3D2023",
+    color: "#FF6B6B",
     ring: "#FF3F3F",
   },
 } as const;
@@ -89,8 +108,11 @@ const TransactionPreview = React.memo(function TransactionPreview({
   readonly store: TransactionStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
+  const theme = useDemoTheme();
   const transactionState = state.value;
-  const colors = TRANSACTION_COLORS[transactionState];
+  const colors = (theme.isDark
+    ? DARK_TRANSACTION_COLORS
+    : LIGHT_TRANSACTION_COLORS)[transactionState];
 
   return (
     <PressableScale
@@ -154,15 +176,16 @@ function TransactionPage({ height, width }: DemoPageProps) {
       onMorph={store.next}
       preview={<TransactionPreview store={store} />}
       settingsStore={store}
-      renderSettings={(state) => (
+      renderSettings={(state, theme) => (
         <>
           {settingsRow({
             label: "Button Text",
             value: state.value,
             onPress: store.next,
+            theme,
           })}
-          {settingsRow({ label: "Surface", value: "Pressable" })}
-          {settingsRow({ label: "Auto Size", value: "On" })}
+          {settingsRow({ label: "Surface", value: "Pressable", theme })}
+          {settingsRow({ label: "Auto Size", value: "On", theme })}
         </>
       )}
     />
@@ -170,3 +193,4 @@ function TransactionPage({ height, width }: DemoPageProps) {
 }
 
 export const TransactionDemoPage = React.memo(TransactionPage);
+

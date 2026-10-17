@@ -1,7 +1,6 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, useColorScheme, View } from "react-native";
 import type { ViewProps } from "react-native";
-import { formColors } from "./colors";
 
 export function HStack(props: ViewProps) {
   return (
@@ -24,7 +23,15 @@ export function Spacer(props: ViewProps) {
 }
 
 export function Separator(props: ViewProps) {
-  return <View {...props} style={[styles.separator, props.style]} />;
+  const backgroundColor =
+    useColorScheme() === "dark" ? "#3A3D44" : "#D1D1D6";
+
+  return (
+    <View
+      {...props}
+      style={[styles.separator, { backgroundColor }, props.style]}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
@@ -43,7 +50,6 @@ const styles = StyleSheet.create({
   },
   separator: {
     marginTop: -0.5,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: formColors.separator,
+    height: StyleSheet.hairlineWidth,
   },
 });

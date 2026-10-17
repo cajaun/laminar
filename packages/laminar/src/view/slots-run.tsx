@@ -132,25 +132,26 @@ const SlotReel = React.memo(function SlotReel({
       ]}
     >
       {REEL_POSITIONS.map((position, index) => (
-        <Text
+        <View
           key={position}
-          numberOfLines={1}
-          style={[
-            textStyle,
-            slotDigitStyle,
-            {
-              position: "absolute",
-              top: index * slotHeight,
-              left: 0,
-              right: 0,
-              height: slotHeight,
-              lineHeight: slotHeight,
-            },
-          ]}
-          className={className}
+          style={{
+            position: "absolute",
+            top: index * slotHeight,
+            left: 0,
+            right: 0,
+            height: slotHeight,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          {mod(position, 10)}
-        </Text>
+          <Text
+            numberOfLines={1}
+            style={[textStyle, slotDigitStyle]}
+            className={className}
+          >
+            {mod(position, 10)}
+          </Text>
+        </View>
       ))}
     </Animated.View>
   );
@@ -163,17 +164,19 @@ type SlotColumnProps = {
   readonly motionRecipe: MotionRecipe;
   readonly slotHeight: number;
   readonly textStyle?: StyleProp<TextStyle>;
+  readonly reelTextStyle?: StyleProp<TextStyle>;
   readonly className?: string;
   readonly shadow?: LaminarShadow;
 };
 
-function SlotColumn({
+const SlotColumn = React.memo(function SlotColumn({
   digit,
   direction,
   animateIn,
   motionRecipe,
   slotHeight,
   textStyle,
+  reelTextStyle,
   className,
   shadow = false,
 }: SlotColumnProps) {
@@ -286,7 +289,7 @@ function SlotColumn({
     <SlotReel
       current={current}
       slotHeight={slotHeight}
-      textStyle={textStyle}
+      textStyle={reelTextStyle ?? textStyle}
       className={className}
     />
   );
@@ -313,7 +316,7 @@ function SlotColumn({
       )}
     </View>
   );
-}
+});
 
 type SlotsRunProps = {
   readonly value: string;
@@ -414,6 +417,21 @@ export const SlotsRun = React.memo(
       ],
       [slotHeight, textStyle]
     );
+    const reelTextStyle: StyleProp<TextStyle> | undefined = useMemo(() => {
+      const flattenedStyle = StyleSheet.flatten(slotTextStyle);
+
+      if (!flattenedStyle) {
+        return undefined;
+      }
+
+      const {
+        height: _height,
+        lineHeight: _lineHeight,
+        ...visibleTextStyle
+      } = flattenedStyle;
+
+      return visibleTextStyle;
+    }, [slotTextStyle]);
 
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
@@ -449,17 +467,25 @@ export const SlotsRun = React.memo(
 
             if (inLead || !isAsciiDigit(unit)) {
               return (
-                <Animated.Text
+                <Animated.View
                   key={laneKey}
                   layout={
                     hasAnimated ? motionRecipe.layoutTransition : undefined
                   }
                   exiting={!inLead ? motionRecipe.exitTransition : undefined}
-                  style={slotTextStyle}
-                  className={className}
+                  style={{
+                    height: slotHeight,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  {unit}
-                </Animated.Text>
+                  <Animated.Text
+                    style={reelTextStyle}
+                    className={className}
+                  >
+                    {unit}
+                  </Animated.Text>
+                </Animated.View>
               );
             }
 
@@ -481,6 +507,7 @@ export const SlotsRun = React.memo(
                   motionRecipe={motionRecipe}
                   slotHeight={slotHeight}
                   textStyle={slotTextStyle}
+                  reelTextStyle={reelTextStyle}
                   className={className}
                   shadow={shadow}
                 />

@@ -48,8 +48,8 @@ export function PriceOverview({
     >
       <View>
         <View className="mb-0.5 flex-row items-center gap-2">
-          <Text className="font-sf-bold text-[22px] leading-6.75 text-[#1D1D1F]">
-            {asset === "usdc" ? "USDC" : "Ethereum"}
+          <Text className="font-sf-bold text-[30px] leading-9 text-[#1D1D1F]">
+            Ethereum
           </Text>
           {asset === "ethereum" ? (
             <SFIcon
@@ -62,75 +62,35 @@ export function PriceOverview({
             />
           ) : null}
         </View>
-        {asset === "usdc" ? (
-          <Text
-            className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
-            style={{
-              color: "#111318",
-              fontFamily: "Sf-bold",
-              fontVariant: ["tabular-nums"],
-              fontWeight: "700",
-              lineHeight: 36,
-            }}
-          >
-            {priceText}
-          </Text>
-        ) : (
-          <Text
-            className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
-            style={priceTextStyle}
-          >
-            {priceText}
-          </Text>
-        )}
+        <Text
+          className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
+          style={priceTextStyle}
+        >
+          {priceText}
+        </Text>
       </View>
       <View className="items-end pb-1.25">
-        {asset === "usdc" ? (
-          <View className="h-7.5 w-27.5 flex-row items-center justify-end gap-1">
-            <SFIcon
-              name="arrow.up"
-              size={28}
-              color={REFERENCE_GREEN}
-              weight="bold"
-              fallback="↑"
-              fallbackSize={28}
-            />
-            <Text
-              className="font-sf-bold text-[24px] leading-7.5 tracking-[-1.5px]"
-              style={{
-                color: REFERENCE_GREEN,
-                fontFamily: "Sf-bold",
-                fontVariant: ["tabular-nums"],
-                fontWeight: "700",
-                lineHeight: 30,
-              }}
-            >
-              {percentText}
-            </Text>
-          </View>
-        ) : (
-          <View className="h-7.5 w-27.5 flex-row items-center justify-end gap-1">
-            <SFIcon
-              name="arrow.up"
-              size={28}
-              color={REFERENCE_GREEN}
-              weight="bold"
-              fallback="↑"
-              fallbackSize={28}
-            />
-            <Text
-              className="font-sf-bold text-[24px] leading-7.5 tracking-[-1.5px]"
-              style={{
-                color: REFERENCE_GREEN,
-                fontFamily: "Sf-bold",
-                fontWeight: "700",
-                lineHeight: 30,
-              }}
-            >
-              {percentText}
-            </Text>
-          </View>
-        )}
+        <View className="h-7.5 w-27.5 flex-row items-center justify-end gap-1">
+          <SFIcon
+            name="arrow.up"
+            size={28}
+            color={REFERENCE_GREEN}
+            weight="bold"
+            fallback="↑"
+            fallbackSize={28}
+          />
+          <Text
+            className="font-sf-bold text-[24px] leading-7.5 tracking-[-1.5px]"
+            style={{
+              color: REFERENCE_GREEN,
+              fontFamily: "Sf-bold",
+              fontWeight: "700",
+              lineHeight: 30,
+            }}
+          >
+            {percentText}
+          </Text>
+        </View>
       </View>
     </View>
   );

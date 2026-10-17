@@ -3,11 +3,12 @@ import { useFonts } from "expo-font";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-import { Platform, View } from "react-native";
+import { Platform, useColorScheme, View } from "react-native";
 import "../global.css";
 
-
 export default function RootLayout() {
+  const isDark = useColorScheme() === "dark";
+  const isLiquidGlass = isLiquidGlassAvailable();
   const [loaded] = useFonts({
     "Sf-black": require("../assets/fonts/SF-Pro-Rounded-Black.otf"),
     "Sf-bold": require("../assets/fonts/SF-Pro-Rounded-Bold.otf"),
@@ -22,29 +23,35 @@ export default function RootLayout() {
     return null;
   }
 
+  const backgroundColor = isDark ? "#111318" : "#F2F2F7";
+  const foregroundColor = isDark ? "#F5F5F5" : "#111318";
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
-        <View style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
+        <View style={{ flex: 1, backgroundColor }}>
           <Stack
             screenOptions={{
               headerTitleAlign: "center",
               headerTransparent: true,
-              headerBlurEffect: "light",
-              headerTintColor: "#111318",
+              headerBlurEffect: isLiquidGlass
+                ? undefined
+                : isDark
+                  ? "dark"
+                  : "light",
+              headerTintColor: foregroundColor,
               headerTitleStyle: { fontFamily: "Sf-semibold" },
               headerStyle: {
                 backgroundColor: Platform.select({
                   ios: undefined,
-                  android: "#F5F5F5",
+                  android: backgroundColor,
                 }),
               },
-              headerShadowVisible: false,
               headerBackButtonDisplayMode: "generic",
               gestureEnabled: true,
               gestureDirection: "horizontal",
-              fullScreenGestureEnabled: isLiquidGlassAvailable() ? false : true,
-              contentStyle: { backgroundColor: "#F5F5F5" },
+              fullScreenGestureEnabled: isLiquidGlass ? false : true,
+              contentStyle: { backgroundColor },
             }}
           >
             <Stack.Screen name="index" />

@@ -1,4 +1,4 @@
-export type FluxAsset = "ethereum" | "usdc";
+export type FluxAsset = "ethereum";
 
 export const FLUX_ASSET_CONFIG: Record<FluxAsset, {
   name: string;
@@ -17,17 +17,7 @@ export const FLUX_ASSET_CONFIG: Record<FluxAsset, {
     fillTopColor: "#000000",
     fillBottomColor: "#000000",
     priceFractionDigits: 2,
-    balance: "0.01017",
-    value: "$25.53",
-  },
-  usdc: {
-    name: "USDC",
-    lineColor: "#2F86D8",
-    futureLineColor: "#DCEAF7",
-    fillTopColor: "#2F86D8",
-    fillBottomColor: "#2F86D8",
-    priceFractionDigits: 3,
-    balance: "19.491",
-    value: "$19.49",
+    balance: "0.3687",
+    value: "$891.43",
   },
 };

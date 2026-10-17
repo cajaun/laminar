@@ -146,7 +146,7 @@ export function ChartArea({
       </View>
 
       <View
-        className="mt-9 h-px bg-[#F1F1F1]"
+        className="mt-8 h-px bg-[#F1F1F1]"
         style={{ width: contentWidth }}
       />
     </>

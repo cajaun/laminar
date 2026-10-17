@@ -21,6 +21,7 @@
     "quality": "npm run quality --workspace packages/laminar"
   },
   "devDependencies": {
+    "@expo/config-plugins": "~57.0.10",
     "@babel/core": "^7.25.2",
     "@types/jest": "^29.5.12",
     "@types/react-test-renderer": "^19.1.0",

@@ -1,13 +1,1 @@
-export { AnimationLayerDemoPage } from "./animation-layer";
-export { AutoSizeDemoPage } from "./auto-size";
-export { ButtonDemoPage } from "./button";
-export { ConfirmationDemoPage } from "./confirmation";
-export { EditorDemoPage } from "./editor";
-export { NumberIdentityDemoPage } from "./number-identity";
-export { NumbersDemoPage } from "./numbers";
-export { NumberFlowDemoPage } from "./number-flow";
-export { SlotsDemoPage } from "./slots";
-export { SlotsNextDemoPage } from "./slots-next";
-export { TextIdentityDemoPage } from "./text-identity";
-export { TransactionDemoPage } from "./transaction";
-export { WordsDemoPage } from "./words";
+export { demoPageComponents } from "./registry";

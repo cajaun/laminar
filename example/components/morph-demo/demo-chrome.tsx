@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View } from "react-native";
 import { PressableScale } from "@/shared/ui/pressable-scale";
 import type { DemoMetrics } from "./use-demo-metrics";
+import { useDemoTheme } from "./demo-theme";
 
 type PreviewStageProps = {
   readonly metrics: DemoMetrics;
@@ -55,6 +56,8 @@ export const DemoFooter = React.memo(function DemoFooter({
   onReverse,
   onMorph,
 }: DemoFooterProps) {
+  const theme = useDemoTheme();
+
   return (
     <View
       style={{
@@ -62,7 +65,7 @@ export const DemoFooter = React.memo(function DemoFooter({
         paddingHorizontal: metrics.horizontalInset,
         paddingTop: 0,
         paddingBottom: metrics.footerPaddingBottom,
-        backgroundColor: "#ffffff",
+        backgroundColor: theme.background,
       }}
     >
       <View
@@ -82,13 +85,13 @@ export const DemoFooter = React.memo(function DemoFooter({
             paddingVertical: metrics.buttonPaddingVertical,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#f5f5f5",
+            backgroundColor: theme.buttonSurface,
           }}
         >
           <Text
             className="text-2xl"
             style={{
-              color: "#252525",
+              color: theme.buttonSurfaceForeground,
               fontFamily: "Sf-bold",
             }}
           >
@@ -106,13 +109,13 @@ export const DemoFooter = React.memo(function DemoFooter({
             paddingVertical: metrics.buttonPaddingVertical,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#000000",
+            backgroundColor: theme.actionSurface,
           }}
         >
           <Text
             className="text-2xl"
             style={{
-              color: "#ffffff",
+              color: theme.actionForeground,
               fontFamily: "Sf-bold",
             }}
           >
