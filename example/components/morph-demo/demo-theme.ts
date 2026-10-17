@@ -16,6 +16,7 @@ export type DemoTheme = {
   readonly slotHighlight: string;
   readonly accent: string;
   readonly accentForeground: string;
+  readonly tabPillSurface: string;
   readonly buttonSurface: string;
   readonly buttonSurfaceForeground: string;
   readonly shadow: string;
@@ -39,6 +40,7 @@ const lightTheme: DemoTheme = {
   slotHighlight: "#EAF4FF",
   accent: "#007AFF",
   accentForeground: "#FFFFFF",
+  tabPillSurface: "#FFFFFF",
   buttonSurface: "#F5F5F5",
   buttonSurfaceForeground: "#252525",
   shadow: "#8E8E93",
@@ -62,7 +64,8 @@ const darkTheme: DemoTheme = {
   slotHighlight: "#243B52",
   accent: "#007AFF",
   accentForeground: "#FFFFFF",
-  buttonSurface: "#2C2C2E",
+  tabPillSurface: "#2C2C2E",
+  buttonSurface: "#1C1C1E",
   buttonSurfaceForeground: "#F5F5F5",
   shadow: "#000000",
   actionSurface: "#F5F5F5",

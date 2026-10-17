@@ -298,7 +298,13 @@ function renderLinkElement(
 
       if (typeof linkChild === "string") {
         return (
-          <RNText style={[styles.text, resolvedProps.style]}>
+          <RNText
+            style={[
+              styles.text,
+              resolvedProps.bold && styles.boldText,
+              resolvedProps.style,
+            ]}
+          >
             {linkChild}
           </RNText>
         );

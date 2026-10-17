@@ -23,13 +23,13 @@ const NumbersPreview = React.memo(function NumbersPreview({
       text={state.value}
       variant="number"
       animationPreset="default"
-      fontSize={40}
+      fontSize={62}
       clipToBounds={false}
       containerStyle={{ alignSelf: "center" }}
       style={{
         color: theme.primary,
         fontFamily: "Sf-semibold",
-        fontSize: 40,
+        fontSize: 62,
         fontVariant: ["tabular-nums"],
         textAlign: "center",
       }}
@@ -44,7 +44,7 @@ function NumbersPage({ height, width }: DemoPageProps) {
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={40}
+      fontSize={62}
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumbersPreview store={store} />}

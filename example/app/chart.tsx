@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { FluxChartScreen } from "@/components/flux-chart";
+import { MorphingChartScreen } from "@/components/morphing-chart";
 
 export default function ChartRoute() {
   return (
@@ -9,7 +9,7 @@ export default function ChartRoute() {
           title: "Ethereum",
         }}
       />
-      <FluxChartScreen />
+      <MorphingChartScreen />
     </>
   );
 }

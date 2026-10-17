@@ -26,12 +26,12 @@ const SlotsPreview = React.memo(function SlotsPreview({
       shadow
       autoSize
       clipToBounds={false}
-      fontSize={40}
+      fontSize={62}
       containerStyle={{ alignSelf: "center" }}
       style={{
         color: theme.primary,
         fontFamily: "Sf-semibold",
-        fontSize: 40,
+        fontSize: 62,
         fontVariant: ["tabular-nums"],
         textAlign: "center",
       }}
@@ -46,7 +46,7 @@ function SlotsPage({ height, width }: DemoPageProps) {
     <DemoPageLayout
       height={height}
       width={width}
-      fontSize={40}
+      fontSize={62}
       onReverse={store.previous}
       onMorph={store.next}
       preview={<SlotsPreview store={store} />}

@@ -83,7 +83,7 @@ export const TopTabs: FC<Props> = ({
           measurementsReady={measurementsReady}
           isPagerScrolling={isPagerScrolling}
           hasPagerInteraction={hasPagerInteraction}
-          backgroundColor={theme.isDark ? theme.buttonSurface : theme.surface}
+          backgroundColor={theme.tabPillSurface}
           shadowColor={theme.shadow}
         />
         {tabs.map((tab, index) => (
