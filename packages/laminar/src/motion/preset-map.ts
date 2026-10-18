@@ -78,7 +78,8 @@ const createOpacityTransition = (
 // convert a named preset into builders for every rendering variant
 export const resolveMotionRecipe = (
   presetName: MorphAnimationPresetName = "default",
-  durationOverride?: number
+  durationOverride?: number,
+  clampSpring = false
 ): MotionRecipe => {
   const preset = MOTION_PRESETS[presetName];
   const durationMs = durationOverride ?? toMilliseconds(preset.duration);
@@ -99,8 +100,8 @@ export const resolveMotionRecipe = (
       driveNumber: (toValue) => {
         return withSpring(toValue, {
           duration: durationMs,
-          dampingRatio,
-          overshootClamping: preset.bounce === 0,
+          dampingRatio: clampSpring ? 1 : dampingRatio,
+          overshootClamping: clampSpring || preset.bounce === 0,
         });
       },
     };

@@ -29,12 +29,13 @@ export const useMorphMotion = ({
   animationDuration,
 }: Params): MorphMotion => {
   const isTicker = variant === "number" && numberMode === "ticker";
+  const isSlots = variant === "slots" || numberMode === "slots";
   // use a quicker default for numeric lane updates
   const slotsPreset = animationPreset ?? (variant === "text" ? "default" : "snappy");
   const tickerPreset = animationPreset ?? "ticker";
   const slotsMotionRecipe = useMemo(
-    () => resolveMotionRecipe(slotsPreset, animationDuration),
-    [animationDuration, slotsPreset]
+    () => resolveMotionRecipe(slotsPreset, animationDuration, isSlots),
+    [animationDuration, isSlots, slotsPreset]
   );
   const tickerMotionRecipe = useMemo(
     () => resolveMotionRecipe(tickerPreset, animationDuration),

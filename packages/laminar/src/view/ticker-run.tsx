@@ -229,7 +229,6 @@ export const TickerRun = React.memo(
 
     const {
       elementEnterTransition,
-      elementExitTransition,
       isLeadingChange,
       isLeadingSwap,
     } = useLeadingAnimation({
@@ -291,8 +290,6 @@ export const TickerRun = React.memo(
           elementEnterTransition={
             isLeadingSwap ? elementEnterTransition : undefined
           }
-          exitTransition={motionRecipe.exitTransition}
-          elementExitTransition={elementExitTransition}
         />
         <Animated.View
           layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
