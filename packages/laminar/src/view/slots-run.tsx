@@ -18,7 +18,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
-import { isAsciiDigit } from "../model/display-units";
+import { isAsciiDigit, splitDisplayUnits } from "../model/display-units";
 import type {
   LaminarAlign,
   LaminarShadow,
@@ -158,6 +158,7 @@ const SlotReel = React.memo(function SlotReel({
 
 type SlotColumnProps = {
   readonly digit: number;
+  readonly initialDigit?: number;
   readonly direction: NumericFlowDirection;
   readonly animateIn: boolean;
   readonly motionRecipe: MotionRecipe;
@@ -170,6 +171,7 @@ type SlotColumnProps = {
 
 const SlotColumn = React.memo(function SlotColumn({
   digit,
+  initialDigit,
   direction,
   animateIn,
   motionRecipe,
@@ -184,10 +186,10 @@ const SlotColumn = React.memo(function SlotColumn({
   const initialDirection = direction || 1;
   const initialValue = animateIn
     ? digit - spinInDistance * initialDirection
-    : digit;
+    : initialDigit ?? digit;
   const current = useSharedValue(initialValue);
-  const cumulativeRef = useRef(digit);
-  const previousDigitRef = useRef(digit);
+  const cumulativeRef = useRef(initialValue);
+  const previousDigitRef = useRef(initialDigit ?? digit);
   const initialRef = useRef(true);
   const drivenTargetRef = useRef<number | null>(null);
   const shadowOptions =
@@ -223,7 +225,7 @@ const SlotColumn = React.memo(function SlotColumn({
     if (initialRef.current) {
       initialRef.current = false;
 
-      if (!animateIn) {
+      if (!animateIn && initialDigit === undefined) {
         drivenTargetRef.current = cumulativeRef.current;
         return;
       }
@@ -250,7 +252,7 @@ const SlotColumn = React.memo(function SlotColumn({
     drivenTargetRef.current = target;
 
     current.value = motionRecipe.driveNumber(target);
-  }, [animateIn, current, digit, direction, motionRecipe]);
+  }, [animateIn, current, digit, direction, initialDigit, motionRecipe]);
 
   // keep the reel child stable while the target changes
   const reel = useMemo(
@@ -337,6 +339,7 @@ const SlotTextLane = React.memo(function SlotTextLane({
 
 type SlotDigitLaneProps = {
   readonly digit: number;
+  readonly initialDigit?: number;
   readonly direction: NumericFlowDirection;
   readonly animateIn: boolean;
   readonly isLast: boolean;
@@ -352,6 +355,7 @@ type SlotDigitLaneProps = {
 
 const SlotDigitLane = React.memo(function SlotDigitLane({
   digit,
+  initialDigit,
   direction,
   animateIn,
   isLast,
@@ -380,6 +384,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
     >
       <SlotColumn
         digit={digit}
+        initialDigit={initialDigit}
         direction={direction}
         animateIn={animateIn}
         motionRecipe={motionRecipe}
@@ -395,6 +400,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
 
 type SlotsRunProps = {
   readonly value: string;
+  readonly fromValue?: string;
   readonly motionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
   readonly fontSize?: number;
@@ -411,6 +417,7 @@ type SlotsRunProps = {
 export const SlotsRun = React.memo(
   ({
     value,
+    fromValue,
     motionRecipe,
     align,
     fontSize,
@@ -461,6 +468,31 @@ export const SlotsRun = React.memo(
     });
     // use numeric lane identity to preserve columns across value changes
     const { units, direction, leadLength } = useNumericLanes(visibleValue);
+    const initialDigits = useMemo(() => {
+      if (!fromValue || fromValue === visibleValue) return undefined;
+
+      const fromUnits = splitDisplayUnits(fromValue);
+      const fromLeadLength = fromUnits.findIndex(isAsciiDigit);
+      const resolvedFromLeadLength =
+        fromLeadLength === -1 ? fromUnits.length : fromLeadLength;
+      const targetTailLength = units.length - leadLength;
+      const fromTail = fromUnits.slice(resolvedFromLeadLength);
+      const initialValues: Array<number | undefined> = [];
+
+      for (let index = 0; index < units.length; index += 1) {
+        if (!isAsciiDigit(units[index])) {
+          initialValues.push(undefined);
+          continue;
+        }
+
+        const targetTailIndex = index - leadLength;
+        const fromIndex = fromTail.length - targetTailLength + targetTailIndex;
+        const fromUnit = fromTail[fromIndex];
+        initialValues.push(isAsciiDigit(fromUnit) ? Number(fromUnit) : undefined);
+      }
+
+      return initialValues;
+    }, [fromValue, leadLength, units, visibleValue]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     // animate reels for value changes and layout for topology changes
@@ -580,6 +612,7 @@ export const SlotsRun = React.memo(
               <SlotDigitLane
                 key={laneKey}
                 digit={Number(unit)}
+                initialDigit={initialDigits?.[index]}
                 direction={direction}
                 animateIn={hasAnimated}
                 isLast={index === units.length - 1}

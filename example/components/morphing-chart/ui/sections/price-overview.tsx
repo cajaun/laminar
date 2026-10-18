@@ -22,6 +22,7 @@ type PriceOverviewProps = {
   meta: RangeMeta;
   numberMode: MorphNumberMode;
   priceFractionDigits: number;
+  slotStartValue: number | null;
   tickerValues: readonly number[] | null;
   width: number;
 };
@@ -33,6 +34,7 @@ export const PriceOverview = React.memo(function PriceOverview({
   meta,
   numberMode,
   priceFractionDigits,
+  slotStartValue,
   tickerValues,
   width,
 }: PriceOverviewProps) {
@@ -49,6 +51,7 @@ export const PriceOverview = React.memo(function PriceOverview({
           displayValue={displayValue}
           numberMode={numberMode}
           priceFractionDigits={priceFractionDigits}
+          slotStartValue={slotStartValue}
           tickerValues={tickerValues}
           color={theme.primary}
           backgroundColor={theme.background}
@@ -61,6 +64,7 @@ export const PriceOverview = React.memo(function PriceOverview({
         numberMode={numberMode}
         tickerValues={tickerValues}
         backgroundColor={theme.background}
+        slotStartValue={slotStartValue}
       />
     </View>
   );
@@ -107,6 +111,7 @@ type NumericReadoutProps = {
   meta: RangeMeta;
   numberMode: MorphNumberMode;
   priceFractionDigits: number;
+  slotStartValue: number | null;
   tickerValues: readonly number[] | null;
   backgroundColor: string;
 };
@@ -116,6 +121,7 @@ const PriceReadout = React.memo(function PriceReadout({
   displayValue,
   numberMode,
   priceFractionDigits,
+  slotStartValue,
   tickerValues,
   color,
   backgroundColor,
@@ -142,6 +148,16 @@ const PriceReadout = React.memo(function PriceReadout({
         : undefined,
     [cursorIndexShared, numberMode, tickerPriceValues],
   );
+  const slotStartPriceText = React.useMemo(
+    () =>
+      slotStartValue === null
+        ? undefined
+        : `$${slotStartValue.toLocaleString("en-US", {
+            minimumFractionDigits: priceFractionDigits,
+            maximumFractionDigits: priceFractionDigits,
+          })}`,
+    [priceFractionDigits, slotStartValue],
+  );
   const priceTextStyle: TextStyle = React.useMemo(
     () => ({
       color,
@@ -161,6 +177,8 @@ const PriceReadout = React.memo(function PriceReadout({
   return (
     <Laminar
       animatedText={animatedPriceText}
+      fromValue={slotStartPriceText}
+      preloadValue={priceText}
       text={priceText}
       variant="number"
       numberMode={numberMode}
@@ -183,6 +201,7 @@ const PercentReadout = React.memo(function PercentReadout({
   meta,
   numberMode,
   tickerValues,
+  slotStartValue,
   backgroundColor,
 }: Omit<NumericReadoutProps, "priceFractionDigits">) {
   const displayPercentChange = getCursorDisplayPercent(
@@ -191,6 +210,19 @@ const PercentReadout = React.memo(function PercentReadout({
     displayValue,
   );
   const percentText = formatPercent(displayPercentChange);
+  const slotStartPercentText = React.useMemo(
+    () =>
+      slotStartValue === null
+        ? undefined
+        : formatPercent(
+            getCursorDisplayPercent(
+              meta.percentChange,
+              meta.totalValue,
+              slotStartValue,
+            ),
+          ),
+    [meta.percentChange, meta.totalValue, slotStartValue],
+  );
   const tickerPercentValues = React.useMemo(
     () =>
       tickerValues?.map((value) =>
@@ -239,6 +271,8 @@ const PercentReadout = React.memo(function PercentReadout({
     <View className="items-end pb-1.25" style={{ flexShrink: 0 }}>
       <Laminar
         animatedText={animatedPercentText}
+        fromValue={slotStartPercentText}
+        preloadValue={percentText}
         text={percentText}
         variant="number"
         numberMode={numberMode}

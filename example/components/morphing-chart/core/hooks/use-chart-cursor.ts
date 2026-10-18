@@ -40,6 +40,7 @@ type UseChartCursorOptions = {
 export type ChartCursorState = {
   clearCursor: () => void;
   cursor: CursorPoint | null;
+  releasedCursor: CursorPoint | null;
   cursorIndex: number | null;
   cursorIndexShared: SharedValue<number>;
   isScrubbing: boolean;
@@ -64,6 +65,7 @@ export function useChartCursor({
   chartWidth,
 }: UseChartCursorOptions): ChartCursorState {
   const [cursor, setCursor] = useState<CursorPoint | null>(null);
+  const [releasedCursor, setReleasedCursor] = useState<CursorPoint | null>(null);
   const [cursorIndex, setCursorIndex] = useState<number | null>(null);
   // keep held cursors separate from active scrubbing
   const [isScrubbing, setIsScrubbing] = useState(false);
@@ -106,6 +108,7 @@ export function useChartCursor({
       // return the readout to slots while the cursor label finishes fading
       if (stopScrubbing) {
         setCursor(null);
+        setReleasedCursor(cursorPoint);
         setCursorIndex(safeIndex);
         setIsScrubbing(false);
         return;
@@ -118,6 +121,7 @@ export function useChartCursor({
   );
 
   const beginScrubbing = useCallback(() => {
+    setReleasedCursor(null);
     setIsScrubbing(true);
   }, []);
 
@@ -259,6 +263,7 @@ export function useChartCursor({
   }, []);
 
   const stopScrubbing = useCallback(() => {
+    setReleasedCursor(null);
     setIsScrubbing(false);
   }, []);
 
@@ -404,6 +409,7 @@ export function useChartCursor({
   return {
     clearCursor,
     cursor,
+    releasedCursor,
     cursorIndex,
     cursorIndexShared,
     isScrubbing,

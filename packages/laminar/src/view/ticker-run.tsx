@@ -61,16 +61,37 @@ type NativeTickerRunProps = {
   readonly fallbackValue: string;
   readonly animatedText: LaminarAnimatedText;
   readonly align: LaminarAlign;
+  readonly className?: string;
+  readonly leading?: ReactNode;
+  readonly leadingKey?: string | number;
+  readonly leadingGap?: number;
   readonly textStyle?: StyleProp<TextStyle>;
 };
 
-// update the displayed string on the ui thread during scrubbing
-const NativeTickerRun = React.memo(function NativeTickerRun({
-  fallbackValue,
+type NativeTickerLaneProps = {
+  readonly animatedText: LaminarAnimatedText;
+  readonly fallbackValue: string;
+  readonly laneIndex: number;
+  readonly unit: string;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly lineHeight?: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+// update one displayed unit on the ui thread
+const NativeTickerLane = React.memo(function NativeTickerLane({
   animatedText,
-  align,
+  fallbackValue,
+  laneIndex,
+  unit,
+  isLast,
+  laneSpacing,
+  lineHeight,
   textStyle,
-}: NativeTickerRunProps) {
+  className,
+}: NativeTickerLaneProps) {
   const animatedProps = useAnimatedProps<{ text: string }>(
     () => {
       "worklet";
@@ -80,58 +101,66 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         0,
         Math.min(lastIndex, Math.round(animatedText.index.value)),
       );
+      const nextValue = animatedText.values[index] ?? fallbackValue;
+      const valueOffset = Math.max(0, fallbackValue.length - nextValue.length);
+      const valueIndex = laneIndex - valueOffset;
 
       return {
-        text: animatedText.values[index] ?? fallbackValue,
+        text: valueIndex >= 0 ? nextValue.charAt(valueIndex) || " " : " ",
       };
     },
-    [animatedText.values, fallbackValue],
+    [animatedText.values, fallbackValue, laneIndex, unit],
   );
+  const nativeTextBoxStyle = {
+    margin: 0,
+    padding: 0,
+    includeFontPadding: false,
+    letterSpacing: 0,
+    textAlign: "center" as const,
+    textAlignVertical: "center" as const,
+    ...(lineHeight !== undefined
+      ? { height: lineHeight, lineHeight }
+      : undefined),
+  };
 
   return (
     <View
       style={[
-        rowStyle,
-        rowAlignStyles[align],
-        { position: "relative" },
+        glyphSlotStyle,
+        {
+          position: "relative",
+          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+        },
+        !isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined,
       ]}
     >
-      {/* keep the ticker layout box anchored to the fallback text */}
       <Text
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
-        style={[
-          textStyle,
-          {
-            opacity: 0,
-            includeFontPadding: false,
-            margin: 0,
-            padding: 0,
-          },
-        ]}
+        style={[textStyle, nativeTextBoxStyle, { opacity: 0 }]}
+        className={className}
       >
-        {fallbackValue}
+        {unit}
       </Text>
       <AnimatedTextInput
         accessibilityElementsHidden
         caretHidden
-        defaultValue={fallbackValue}
+        defaultValue={unit}
         editable={false}
+        multiline={false}
         pointerEvents="none"
         style={[
           textStyle,
+          nativeTextBoxStyle,
           {
             position: "absolute",
             left: 0,
             top: 0,
             width: "100%",
-            alignSelf: "flex-start",
-            flexShrink: 0,
-            includeFontPadding: false,
-            margin: 0,
-            padding: 0,
-            textAlign: align,
+            borderWidth: 0,
           },
         ]}
         animatedProps={
@@ -144,10 +173,67 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
   );
 });
 
+// keep native ticker lanes aligned with slot lanes
+const NativeTickerRun = React.memo(function NativeTickerRun({
+  fallbackValue,
+  animatedText,
+  align,
+  className,
+  leading,
+  leadingKey,
+  leadingGap = 0,
+  textStyle,
+}: NativeTickerRunProps) {
+  const flattenedTextStyle = StyleSheet.flatten(textStyle);
+  const lineHeight =
+    typeof flattenedTextStyle?.lineHeight === "number"
+      ? flattenedTextStyle.lineHeight
+      : undefined;
+  const laneSpacing =
+    typeof flattenedTextStyle?.letterSpacing === "number"
+      ? flattenedTextStyle.letterSpacing
+      : 0;
+  const { units } = useNumericLanes(fallbackValue);
+
+  return (
+    <View
+      style={[
+        rowStyle,
+        rowAlignStyles[align],
+        {
+          position: "relative",
+          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+        },
+      ]}
+    >
+      <LeadingElement
+        leading={leading}
+        leadingKey={leadingKey}
+        leadingGap={leadingGap}
+      />
+      {units.map((unit, index) => (
+        <NativeTickerLane
+          key={`native:${index}`}
+          animatedText={animatedText}
+          fallbackValue={fallbackValue}
+          laneIndex={index}
+          unit={unit}
+          isLast={index === units.length - 1}
+          laneSpacing={laneSpacing}
+          lineHeight={lineHeight}
+          textStyle={textStyle}
+          className={className}
+        />
+      ))}
+    </View>
+  );
+});
+
 type TickerLaneProps = {
   readonly unit: string;
   readonly isLast: boolean;
   readonly laneSpacing: number;
+  readonly lineHeight?: number;
   readonly animateLayout: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly textStyle?: StyleProp<TextStyle>;
@@ -159,6 +245,7 @@ const TickerLane = React.memo(function TickerLane({
   unit,
   isLast,
   laneSpacing,
+  lineHeight,
   animateLayout,
   motionRecipe,
   textStyle,
@@ -169,13 +256,28 @@ const TickerLane = React.memo(function TickerLane({
       layout={animateLayout ? motionRecipe.layoutTransition : undefined}
       style={[
         glyphSlotStyle,
+        {
+          alignItems: "center",
+          justifyContent: "center",
+          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+        },
         !isLast && laneSpacing !== 0
           ? { marginRight: laneSpacing }
           : undefined,
       ]}
     >
       <Animated.Text
-        style={[textStyle, { letterSpacing: 0 }]}
+        style={[
+          textStyle,
+          {
+            includeFontPadding: false,
+            letterSpacing: 0,
+            textAlignVertical: "center",
+            ...(lineHeight !== undefined
+              ? { height: lineHeight, lineHeight }
+              : undefined),
+          },
+        ]}
         className={className}
       >
         {unit}
@@ -238,12 +340,16 @@ export const TickerRun = React.memo(
       motionRecipe,
     });
     const { units, leadLength } = useNumericLanes(visibleValue);
+    const flattenedTextStyle = StyleSheet.flatten(textStyle);
+    const lineHeight =
+      typeof flattenedTextStyle?.lineHeight === "number"
+        ? flattenedTextStyle.lineHeight
+        : undefined;
     const laneSpacing = useMemo(() => {
-      const flattenedStyle = StyleSheet.flatten(textStyle);
-      return typeof flattenedStyle?.letterSpacing === "number"
-        ? flattenedStyle.letterSpacing
+      return typeof flattenedTextStyle?.letterSpacing === "number"
+        ? flattenedTextStyle.letterSpacing
         : 0;
-    }, [textStyle]);
+    }, [flattenedTextStyle]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     const structureSignature = useMemo(
@@ -267,19 +373,31 @@ export const TickerRun = React.memo(
     previousStructureSignatureRef.current = structureSignature;
     const bodyLength = Math.max(units.length - leadLength, 0);
 
-    if (animatedText && !visibleLeading) {
+    if (animatedText) {
+      const tickerLayoutValue = animatedText.values.reduce(
+        (longest, candidate) =>
+          candidate.length > longest.length ? candidate : longest,
+        visibleValue,
+      );
+
       return (
         <NativeTickerRun
           animatedText={animatedText}
           align={align}
-          fallbackValue={visibleValue}
+          fallbackValue={tickerLayoutValue}
+          className={className}
+          leading={visibleLeading}
+          leadingKey={visibleLeadingKey}
+          leadingGap={visibleLeadingGap}
           textStyle={textStyle}
         />
       );
     }
 
     return (
-      <View style={[rowStyle, rowAlignStyles[align]]}>
+      <View
+        style={[rowStyle, rowAlignStyles[align], { height: lineHeight }]}
+      >
         <LeadingElement
           leading={visibleLeading}
           leadingKey={visibleLeadingKey}
@@ -293,7 +411,7 @@ export const TickerRun = React.memo(
         />
         <Animated.View
           layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
-          style={rowStyle}
+          style={[rowStyle, { height: lineHeight }]}
         >
           {units.map((unit, index) => {
             const inLead = index < leadLength;
@@ -311,6 +429,7 @@ export const TickerRun = React.memo(
                 unit={unit}
                 isLast={index === units.length - 1}
                 laneSpacing={laneSpacing}
+                lineHeight={lineHeight}
                 animateLayout={structureChanged}
                 motionRecipe={motionRecipe}
                 textStyle={textStyle}

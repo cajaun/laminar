@@ -75,6 +75,10 @@ export type MorphingTextProps = {
   // number mode selects the numeric renderer
   readonly numberMode?: MorphNumberMode;
   readonly animatedText?: LaminarAnimatedText;
+  // start a slot handoff from the last displayed numeric value
+  readonly fromValue?: string;
+  // keep the inactive slot renderer warm during ticker mode
+  readonly preloadValue?: string;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;

@@ -26,6 +26,8 @@ export const Laminar = React.memo(function Laminar({
     leadingGap = 0,
     numberMode = "morph",
     animatedText,
+    fromValue,
+    preloadValue,
     shadow = false,
     style,
     containerStyle,
@@ -160,6 +162,8 @@ export const Laminar = React.memo(function Laminar({
           <NumericRunSwitch
             mode="slots"
             value={resolvedValue}
+            fromValue={fromValue}
+            preloadValue={preloadValue}
             animatedText={animatedText}
             slotsMotionRecipe={slotsMotionRecipe}
             tickerMotionRecipe={tickerMotionRecipe}
@@ -178,6 +182,7 @@ export const Laminar = React.memo(function Laminar({
             mode="ticker"
             value={resolvedValue}
             animatedText={animatedText}
+            preloadValue={preloadValue}
             slotsMotionRecipe={slotsMotionRecipe}
             tickerMotionRecipe={tickerMotionRecipe}
             align={align}

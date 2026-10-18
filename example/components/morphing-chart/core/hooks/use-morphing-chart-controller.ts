@@ -76,6 +76,7 @@ export function useMorphingChartController({
     fadeProgress,
     isScrubbing,
     panGesture,
+    releasedCursor,
     stopScrubbing,
   } = useChartCursor({
     chartWidth,
@@ -141,6 +142,9 @@ export function useMorphingChartController({
     cursor,
     graphWidth,
   );
+  const slotStartValue = releasedCursor
+    ? getCursorDisplayValue(selected, meta.totalValue, releasedCursor, graphWidth)
+    : null;
   // prepare ticker values only while scrubbing uses the shared index
   const tickerValues = useMemo(
     () => {
@@ -183,6 +187,7 @@ export function useMorphingChartController({
     panGesture,
     points,
     selected,
+    slotStartValue,
     tickerValues,
   };
 }

@@ -135,6 +135,7 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
     numberMode,
     panGesture,
     selected,
+    slotStartValue,
     tickerValues,
   } = useMorphingChartController({
     chartWidth,
@@ -152,6 +153,7 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
         asset={asset}
         numberMode={numberMode}
         priceFractionDigits={priceFractionDigits}
+        slotStartValue={slotStartValue}
         tickerValues={tickerValues}
         width={contentWidth}
       />
