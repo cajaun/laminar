@@ -34,16 +34,18 @@ const MultiIconValue = React.memo(function MultiIconValue({
   const state = useCyclicValueStoreSnapshot(store);
   const leading = React.useMemo(
     () => ({
-      "Running Simulation": <LoadingSpinner color={theme.accent} />,
+      "Running Simulation": (
+        <LoadingSpinner color={theme.primary} />
+      ),
       "Simulation Done!": (
         <SymbolView
           name="checkmark.circle.fill"
           size={32}
-          tintColor={theme.accent}
+          tintColor={theme.primary}
         />
       ),
     }),
-    [theme.accent],
+    [theme.primary],
   );
   const previewTextStyle = React.useMemo(
     () => ({

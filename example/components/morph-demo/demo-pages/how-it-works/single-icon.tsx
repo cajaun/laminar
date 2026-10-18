@@ -34,10 +34,14 @@ const SingleIconValue = React.memo(function SingleIconValue({
   const leading = React.useMemo(
     () => ({
       Confirm: (
-        <SymbolView name="faceid" size={34} tintColor={theme.accent} />
+        <SymbolView
+          name="faceid"
+          size={34}
+          tintColor={theme.primary}
+        />
       ),
     }),
-    [theme.accent],
+    [theme.primary],
   );
   const previewTextStyle = React.useMemo(
     () => ({

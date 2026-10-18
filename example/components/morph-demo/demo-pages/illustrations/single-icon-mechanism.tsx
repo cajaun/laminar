@@ -19,14 +19,16 @@ type SingleIconMechanismProps = {
 function StateContent({
   current,
   color,
+  iconColor,
 }: {
   readonly current: string;
   readonly color: string;
+  readonly iconColor: string;
 }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       {current === "Confirm" ? (
-        <SymbolView name="faceid" size={20} tintColor={color} />
+        <SymbolView name="faceid" size={20} tintColor={iconColor} />
       ) : null}
       <Text
         numberOfLines={1}
@@ -47,10 +49,14 @@ export function SingleIconMechanism({ current }: SingleIconMechanismProps) {
   const leading = React.useMemo(
     () => ({
       Confirm: (
-        <SymbolView name="faceid" size={20} tintColor={teachingBlue} />
+        <SymbolView
+          name="faceid"
+          size={20}
+          tintColor={theme.primary}
+        />
       ),
     }),
-    [],
+    [theme.primary],
   );
   const iconReplacementTextStyle = React.useMemo(
     () => ({
@@ -89,7 +95,11 @@ export function SingleIconMechanism({ current }: SingleIconMechanismProps) {
               borderRadius: 12,
             }}
           >
-            <StateContent current={current} color={theme.secondary} />
+            <StateContent
+              current={current}
+              color={theme.secondary}
+              iconColor={theme.primary}
+            />
           </View>
         </View>
 

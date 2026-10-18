@@ -20,16 +20,22 @@ type MultiIconMechanismProps = {
 function StateContent({
   current,
   color,
+  iconColor,
 }: {
   readonly current: string;
   readonly color: string;
+  readonly iconColor: string;
 }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       {current === "Running Simulation" ? (
-        <LoadingSpinner color={color} size={20} />
+        <LoadingSpinner color={iconColor} size={20} />
       ) : current === "Simulation Done!" ? (
-        <SymbolView name="checkmark.circle.fill" size={20} tintColor={color} />
+        <SymbolView
+          name="checkmark.circle.fill"
+          size={20}
+          tintColor={iconColor}
+        />
       ) : null}
       <Text
         numberOfLines={1}
@@ -50,17 +56,17 @@ export function MultiIconMechanism({ current }: MultiIconMechanismProps) {
   const leading = React.useMemo(
     () => ({
       "Running Simulation": (
-        <LoadingSpinner color={teachingBlue} size={20} />
+        <LoadingSpinner color={theme.primary} size={20} />
       ),
       "Simulation Done!": (
         <SymbolView
           name="checkmark.circle.fill"
           size={20}
-          tintColor={teachingBlue}
+          tintColor={theme.primary}
         />
       ),
     }),
-    [],
+    [theme.primary],
   );
   const iconReplacementTextStyle = React.useMemo(
     () => ({
@@ -100,7 +106,11 @@ export function MultiIconMechanism({ current }: MultiIconMechanismProps) {
               overflow: "hidden",
             }}
           >
-            <StateContent current={current} color={theme.secondary} />
+            <StateContent
+              current={current}
+              color={theme.secondary}
+              iconColor={theme.primary}
+            />
           </View>
         </View>
 
