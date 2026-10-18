@@ -1,5 +1,4 @@
-// Data is kept separate from the renderer so the engine can accept another
-// source without importing screen-specific UI.
+// keep chart data independent from renderer and screen ui
 export {
   CHART_DATA_BY_SOURCE,
   CHART_DATA_SETS,

@@ -10,7 +10,7 @@ type Params = {
 
 const WIDTH_CACHE_LIMIT = 64;
 
-// update shared width from each content layout
+// update shared width from content layout
 export const useInlineAutoWidth = ({
   enabled,
   driveToWidth,
@@ -48,7 +48,7 @@ export const useInlineAutoWidth = ({
         return;
       }
 
-      // replace the animation so native motion continues from its current value
+      // replace the animation from its current value
       widthValue.value = driveToWidth(nextWidth);
     },
     [driveToWidth, hasBootstrappedWidth, widthValue]
@@ -56,7 +56,7 @@ export const useInlineAutoWidth = ({
 
   const captureLayout = useCallback(
     (event: LayoutChangeEvent) => {
-      // accept layout events only from the current probe
+      // accept layout events from the current probe
       if (
         !enabledRef.current ||
         measurementGeneration !== measurementGenerationRef.current
@@ -77,7 +77,7 @@ export const useInlineAutoWidth = ({
       }
       cache.set(measurementKey, nextWidth);
 
-      // drive the shell from the visible probe without another react render
+      // drive the shell from the probe without another react render
       applyWidth(nextWidth);
     },
     [applyWidth, measurementGeneration, measurementKey]
@@ -109,7 +109,7 @@ export const useInlineAutoWidth = ({
   return {
     captureLayout,
     animatedWidthStyle,
-    // render content without a timer based readiness gate
+    // render content without a timer readiness gate
     isReady: true,
     shouldMeasure: enabled && cachedWidth === undefined,
   };

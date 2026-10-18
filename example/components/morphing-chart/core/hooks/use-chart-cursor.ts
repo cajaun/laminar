@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as Haptics from "expo-haptics";
 import {
   Gesture,
@@ -8,6 +15,7 @@ import {
   Easing,
   runOnJS,
   type SharedValue,
+  useFrameCallback,
   useSharedValue,
   withSpring,
   withTiming,
@@ -33,16 +41,15 @@ export type ChartCursorState = {
   clearCursor: () => void;
   cursor: CursorPoint | null;
   cursorIndex: number | null;
+  cursorIndexShared: SharedValue<number>;
+  isScrubbing: boolean;
   cursorScale: SharedValue<number>;
   cursorX: SharedValue<number>;
   cursorY: SharedValue<number>;
   fadeProgress: SharedValue<number>;
   panGesture: ComposedGesture;
+  stopScrubbing: () => void;
 };
-
-function selectHaptic() {
-  if (Platform.OS !== "web") void Haptics.selectionAsync();
-}
 
 function impactHaptic() {
   if (Platform.OS !== "web") {
@@ -50,7 +57,7 @@ function impactHaptic() {
   }
 }
 
-/** Owns cursor interaction, visibility transitions, and haptic feedback. */
+// coordinate cursor interaction visibility and haptics
 export function useChartCursor({
   points,
   graphWidth,
@@ -58,8 +65,19 @@ export function useChartCursor({
 }: UseChartCursorOptions): ChartCursorState {
   const [cursor, setCursor] = useState<CursorPoint | null>(null);
   const [cursorIndex, setCursorIndex] = useState<number | null>(null);
-  const lastHapticIndex = useSharedValue(-1);
+  // keep held cursors separate from active scrubbing
+  const [isScrubbing, setIsScrubbing] = useState(false);
   const committedCursorIndex = useSharedValue(-1);
+  const cursorIndexShared = useSharedValue(-1);
+  // keep the gesture stable while shared values receive new chart data
+  const pointsShared = useSharedValue(points);
+  const graphWidthShared = useSharedValue(graphWidth);
+  const scrubbingActive = useSharedValue(0);
+  const panEnded = useSharedValue(0);
+  const pendingReactCommit = useSharedValue(0);
+  const releaseRequested = useSharedValue(0);
+  const commitVersion = useSharedValue(0);
+  const latestCommitVersionRef = useRef(0);
   const cursorActive = useSharedValue(0);
   const fadeStarted = useSharedValue(0);
   const fadeOutStarted = useSharedValue(0);
@@ -69,13 +87,74 @@ export function useChartCursor({
   const cursorY = useSharedValue(CHART_HEIGHT);
   const fadeProgress = useSharedValue(0);
 
+  useLayoutEffect(() => {
+    pointsShared.value = points;
+    graphWidthShared.value = graphWidth;
+  }, [graphWidth, graphWidthShared, points, pointsShared]);
+
   const commitCursorState = useCallback(
-    (cursorPoint: CursorPoint, safeIndex: number) => {
+    (
+      cursorPoint: CursorPoint,
+      safeIndex: number,
+      stopScrubbing = false,
+      version = 0,
+    ) => {
+      // ignore queued samples older than the latest release commit
+      if (version < latestCommitVersionRef.current) return;
+      latestCommitVersionRef.current = version;
+
+      // return the readout to slots while the cursor label finishes fading
+      if (stopScrubbing) {
+        setCursor(null);
+        setCursorIndex(safeIndex);
+        setIsScrubbing(false);
+        return;
+      }
+
       setCursor(cursorPoint);
       setCursorIndex(safeIndex);
     },
     [],
   );
+
+  const beginScrubbing = useCallback(() => {
+    setIsScrubbing(true);
+  }, []);
+
+  const scheduleStopScrubbing = useCallback(() => {
+    setIsScrubbing(false);
+  }, []);
+
+  // bridge at most one cursor sample from each ui frame
+  useFrameCallback(() => {
+    "worklet";
+
+    if (!pendingReactCommit.value && !releaseRequested.value) return;
+    // keep active pan values on the ui thread and bridge discrete commits
+    if (scrubbingActive.value === 1 && releaseRequested.value === 0) {
+      pendingReactCommit.value = 0;
+      return;
+    }
+
+    const cursorPoint = getChartCursorPoint(
+      pointsShared.value,
+      cursorX.value,
+      graphWidthShared.value,
+    );
+    if (!cursorPoint) return;
+
+    const safeIndex = cursorIndexShared.value;
+    const stopAfterCommit = releaseRequested.value === 1;
+    const version = commitVersion.value;
+    pendingReactCommit.value = 0;
+    releaseRequested.value = 0;
+    runOnJS(commitCursorState)(
+      cursorPoint,
+      safeIndex,
+      stopAfterCommit,
+      version,
+    );
+  }, true);
 
   useEffect(() => {
     if (cursorIndex === null) {
@@ -108,24 +187,32 @@ export function useChartCursor({
   }, [cursorScale, fadeProgress]);
 
   const updateCursor = useCallback(
-    (x: number) => {
+    (x: number, forceReactCommit = false) => {
       "worklet";
 
-      if (points.length === 0) return;
+      const currentPoints = pointsShared.value;
+      const currentGraphWidth = graphWidthShared.value;
 
-      const clampedX = Math.max(0, Math.min(graphWidth, x));
-      const cursorPoint = getChartCursorPoint(points, clampedX, graphWidth);
+      if (currentPoints.length === 0) return;
+
+      const clampedX = Math.max(0, Math.min(currentGraphWidth, x));
+      const cursorPoint = getChartCursorPoint(
+        currentPoints,
+        clampedX,
+        currentGraphWidth,
+      );
       if (!cursorPoint) return;
 
       const rawIndex = Math.round(
-        (clampedX / Math.max(1, graphWidth)) * (points.length - 1),
+        (clampedX / Math.max(1, currentGraphWidth)) *
+          (currentPoints.length - 1),
       );
-      const safeIndex = Math.max(0, Math.min(points.length - 1, rawIndex));
+      const safeIndex = Math.max(
+        0,
+        Math.min(currentPoints.length - 1, rawIndex),
+      );
 
-      if (lastHapticIndex.value !== safeIndex) {
-        lastHapticIndex.value = safeIndex;
-        runOnJS(selectHaptic)();
-      }
+      cursorIndexShared.value = safeIndex;
 
       if (!fadeStarted.value) {
         fadeStarted.value = 1;
@@ -136,9 +223,12 @@ export function useChartCursor({
       cursorX.value = cursorPoint.x;
       cursorY.value = cursorPoint.y;
 
-      if (committedCursorIndex.value !== safeIndex) {
+      if (forceReactCommit || committedCursorIndex.value !== safeIndex) {
         committedCursorIndex.value = safeIndex;
-        runOnJS(commitCursorState)(cursorPoint, safeIndex);
+        commitVersion.value += 1;
+        if (scrubbingActive.value === 0 || forceReactCommit) {
+          pendingReactCommit.value = 1;
+        }
       }
 
       if (fadeOutStarted.value) {
@@ -147,16 +237,18 @@ export function useChartCursor({
       }
     },
     [
-      commitCursorState,
       committedCursorIndex,
       cursorActive,
       cursorX,
       cursorY,
       fadeOutStarted,
       fadeStarted,
-      graphWidth,
-      lastHapticIndex,
-      points,
+      graphWidthShared,
+      cursorIndexShared,
+      commitVersion,
+      pendingReactCommit,
+      pointsShared,
+      scrubbingActive,
       startCursorEntry,
     ],
   );
@@ -166,10 +258,14 @@ export function useChartCursor({
     setCursorIndex(null);
   }, []);
 
+  const stopScrubbing = useCallback(() => {
+    setIsScrubbing(false);
+  }, []);
+
   const clearCursor = useCallback(() => {
     "worklet";
 
-    lastHapticIndex.value = -1;
+    scrubbingActive.value = 0;
     committedCursorIndex.value = -1;
 
     if (!cursorActive.value || fadeOutStarted.value) return;
@@ -189,6 +285,7 @@ export function useChartCursor({
         "worklet";
 
         if (finished) {
+          cursorIndexShared.value = -1;
           cursorActive.value = 0;
           fadeStarted.value = 0;
           fadeOutStarted.value = 0;
@@ -199,21 +296,26 @@ export function useChartCursor({
   }, [
     committedCursorIndex,
     cursorActive,
+    cursorIndexShared,
     cursorScale,
     fadeOutStarted,
     fadeProgress,
     fadeStarted,
     finishCursor,
-    lastHapticIndex,
+    scrubbingActive,
   ]);
 
   const panGesture = useMemo(
     () => {
       const pan = Gesture.Pan()
-        .onStart(() => {
+        .onStart((event) => {
           "worklet";
 
-          lastHapticIndex.value = -1;
+          panEnded.value = 0;
+          releaseRequested.value = 0;
+          scrubbingActive.value = 1;
+          updateCursor(event.x);
+          runOnJS(beginScrubbing)();
           runOnJS(impactHaptic)();
         })
         .onUpdate((event) => {
@@ -221,35 +323,80 @@ export function useChartCursor({
 
           updateCursor(event.x);
         })
-        .onEnd(() => {
+        .onEnd((event) => {
           "worklet";
 
-          runOnJS(selectHaptic)();
+          // commit the final point before returning to slots
+          panEnded.value = 1;
+          scrubbingActive.value = 0;
+          updateCursor(event.x);
+
+          const finalPoint = getChartCursorPoint(
+            pointsShared.value,
+            cursorX.value,
+            graphWidthShared.value,
+          );
+          const finalIndex = cursorIndexShared.value;
+          const finalVersion = commitVersion.value + 1;
+          commitVersion.value = finalVersion;
+          pendingReactCommit.value = 0;
+          releaseRequested.value = 0;
+
+          if (finalPoint) {
+            // bridge release immediately as a discrete event
+            runOnJS(commitCursorState)(
+              finalPoint,
+              finalIndex,
+              true,
+              finalVersion,
+            );
+          }
           clearCursor();
         })
         .onFinalize(() => {
           "worklet";
 
+          const completed = panEnded.value === 1;
+          panEnded.value = 0;
+          scrubbingActive.value = 0;
+          if (!completed) {
+            commitVersion.value += 1;
+            pendingReactCommit.value = 1;
+            releaseRequested.value = 1;
+          }
           clearCursor();
         });
 
       const tap = Gesture.Tap()
+        // keep a stationary press alive until pan movement begins
+        .maxDuration(10_000)
         .onBegin((event) => {
           "worklet";
 
+          scrubbingActive.value = 0;
           updateCursor(event.x);
         })
         .onEnd((_event, success) => {
           "worklet";
 
-          if (success) clearCursor();
+          if (success) {
+            runOnJS(scheduleStopScrubbing)();
+            clearCursor();
+          }
         });
 
       return Gesture.Race(pan, tap);
     },
     [
       clearCursor,
-      lastHapticIndex,
+      beginScrubbing,
+      graphWidthShared,
+      panEnded,
+      pendingReactCommit,
+      pointsShared,
+      releaseRequested,
+      scrubbingActive,
+      scheduleStopScrubbing,
       updateCursor,
     ],
   );
@@ -258,10 +405,13 @@ export function useChartCursor({
     clearCursor,
     cursor,
     cursorIndex,
+    cursorIndexShared,
+    isScrubbing,
     cursorScale,
     cursorX,
     cursorY,
     fadeProgress,
     panGesture,
+    stopScrubbing,
   };
 }

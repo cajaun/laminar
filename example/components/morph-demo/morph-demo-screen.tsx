@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { FlatList, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -25,7 +25,7 @@ const catalogContentStyle = {
   paddingBottom: 28,
 } as const;
 
-export function MorphDemoScreen() {
+export const MorphDemoScreen = React.memo(function MorphDemoScreen() {
   const theme = useDemoTheme();
   const { width: windowWidth } = useWindowDimensions();
   const pageWidth = windowWidth;
@@ -33,12 +33,16 @@ export function MorphDemoScreen() {
   const indexDecimal = useSharedValue(0);
   const isPagerScrolling = useSharedValue(false);
   const hasPagerInteraction = useSharedValue(false);
-  const pagesById = new Map(examplePages.map((page) => [page.id, page]));
-  const componentPagesById = new Map(
-    componentPages.map((page) => [page.id, page]),
+  const pagesById = useMemo(
+    () => new Map(examplePages.map((page) => [page.id, page])),
+    [],
+  );
+  const componentPagesById = useMemo(
+    () => new Map(componentPages.map((page) => [page.id, page])),
+    [],
   );
 
-  const renderDemoLink = (pageId: ExamplePageId) => {
+  const renderDemoLink = useCallback((pageId: ExamplePageId) => {
     const page = pagesById.get(pageId);
 
     return page ? (
@@ -54,9 +58,9 @@ export function MorphDemoScreen() {
         {page.label}
       </FormLink>
     ) : null;
-  };
+  }, [pagesById, theme.primary]);
 
-  const renderComponentLink = (componentId: ComponentPageId) => {
+  const renderComponentLink = useCallback((componentId: ComponentPageId) => {
     const component = componentPagesById.get(componentId);
 
     return component ? (
@@ -72,28 +76,38 @@ export function MorphDemoScreen() {
         {component.label}
       </FormLink>
     ) : null;
-  };
+  }, [componentPagesById, theme.primary]);
 
-  const renderPageList = (group: DemoTabGroup) => (
-    <FormSection
-      outerStyle={{ paddingHorizontal: 20 }}
-      style={{
-        backgroundColor: theme.catalogPanel,
-        borderRadius: 28,
-      }}
-      separatorInset="content"
-    >
-      {group.id === "components"
-        ? group.componentIds.map(renderComponentLink)
-        : group.pageIds.map(renderDemoLink)}
-    </FormSection>
+  const renderPageList = useCallback(
+    (group: DemoTabGroup) => (
+      <FormSection
+        outerStyle={{ paddingHorizontal: 20 }}
+        style={{
+          backgroundColor: theme.catalogPanel,
+          borderRadius: 28,
+        }}
+        separatorInset="content"
+      >
+        {group.id === "components"
+          ? group.componentIds.map(renderComponentLink)
+          : group.pageIds.map(renderDemoLink)}
+      </FormSection>
+    ),
+    [renderComponentLink, renderDemoLink, theme.catalogPanel],
   );
 
-  const tabs: TopTab[] = demoTabGroups.map((group, index) => ({
-    label: group.label,
-    value: index,
-  }));
-  const pages = demoTabGroups.map(renderPageList);
+  const tabs: TopTab[] = useMemo(
+    () =>
+      demoTabGroups.map((group, index) => ({
+        label: group.label,
+        value: index,
+      })),
+    [],
+  );
+  const pages = useMemo(
+    () => demoTabGroups.map(renderPageList),
+    [renderPageList],
+  );
   const horizontalScrollHandler = useAnimatedScrollHandler({
     onBeginDrag: () => {
       hasPagerInteraction.value = true;
@@ -110,6 +124,28 @@ export function MorphDemoScreen() {
       isPagerScrolling.value = false;
     },
   });
+  const handleTabPress = useCallback(
+    (index: number) => {
+      hasPagerInteraction.value = true;
+      if (Math.round(indexDecimal.value) === index) {
+        isPagerScrolling.value = false;
+        return;
+      }
+
+      isPagerScrolling.value = true;
+      horizontalListRef.current?.scrollToOffset({
+        offset: index * pageWidth,
+        animated: true,
+      });
+    },
+    [hasPagerInteraction, indexDecimal, isPagerScrolling, pageWidth],
+  );
+  const renderPagerItem = useCallback(
+    ({ item }: { item: React.ReactNode }) => (
+      <View style={{ width: pageWidth }}>{item}</View>
+    ),
+    [pageWidth],
+  );
 
   return (
     <ScreenScrollView
@@ -122,19 +158,7 @@ export function MorphDemoScreen() {
         indexDecimal={indexDecimal}
         isPagerScrolling={isPagerScrolling}
         hasPagerInteraction={hasPagerInteraction}
-        onTabPress={(index) => {
-          hasPagerInteraction.value = true;
-          if (Math.round(indexDecimal.value) === index) {
-            isPagerScrolling.value = false;
-            return;
-          }
-
-          isPagerScrolling.value = true;
-          horizontalListRef.current?.scrollToOffset({
-            offset: index * pageWidth,
-            animated: true,
-          });
-        }}
+        onTabPress={handleTabPress}
       />
       <Animated.FlatList
         ref={horizontalListRef}
@@ -142,21 +166,32 @@ export function MorphDemoScreen() {
         horizontal
         pagingEnabled
         bounces={false}
-        initialNumToRender={pages.length}
-        windowSize={pages.length}
-        removeClippedSubviews={false}
+        // Keep the off-screen tab pages out of the initial native tree. The
+        // previous pages.length settings mounted every form link before a
+        // route transition could start, which inflated chart-route commits.
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
+        windowSize={2}
+        removeClippedSubviews
         showsHorizontalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={horizontalScrollHandler}
         keyExtractor={(_, index) =>
           tabs[index]?.value.toString() ?? String(index)
         }
+        getItemLayout={(_, index) => ({
+          length: pageWidth,
+          offset: pageWidth * index,
+          index,
+        })}
         style={{ width: pageWidth, flexGrow: 0, marginTop: 8 }}
-        renderItem={({ item }) => <View style={{ width: pageWidth }}>{item}</View>}
+        renderItem={renderPagerItem}
       />
     </ScreenScrollView>
   );
-}
+});
+
+MorphDemoScreen.displayName = "MorphDemoScreen";
 
 type DemoDetailScreenProps = {
   readonly pageId: ExamplePageId;

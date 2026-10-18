@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   ChartDataBySource,
   DataSourceOption,
@@ -8,23 +14,34 @@ import { CHART_DATA_BY_SOURCE } from "@/components/morphing-chart/data/chart-dat
 import {
   REFERENCE_GRAPH_EXTENT,
 } from "@/components/morphing-chart/core/model/chart-config";
-import { getCursorDisplayValue } from "@/components/morphing-chart/core/model/cursor-values";
+import {
+  getCursorLabel,
+} from "@/components/morphing-chart/core/model/chart-formatters";
+import {
+  getCursorDisplayValue,
+} from "@/components/morphing-chart/core/model/cursor-values";
 import { buildChartPoints, buildChartYValues } from "@/components/morphing-chart/core/model/series";
 import { useChartCursor } from "@/components/morphing-chart/core/hooks/use-chart-cursor";
 import { useChartMorph } from "@/components/morphing-chart/core/hooks/use-chart-morph";
+import type { MorphNumberMode } from "react-native-laminar";
+
+const EMPTY_TICKER_VALUES: readonly number[] = [];
+const EMPTY_CURSOR_LABELS: readonly string[] = [];
 
 type UseMorphingChartControllerOptions = {
   chartWidth: number;
   chartData?: ChartDataBySource;
   initialRange?: RangeType;
+  showFill?: boolean;
   source?: DataSourceOption;
 };
 
-/** Coordinates the chart's selected range, data model, and specialized hooks. */
+// coordinate range data chart motion and cursor state
 export function useMorphingChartController({
   chartWidth,
   chartData,
   initialRange = "1M",
+  showFill = false,
   source = "Revenue",
 }: UseMorphingChartControllerOptions) {
   const [selected, setSelected] = useState<RangeType>(initialRange);
@@ -38,56 +55,84 @@ export function useMorphingChartController({
   );
   const targetYValues = useMemo(() => buildChartYValues(data), [data]);
   const {
+    animatedFillPath,
     animateTo,
     animatedGraphWidth,
-    morphedYValues,
+    animatedLinePath,
   } = useChartMorph({
     initialGraphWidth: graphWidth,
     initialYValues: targetYValues,
+    layoutWidth: chartWidth,
+    showFill,
   });
   const {
     clearCursor,
     cursor,
     cursorIndex,
+    cursorIndexShared,
     cursorScale,
     cursorX,
     cursorY,
     fadeProgress,
+    isScrubbing,
     panGesture,
+    stopScrubbing,
   } = useChartCursor({
     chartWidth,
     graphWidth,
     points,
   });
-  const previousSource = useRef(source);
+  const previousSelection = useRef({ source, selected });
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const handlerStartedRangeRef = useRef<RangeType | null>(null);
+  const numberMode: MorphNumberMode = isScrubbing ? "ticker" : "slots";
 
-  useEffect(() => {
-    if (previousSource.current === source) return;
+  // start chart motion in the press handler before the range state commit
+  useLayoutEffect(() => {
+    const previous = previousSelection.current;
+    const rangeChanged = previous.selected !== selected;
+    const sourceChanged = previous.source !== source;
 
-    animateTo(targetYValues, graphWidth);
-    clearCursor();
-    previousSource.current = source;
-  }, [animateTo, clearCursor, graphWidth, source, targetYValues]);
+    if (!rangeChanged && !sourceChanged) return;
+
+    previousSelection.current = { source, selected };
+    const startedInHandler = handlerStartedRangeRef.current === selected;
+    handlerStartedRangeRef.current = null;
+
+    if (!startedInHandler) {
+      animateTo(targetYValues, graphWidth);
+    }
+
+    if (sourceChanged) {
+      stopScrubbing();
+      clearCursor();
+    }
+  }, [
+    animateTo,
+    clearCursor,
+    graphWidth,
+    selected,
+    source,
+    stopScrubbing,
+    targetYValues,
+  ]);
 
   const handleRangePress = useCallback(
     (range: RangeType) => {
-      if (range !== selected) {
-        animateTo(
-          buildChartYValues(sourceData.chartDataSets[range]),
-          chartWidth * REFERENCE_GRAPH_EXTENT[range],
-        );
-      }
+      if (range === selectedRef.current) return;
 
+      const nextData = sourceData.chartDataSets[range];
+      const nextGraphWidth = chartWidth * REFERENCE_GRAPH_EXTENT[range];
+      const nextYValues = buildChartYValues(nextData);
+
+      handlerStartedRangeRef.current = range;
+      stopScrubbing();
       clearCursor();
+      animateTo(nextYValues, nextGraphWidth);
       setSelected(range);
     },
-    [
-      animateTo,
-      chartWidth,
-      clearCursor,
-      selected,
-      sourceData.chartDataSets,
-    ],
+    [animateTo, chartWidth, clearCursor, sourceData, stopScrubbing],
   );
 
   const displayValue = getCursorDisplayValue(
@@ -96,22 +141,49 @@ export function useMorphingChartController({
     cursor,
     graphWidth,
   );
+  // prepare ticker values only while scrubbing uses the shared index
+  const tickerValues = useMemo(
+    () => {
+      // skip ticker formatting while slots show the settled state
+      if (!isScrubbing) return EMPTY_TICKER_VALUES;
 
+      return points.map((point) =>
+        getCursorDisplayValue(selected, meta.totalValue, point, graphWidth),
+      );
+    },
+    [graphWidth, isScrubbing, meta.totalValue, points, selected],
+  );
+  const cursorLabels = useMemo(
+    () => {
+      // skip cursor label formatting until the cursor becomes visible
+      if (!isScrubbing && cursorIndex === null) return EMPTY_CURSOR_LABELS;
+
+      return points.map((_point, index) =>
+        getCursorLabel(selected, index, points.length),
+      );
+    },
+    [cursorIndex, isScrubbing, points, selected],
+  );
   return {
+    animatedFillPath,
     animatedGraphWidth,
+    animatedLinePath,
     cursorIndex,
+    cursorIndexShared,
     cursorScale,
     cursorX,
     cursorY,
+    cursorLabels,
     displayValue,
     fadeProgress,
     graphWidth,
     handleRangePress,
     meta,
-    morphedYValues,
+    numberMode,
     panGesture,
     points,
     selected,
+    tickerValues,
   };
 }
 

@@ -1,7 +1,27 @@
 import { CHART_HEIGHT } from "@/components/morphing-chart/core/model/geometry";
-import type { SkPath } from "@shopify/react-native-skia";
+import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-/** Writes the same tangent-continuous cubic path used by rendering and cursors. */
+// build a reusable line path for native interpolation
+export function createLinePath(
+  yValues: readonly number[],
+  chartWidth: number,
+) {
+  const path = Skia.Path.Make();
+  writeLinePath(path, yValues, chartWidth);
+  return path;
+}
+
+// build the closed path used by the optional chart fill
+export function createFillPath(
+  yValues: readonly number[],
+  chartWidth: number,
+) {
+  const path = Skia.Path.Make();
+  writeFillPath(path, yValues, chartWidth);
+  return path;
+}
+
+// write the tangent continuous cubic path used by rendering and cursors
 export function writeLinePath(
   path: SkPath,
   yValues: readonly number[],
@@ -60,8 +80,7 @@ export function writeFutureClipPath(
   "worklet";
 
   path.reset();
-  // Clamp a cursor carried over from the previous range to the new graph.
-  // The clip must still include the terminal point while the range morphs.
+  // clamp the carried cursor to the new graph bounds
   const startX = Math.max(0, Math.min(graphWidth, cursorX));
   const endX = Math.max(canvasWidth, startX + 0.001);
 

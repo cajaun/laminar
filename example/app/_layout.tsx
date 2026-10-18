@@ -3,8 +3,13 @@ import { useFonts } from "expo-font";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { enableFreeze } from "react-native-screens";
 import { Platform, useColorScheme, View } from "react-native";
 import "../global.css";
+
+// Inactive native-stack screens should not reconcile while a new route is
+// mounting. This keeps the catalog's demo tree out of the chart transition.
+enableFreeze(true);
 
 export default function RootLayout() {
   const isDark = useColorScheme() === "dark";
@@ -51,6 +56,7 @@ export default function RootLayout() {
               gestureEnabled: true,
               gestureDirection: "horizontal",
               fullScreenGestureEnabled: isLiquidGlass ? false : true,
+              freezeOnBlur: true,
               contentStyle: { backgroundColor },
             }}
           >

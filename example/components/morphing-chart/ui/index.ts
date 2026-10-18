@@ -1,4 +1,4 @@
-// Asset-detail UI is intentionally separate from the chart engine.
+// keep asset detail ui separate from the chart engine
 export { MORPHING_ASSET_CONFIG } from "./assets/asset-config";
 export type { MorphingAsset } from "./assets/asset-config";
 export { EthereumIcon } from "./assets/ethereum-icon";

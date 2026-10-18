@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { usePathValue, type SkPath } from "@shopify/react-native-skia";
 import {
   Easing,
   runOnUI,
@@ -7,34 +8,80 @@ import {
   withTiming,
 } from "react-native-reanimated";
 import { CHART_MORPH_DURATION } from "@/components/morphing-chart/core/model/chart-config";
+import {
+  createFillPath,
+  createLinePath,
+  writeFillPath,
+  writeLinePath,
+} from "@/components/morphing-chart/core/rendering/path-writers";
 
 type UseChartMorphOptions = {
   initialYValues: number[];
   initialGraphWidth: number;
+  layoutWidth: number;
+  showFill?: boolean;
 };
 
-/** Owns the UI-thread state used to morph one chart range into another. */
+// own ui thread state for chart range morphs
 export function useChartMorph({
   initialYValues,
   initialGraphWidth,
+  layoutWidth,
+  showFill = false,
 }: UseChartMorphOptions) {
-  const morphFrom = useSharedValue<number[]>(initialYValues);
-  const morphTo = useSharedValue<number[]>(initialYValues);
+  // keep initial geometry in refs so range presses avoid js path rebuilds
+  const initialPathsRef = useRef<{
+    layoutWidth: number;
+    line: SkPath;
+    fill: SkPath;
+  } | null>(null);
+
+  if (
+    initialPathsRef.current === null ||
+    initialPathsRef.current.layoutWidth !== layoutWidth
+  ) {
+    initialPathsRef.current = {
+      layoutWidth,
+      line: createLinePath(initialYValues, initialGraphWidth),
+      fill: createFillPath(initialYValues, initialGraphWidth),
+    };
+  }
+
+  const initialLinePath = initialPathsRef.current.line;
+  const initialFillPath = initialPathsRef.current.fill;
+  const morphFromLinePath = useSharedValue(initialLinePath);
+  const morphToLinePath = useSharedValue(initialLinePath);
+  const morphFromFillPath = useSharedValue(initialFillPath);
+  const morphToFillPath = useSharedValue(initialFillPath);
   const morphProgress = useSharedValue(1);
   const graphWidthFrom = useSharedValue(initialGraphWidth);
   const graphWidthTo = useSharedValue(initialGraphWidth);
 
-  const morphedYValues = useDerivedValue(() => {
-    const from = morphFrom.value;
-    const to = morphTo.value;
+  const animatedLinePath = usePathValue((path) => {
+    "worklet";
 
-    return from.map(
-      (value, index) => value + (to[index] - value) * morphProgress.value,
+    morphToLinePath.value.interpolate(
+      morphFromLinePath.value,
+      morphProgress.value,
+      path,
+    );
+  });
+  const animatedFillPath = usePathValue((path) => {
+    "worklet";
+
+    if (!showFill) {
+      path.reset();
+      return;
+    }
+
+    morphToFillPath.value.interpolate(
+      morphFromFillPath.value,
+      morphProgress.value,
+      path,
     );
   });
 
-  // One clock drives both the line geometry and the horizontal reveal. This
-  // prevents the path and its width from starting on different frames.
+  // drive line geometry and horizontal reveal from one clock
   const animatedGraphWidth = useDerivedValue(() => {
     return (
       graphWidthFrom.value +
@@ -43,39 +90,63 @@ export function useChartMorph({
   });
 
   const animateTo = useCallback(
-    (nextYValues: number[], nextGraphWidth: number) => {
-      runOnUI((toValues: number[], toWidth: number) => {
-        "worklet";
+    (
+      nextYValues: number[],
+      nextGraphWidth: number,
+    ) => {
+      runOnUI(
+        (
+          nextValues: readonly number[],
+          toWidth: number,
+        ) => {
+          "worklet";
 
-        const currentFrom = morphFrom.value;
-        const currentTo = morphTo.value;
-        const currentProgress = morphProgress.value;
-        const currentYValues = currentFrom.map(
-          (value, index) =>
-            value + (currentTo[index] - value) * currentProgress,
-        );
-        const currentGraphWidth =
-          graphWidthFrom.value +
-          (graphWidthTo.value - graphWidthFrom.value) * currentProgress;
+          const currentProgress = morphProgress.value;
+          const currentLinePath = morphToLinePath.value.interpolate(
+            morphFromLinePath.value,
+            currentProgress,
+          );
+          const currentFillPath = morphToFillPath.value.interpolate(
+            morphFromFillPath.value,
+            currentProgress,
+          );
+          const currentGraphWidth =
+            graphWidthFrom.value +
+            (graphWidthTo.value - graphWidthFrom.value) * currentProgress;
 
-        morphFrom.value = currentYValues;
-        morphTo.value = toValues;
-        graphWidthFrom.value = currentGraphWidth;
-        graphWidthTo.value = toWidth;
-        morphProgress.value = 0;
-        morphProgress.value = withTiming(1, {
-          duration: CHART_MORPH_DURATION,
-          easing: Easing.out(Easing.cubic),
-        });
-      })(nextYValues, nextGraphWidth);
+          if (currentLinePath) morphFromLinePath.value = currentLinePath;
+          if (currentFillPath) morphFromFillPath.value = currentFillPath;
+          // build the target path on the ui thread
+          morphToLinePath.value.reset();
+          writeLinePath(morphToLinePath.value, nextValues, toWidth);
+          morphToFillPath.value.reset();
+          writeFillPath(morphToFillPath.value, nextValues, toWidth);
+          graphWidthFrom.value = currentGraphWidth;
+          graphWidthTo.value = toWidth;
+          morphProgress.value = 0;
+          morphProgress.value = withTiming(1, {
+            duration: CHART_MORPH_DURATION,
+            easing: Easing.out(Easing.cubic),
+          });
+        },
+      )(nextYValues, nextGraphWidth);
     },
-    [graphWidthFrom, graphWidthTo, morphFrom, morphProgress, morphTo],
+    [
+      graphWidthFrom,
+      graphWidthTo,
+      morphFromFillPath,
+      morphFromLinePath,
+      morphProgress,
+      morphToFillPath,
+      morphToLinePath,
+    ],
   );
 
   return {
+    animatedFillPath,
     animatedGraphWidth,
+    animatedLinePath,
     animateTo,
-    morphedYValues,
   };
 }
 

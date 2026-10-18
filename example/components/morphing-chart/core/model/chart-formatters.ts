@@ -44,8 +44,7 @@ function getDateAtProgress(start: number, duration: number, progress: number) {
 function getTodayStart() {
   const today = new Date();
 
-  // Use the device's calendar day for the relative chart labels. Using UTC
-  // getters would roll the sample timeline forward after local evening.
+  // use local calendar getters for relative labels
   return Date.UTC(
     today.getFullYear(),
     today.getMonth(),
@@ -101,8 +100,7 @@ export function getCursorLabel(
     const end = todayStart + (11 * MINUTES_PER_HOUR + 25) * 60 * 1000;
     const date = getDateAtProgress(start, end - start, progress);
 
-    // The first sample retains yesterday's date; after midnight the cursor
-    // switches to the new day's time-only labels.
+    // switch from the prior date to current day time labels after midnight
     return index === 0
       ? `${formatMonthDay(date)} ${formatTime(date)}`
       : formatTime(date);
@@ -114,8 +112,7 @@ export function getCursorLabel(
     const date = getDateAtProgress(start, end - start, progress);
     const today = new Date(todayStart);
 
-    // Keep date/hour context through yesterday's final hour, then switch to
-    // compact hour-only labels exactly when the current day begins.
+    // keep date and hour context until the current day begins
     return isSameUtcDay(date, today)
       ? String(date.getUTCHours()).padStart(2, "0")
       : formatMonthDayHour(date);
@@ -126,16 +123,14 @@ export function getCursorLabel(
     const end = todayStart + 20 * 60 * 60 * 1000;
     const date = getDateAtProgress(start, end - start, progress);
 
-    // Month labels retain both calendar date and hour, e.g. Aug 31 19 and
-    // Sep 05 20, so the exact recent position remains visible.
+    // include date and hour in month labels
     return formatMonthDayHour(date);
   }
 
   const start = todayStart - 365 * DAY_MS;
   const date = getDateAtProgress(start, 365 * DAY_MS, progress);
 
-  // Current-year dates are compact (Jul 30); the older year identifies the
-  // month and year (July 2025) so the two calendar years remain distinct.
+  // use compact labels for the current year and full labels for older years
   return date.getUTCFullYear() < new Date().getUTCFullYear()
     ? `${MONTH_NAMES_LONG[date.getUTCMonth()]} ${date.getUTCFullYear()}`
     : formatMonthDay(date);

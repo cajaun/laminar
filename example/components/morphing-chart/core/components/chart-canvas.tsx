@@ -5,22 +5,18 @@ import {
   Group,
   LinearGradient,
   Path,
+  type SkPath,
   usePathValue,
   vec,
 } from "@shopify/react-native-skia";
 import {
   interpolateColor,
-  type DerivedValue,
   type SharedValue,
   useDerivedValue,
 } from "react-native-reanimated";
 import { CHART_HEIGHT, CROSSHAIR_RADIUS } from "@/components/morphing-chart/core/model/geometry";
 import { Cursor } from "@/components/morphing-chart/core/components/cursor";
-import {
-  writeFillPath,
-  writeFutureClipPath,
-  writeLinePath,
-} from "@/components/morphing-chart/core/rendering/path-writers";
+import { writeFutureClipPath } from "@/components/morphing-chart/core/rendering/path-writers";
 import {
   CHART_COLOR,
   FUTURE_LINE_COLOR,
@@ -56,11 +52,12 @@ export type ChartCanvasProps = {
   fillTopColor?: string;
   futureLineColor?: string;
   lineColor?: string;
-  morphedYValues: DerivedValue<number[]>;
+  animatedFillPath: SharedValue<SkPath>;
+  animatedLinePath: SharedValue<SkPath>;
   showFill?: boolean;
 };
 
-/** Renders the chart through Skia so cursor scrubbing stays on the GPU-backed canvas. */
+// render chart paths and cursor markers on the skia canvas
 function ChartCanvasComponent({
   animatedGraphWidth,
   chartWidth,
@@ -72,23 +69,10 @@ function ChartCanvasComponent({
   fillTopColor = CHART_COLOR,
   futureLineColor = FUTURE_LINE_COLOR,
   lineColor = CHART_COLOR,
-  morphedYValues,
+  animatedFillPath,
+  animatedLinePath,
   showFill = false,
 }: ChartCanvasProps) {
-  const animatedLinePath = usePathValue((path) => {
-    "worklet";
-
-    writeLinePath(path, morphedYValues.value, animatedGraphWidth.value);
-  });
-  const animatedFillPath = usePathValue((path) => {
-    "worklet";
-
-    if (showFill) {
-      writeFillPath(path, morphedYValues.value, animatedGraphWidth.value);
-    } else {
-      path.reset();
-    }
-  });
   const futureClipPath = usePathValue((path) => {
     "worklet";
 
@@ -103,9 +87,7 @@ function ChartCanvasComponent({
     interpolateColor(fadeProgress.value, [0, 1], [lineColor, futureLineColor]),
   );
   const animatedEndpointRadius = useDerivedValue(() => {
-    // Keep the marker attached to the terminal path point. When a range fills
-    // the canvas, the endpoint becomes the line's round cap by collapsing the
-    // marker radius instead of removing a separate dot mid-morph.
+    // collapse the terminal marker when the line reaches the chart edge
     const distanceToEdge = chartWidth - animatedGraphWidth.value;
 
     const scale = Math.max(
@@ -116,8 +98,7 @@ function ChartCanvasComponent({
     return CROSSHAIR_RADIUS * scale;
   });
   const animatedEndpointCenter = useDerivedValue(() => {
-    // Read the endpoint from the exact path being drawn. This keeps the live
-    // marker locked to the line even while the path is morphing between ranges.
+    // read the endpoint from the rendered path
     const endpoint = animatedLinePath.value.getLastPt();
 
     return {
@@ -174,9 +155,7 @@ function ChartCanvasComponent({
           strokeWidth={5}
         />
       </Group>
-      {/* Keep the live marker in the same clipped color layers as the line.
-       * This makes it turn grey with the future segment while scrubbing and
-       * return to the line color as the scrub fades out. */}
+      {/* keep marker layers aligned with line color transitions */}
       <Group clip={futureClipPath} invertClip>
         <SkiaCircle
           c={animatedEndpointCenter}

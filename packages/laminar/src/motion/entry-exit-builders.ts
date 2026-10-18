@@ -29,7 +29,7 @@ type LeadingEnterTransitionParams = {
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
 };
 
-// leading replacements use scale while first appearance uses the regular fade path
+// use scale for leading replacements and fade for first appearance
 export const createLeadingEnterTransition = ({
   durationMs,
   easing,
@@ -50,7 +50,7 @@ export const createLeadingEnterTransition = ({
   };
 };
 
-// combine opacity travel and scale on one timing path
+// combine opacity and scale on one timing path
 export const createShiftTransition = ({
   durationMs,
   easing,
@@ -98,7 +98,7 @@ export const createShiftTransition = ({
   };
 };
 
-// the shared swap flag lets an exiting worklet read the current transition type
+// let exiting worklets read the current transition type
 export const createLeadingExitTransition = ({
   durationMs,
   easing,

@@ -13,7 +13,7 @@ type LeadingElementProps = {
   readonly elementExitTransition?: EntryExitAnimationFunction;
 };
 
-// render an inline element independently so it can enter exit and swap beside any run
+// render leading content beside any run with its own transitions
 export const LeadingElement = React.memo(function LeadingElement({
   leading,
   leadingKey,

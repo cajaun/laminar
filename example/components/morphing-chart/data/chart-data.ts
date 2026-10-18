@@ -12,11 +12,7 @@ export type ChartDataBySource = {
   rangeMetadata: Record<RangeType, RangeMeta>;
 };
 
-/**
- * High-resolution centerline samples traced from the supplied 1170px
- * reference screenshots. Keeping the samples dense preserves the small
- * oscillations while still allowing the chart path to morph between ranges.
- */
+// store dense reference samples for stable range morphs
 const REFERENCE_SERIES: Record<RangeType, number[]> = {
   "1H": [
     63.8, 64.4, 66.2, 69.2, 73.2, 77.6, 81.3, 83.9, 85.4, 85.8, 84.8, 82.8,
@@ -84,9 +80,9 @@ const metadata: Record<DataSourceOption, Record<RangeType, RangeMeta>> = {
   Revenue: {
     "1H": { totalValue: 2_417.71, percentChange: 0.03, periodLabel: "last hour" },
     "1D": { totalValue: 2_502.3, percentChange: 0, periodLabel: "last day" },
-    "1W": { totalValue: 2_502.3, percentChange: 3.61, periodLabel: "last week" },
-    "1M": { totalValue: 2_502.3, percentChange: 30.9, periodLabel: "last month" },
-    "1Y": { totalValue: 2_502.3, percentChange: -43.83, periodLabel: "last year" },
+    "1W": { totalValue: 2_518.42, percentChange: 3.61, periodLabel: "last week" },
+    "1M": { totalValue: 2_631.84, percentChange: 30.9, periodLabel: "last month" },
+    "1Y": { totalValue: 2_148.63, percentChange: -43.83, periodLabel: "last year" },
   },
   Downloads: {
     "1H": { totalValue: 28_400, percentChange: -0.06, periodLabel: "last hour" },

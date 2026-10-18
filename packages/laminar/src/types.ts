@@ -3,6 +3,7 @@ import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import type {
   BaseAnimationBuilder,
   EntryExitAnimationFunction,
+  SharedValue,
   WithTimingConfig,
 } from "react-native-reanimated";
 
@@ -14,8 +15,10 @@ export type MorphAnimationPresetName =
   | "ticker";
 
 export type MorphContentVariant = "text" | "number" | "slots";
-export type MorphNumberMode = "morph" | "ticker";
+// numeric renderers share the laminar shell while changing value motion
+export type MorphNumberMode = "morph" | "ticker" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
+
 // text keys let leading content follow the same state as the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
@@ -27,6 +30,12 @@ export type LaminarShadowOptions = {
 };
 
 export type LaminarShadow = boolean | LaminarShadowOptions;
+
+// provide preformatted values to the ui thread without per sample react work
+export type LaminarAnimatedText = {
+  readonly index: SharedValue<number>;
+  readonly values: readonly string[];
+};
 
 type CubicBezierTuple = readonly [number, number, number, number];
 
@@ -65,6 +74,7 @@ export type MorphingTextProps = {
   readonly variant?: MorphContentVariant;
   // number mode selects the numeric renderer
   readonly numberMode?: MorphNumberMode;
+  readonly animatedText?: LaminarAnimatedText;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;

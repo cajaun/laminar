@@ -13,7 +13,7 @@ type UseLeadingAnimationParams = {
   readonly motionRecipe: MotionRecipe;
 };
 
-// keep leading presence and replacement motion consistent across every content variant
+// keep leading presence and replacement motion consistent
 export const useLeadingAnimation = ({
   leading,
   leadingKey,
@@ -31,7 +31,7 @@ export const useLeadingAnimation = ({
     (Boolean(leading) && leadingKey !== lastLeadingKeyRef.current);
   const leadingSwapProgress = useSharedValue(0);
 
-  // update the worklet flag after commit so render never writes a shared value
+  // update the worklet flag after commit
   useLayoutEffect(() => {
     leadingSwapProgress.value = isLeadingSwap ? 1 : 0;
   }, [isLeadingSwap, leadingSwapProgress]);

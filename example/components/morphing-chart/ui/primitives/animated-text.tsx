@@ -2,9 +2,7 @@ import { Text } from "react-native";
 import type { TextStyle } from "react-native";
 import type { AnimatedTextProps } from "@/components/morphing-chart/core/types";
 
-// Kept as a compatibility primitive, but deliberately renders a semantic
-// value. Animation must be owned by a native/UI-thread renderer, never by a
-// JavaScript frame loop that updates React state per frame.
+// keep the compatibility primitive semantic while native renderers own motion
 export default function AnimatedText({
   value,
   fontSize = 52,

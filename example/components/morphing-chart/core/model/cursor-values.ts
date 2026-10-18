@@ -1,17 +1,13 @@
 import type { RangeType } from "@/components/morphing-chart/data/chart-data";
 import type { CursorPoint } from "@/components/morphing-chart/core/types";
 
-type CursorPriceSample = {
+export type CursorPriceSample = {
   progress: number;
   value: number;
 };
 
-/**
- * Cursor price samples measured from the supplied screen recording. Keeping
- * them separate from the chart renderer makes the display model replaceable
- * without changing gesture or SVG code.
- */
-const CURSOR_PRICE_SAMPLES: Record<RangeType, readonly CursorPriceSample[]> = {
+// store recorded cursor values outside the chart renderer
+export const CURSOR_PRICE_SAMPLES: Record<RangeType, readonly CursorPriceSample[]> = {
   "1H": [
     { progress: 0.114, value: 2_505.75 },
     { progress: 0.220, value: 2_504.56 },
@@ -49,24 +45,23 @@ const CURSOR_PRICE_SAMPLES: Record<RangeType, readonly CursorPriceSample[]> = {
     { progress: 0.858, value: 2_408.08 },
     { progress: 1, value: 2_502.30 },
   ],
-  // The recording switches to 1Y but does not drag the cursor there. Keep
-  // its value anchored until there are observed 1Y cursor samples to match.
+  // hold the one year value until recorded cursor samples exist
   "1Y": [],
 };
 
 const CURSOR_PRICE_TIGHTENING = 0.5;
 
-export function getCursorDisplayValue(
-  range: RangeType,
+// interpolate cursor values on the ui thread
+export function getCursorDisplayValueAtProgress(
   totalValue: number,
-  cursor: CursorPoint | null,
-  graphWidth: number,
+  samples: readonly CursorPriceSample[],
+  inputProgress: number,
 ) {
-  const samples = CURSOR_PRICE_SAMPLES[range];
+  "worklet";
 
-  if (!cursor || graphWidth <= 0 || samples.length === 0) return totalValue;
+  if (samples.length === 0) return totalValue;
 
-  const progress = Math.max(0, Math.min(1, cursor.x / graphWidth));
+  const progress = Math.max(0, Math.min(1, inputProgress));
   let sampledValue = samples[samples.length - 1].value;
 
   if (progress <= samples[0].progress) {
@@ -89,11 +84,30 @@ export function getCursorDisplayValue(
   return totalValue + (sampledValue - totalValue) * CURSOR_PRICE_TIGHTENING;
 }
 
+export function getCursorDisplayValue(
+  range: RangeType,
+  totalValue: number,
+  cursor: CursorPoint | null,
+  graphWidth: number,
+) {
+  const samples = CURSOR_PRICE_SAMPLES[range];
+
+  if (!cursor || graphWidth <= 0 || samples.length === 0) return totalValue;
+
+  return getCursorDisplayValueAtProgress(
+    totalValue,
+    samples,
+    cursor.x / graphWidth,
+  );
+}
+
 export function getCursorDisplayPercent(
   rangePercent: number,
   totalValue: number,
   displayValue: number,
 ) {
+  "worklet";
+
   if (totalValue === 0) return rangePercent;
 
   return rangePercent + ((displayValue - totalValue) / totalValue) * 100;

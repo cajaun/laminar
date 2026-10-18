@@ -16,9 +16,12 @@ type Params = {
 
 type MorphMotion = {
   readonly motionRecipe: MotionRecipe;
+  // keep separate motion recipes for slots and ticker modes
+  readonly slotsMotionRecipe: MotionRecipe;
+  readonly tickerMotionRecipe: MotionRecipe;
 };
 
-// resolve one recipe for coordinated token timing
+// resolve motion recipes for coordinated token timing
 export const useMorphMotion = ({
   variant,
   numberMode,
@@ -26,19 +29,21 @@ export const useMorphMotion = ({
   animationDuration,
 }: Params): MorphMotion => {
   const isTicker = variant === "number" && numberMode === "ticker";
-  // numeric variants need a quicker default because their lanes update often
-  const resolvedPreset =
-    animationPreset ??
-    (isTicker
-      ? "ticker"
-      : variant === "text"
-        ? "default"
-        : "snappy");
-
-  const motionRecipe = useMemo(
-    () => resolveMotionRecipe(resolvedPreset, animationDuration),
-    [animationDuration, resolvedPreset]
+  // use a quicker default for numeric lane updates
+  const slotsPreset = animationPreset ?? (variant === "text" ? "default" : "snappy");
+  const tickerPreset = animationPreset ?? "ticker";
+  const slotsMotionRecipe = useMemo(
+    () => resolveMotionRecipe(slotsPreset, animationDuration),
+    [animationDuration, slotsPreset]
+  );
+  const tickerMotionRecipe = useMemo(
+    () => resolveMotionRecipe(tickerPreset, animationDuration),
+    [animationDuration, tickerPreset]
   );
 
-  return { motionRecipe };
+  return {
+    motionRecipe: isTicker ? tickerMotionRecipe : slotsMotionRecipe,
+    slotsMotionRecipe,
+    tickerMotionRecipe,
+  };
 };

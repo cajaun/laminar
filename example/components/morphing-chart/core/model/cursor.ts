@@ -19,7 +19,7 @@ function cubicAt(
   );
 }
 
-/** Finds the point on the rendered cubic line at a continuous chart X. */
+// find the point on the cubic line at a continuous chart x
 export function getChartCursorPoint(
   points: CursorPoint[],
   x: number,
@@ -41,7 +41,7 @@ export function getChartCursorPoint(
     ? Math.max(0, Math.min(1, (clampedX - left.x) / segmentWidth))
     : 0;
 
-  // The renderer uses X control points at 1/3 and 2/3, so X is linear in t.
+  // solve the cubic parameter from the linear x control points
   const previousPoint = points[Math.max(0, segmentIndex - 1)];
   const followingPoint = points[Math.min(points.length - 1, segmentIndex + 2)];
   const firstControlY = left.y + (right.y - previousPoint.y) / 6;

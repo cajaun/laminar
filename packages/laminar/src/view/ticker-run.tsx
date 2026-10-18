@@ -1,11 +1,22 @@
-import React, { useRef, type ReactNode } from "react";
-import { type StyleProp, type TextStyle, View } from "react-native";
-import Animated from "react-native-reanimated";
+import React, { useMemo, useRef, type ReactNode } from "react";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  type StyleProp,
+  type TextStyle,
+  View,
+} from "react-native";
+import Animated, {
+  createAnimatedComponent,
+  useAnimatedProps,
+} from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
 import { isAsciiDigit } from "../model/display-units";
 import type {
   LaminarAlign,
+  LaminarAnimatedText,
   LaminarShadow,
   MotionRecipe,
 } from "../types";
@@ -17,7 +28,7 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
-// keep the layout transition on the wrapper so new glyphs keep their width
+// keep each glyph in the row so surrounding digits can reflow
 const glyphSlotStyle = {
   alignSelf: "flex-start",
 } as const;
@@ -28,8 +39,11 @@ const rowAlignStyles = {
   right: { alignSelf: "flex-end" },
 } as const;
 
+const AnimatedTextInput = createAnimatedComponent(TextInput);
+
 type TickerRunProps = {
   readonly value: string;
+  readonly animatedText?: LaminarAnimatedText;
   readonly motionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
   readonly fontSize?: number;
@@ -39,14 +53,144 @@ type TickerRunProps = {
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
   readonly ready?: boolean;
-  // keep shadow for api compatibility while ticker values stay crisp
+  // keep shadow for api compatibility
   readonly shadow?: LaminarShadow;
 };
+
+type NativeTickerRunProps = {
+  readonly fallbackValue: string;
+  readonly animatedText: LaminarAnimatedText;
+  readonly align: LaminarAlign;
+  readonly textStyle?: StyleProp<TextStyle>;
+};
+
+// update the displayed string on the ui thread during scrubbing
+const NativeTickerRun = React.memo(function NativeTickerRun({
+  fallbackValue,
+  animatedText,
+  align,
+  textStyle,
+}: NativeTickerRunProps) {
+  const animatedProps = useAnimatedProps<{ text: string }>(
+    () => {
+      "worklet";
+
+      const lastIndex = Math.max(0, animatedText.values.length - 1);
+      const index = Math.max(
+        0,
+        Math.min(lastIndex, Math.round(animatedText.index.value)),
+      );
+
+      return {
+        text: animatedText.values[index] ?? fallbackValue,
+      };
+    },
+    [animatedText.values, fallbackValue],
+  );
+
+  return (
+    <View
+      style={[
+        rowStyle,
+        rowAlignStyles[align],
+        { position: "relative" },
+      ]}
+    >
+      {/* keep the ticker layout box anchored to the fallback text */}
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[
+          textStyle,
+          {
+            opacity: 0,
+            includeFontPadding: false,
+            margin: 0,
+            padding: 0,
+          },
+        ]}
+      >
+        {fallbackValue}
+      </Text>
+      <AnimatedTextInput
+        accessibilityElementsHidden
+        caretHidden
+        defaultValue={fallbackValue}
+        editable={false}
+        pointerEvents="none"
+        style={[
+          textStyle,
+          {
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            alignSelf: "flex-start",
+            flexShrink: 0,
+            includeFontPadding: false,
+            margin: 0,
+            padding: 0,
+            textAlign: align,
+          },
+        ]}
+        animatedProps={
+          animatedProps as unknown as React.ComponentProps<
+            typeof AnimatedTextInput
+          >["animatedProps"]
+        }
+      />
+    </View>
+  );
+});
+
+type TickerLaneProps = {
+  readonly unit: string;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly animateLayout: boolean;
+  readonly motionRecipe: MotionRecipe;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+// keep unchanged lanes out of scrub reconciliation
+const TickerLane = React.memo(function TickerLane({
+  unit,
+  isLast,
+  laneSpacing,
+  animateLayout,
+  motionRecipe,
+  textStyle,
+  className,
+}: TickerLaneProps) {
+  return (
+    <Animated.View
+      layout={animateLayout ? motionRecipe.layoutTransition : undefined}
+      style={[
+        glyphSlotStyle,
+        !isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined,
+      ]}
+    >
+      <Animated.Text
+        style={[textStyle, { letterSpacing: 0 }]}
+        className={className}
+      >
+        {unit}
+      </Animated.Text>
+    </Animated.View>
+  );
+});
+
+TickerLane.displayName = "TickerLane";
 
 // keep ticker lanes inline with crisp replacements
 export const TickerRun = React.memo(
   ({
     value,
+    animatedText,
     motionRecipe,
     align,
     textStyle,
@@ -95,8 +239,22 @@ export const TickerRun = React.memo(
       motionRecipe,
     });
     const { units, leadLength } = useNumericLanes(visibleValue);
+    const laneSpacing = useMemo(() => {
+      const flattenedStyle = StyleSheet.flatten(textStyle);
+      return typeof flattenedStyle?.letterSpacing === "number"
+        ? flattenedStyle.letterSpacing
+        : 0;
+    }, [textStyle]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
+    const structureSignature = useMemo(
+      () =>
+        units
+          .map((unit) => (isAsciiDigit(unit) ? "digit" : unit))
+          .join("\u0000"),
+      [units],
+    );
+    const previousStructureSignatureRef = useRef(structureSignature);
 
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
@@ -104,7 +262,22 @@ export const TickerRun = React.memo(
     }
 
     const hasAnimated = hasAnimatedRef.current;
+    const structureChanged =
+      hasAnimated &&
+      previousStructureSignatureRef.current !== structureSignature;
+    previousStructureSignatureRef.current = structureSignature;
     const bodyLength = Math.max(units.length - leadLength, 0);
+
+    if (animatedText && !visibleLeading) {
+      return (
+        <NativeTickerRun
+          animatedText={animatedText}
+          align={align}
+          fallbackValue={visibleValue}
+          textStyle={textStyle}
+        />
+      );
+    }
 
     return (
       <View style={[rowStyle, rowAlignStyles[align]]}>
@@ -135,18 +308,17 @@ export const TickerRun = React.memo(
             const unitKey = isDigit ? laneKey : `${laneKey}:${unit}`;
 
             return (
-              <Animated.View
+              <TickerLane
                 // keep each lane mounted so width changes move following digits
                 key={unitKey}
-                layout={
-                  hasAnimated ? motionRecipe.layoutTransition : undefined
-                }
-                style={glyphSlotStyle}
-              >
-                <Animated.Text style={textStyle} className={className}>
-                  {unit}
-                </Animated.Text>
-              </Animated.View>
+                unit={unit}
+                isLast={index === units.length - 1}
+                laneSpacing={laneSpacing}
+                animateLayout={structureChanged}
+                motionRecipe={motionRecipe}
+                textStyle={textStyle}
+                className={className}
+              />
             );
           })}
         </Animated.View>

@@ -1,5 +1,8 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Text, View, type TextStyle } from "react-native";
+import { Laminar } from "react-native-laminar";
+import type { MorphNumberMode } from "react-native-laminar";
+import type { SharedValue } from "react-native-reanimated";
 import type { RangeMeta } from "@/components/morphing-chart/data/chart-data";
 import type { MorphingAsset } from "@/components/morphing-chart/ui/assets/asset-config";
 import { REFERENCE_GREEN } from "@/components/morphing-chart/core/model/chart-config";
@@ -10,93 +13,246 @@ import { getCursorDisplayPercent } from "@/components/morphing-chart/core/model/
 import { SFIcon } from "@/components/morphing-chart/ui/primitives/sf-icon";
 import { useMorphingChartTheme } from "@/components/morphing-chart/ui/morphing-chart-theme";
 
+const fullReadoutContainerStyle = { width: "100%" } as const;
+
 type PriceOverviewProps = {
   asset: MorphingAsset;
+  cursorIndexShared: SharedValue<number>;
   displayValue: number;
   meta: RangeMeta;
+  numberMode: MorphNumberMode;
   priceFractionDigits: number;
+  tickerValues: readonly number[] | null;
   width: number;
 };
 
-export function PriceOverview({
+export const PriceOverview = React.memo(function PriceOverview({
   asset,
+  cursorIndexShared,
   displayValue,
   meta,
+  numberMode,
   priceFractionDigits,
+  tickerValues,
   width,
 }: PriceOverviewProps) {
   const theme = useMorphingChartTheme();
+  return (
+    <View
+      className="mt-6 flex-row items-end justify-between"
+      style={{ width }}
+    >
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <PriceIdentity asset={asset} color={theme.primary} />
+        <PriceReadout
+          cursorIndexShared={cursorIndexShared}
+          displayValue={displayValue}
+          numberMode={numberMode}
+          priceFractionDigits={priceFractionDigits}
+          tickerValues={tickerValues}
+          color={theme.primary}
+          backgroundColor={theme.background}
+        />
+      </View>
+      <PercentReadout
+        cursorIndexShared={cursorIndexShared}
+        displayValue={displayValue}
+        meta={meta}
+        numberMode={numberMode}
+        tickerValues={tickerValues}
+        backgroundColor={theme.background}
+      />
+    </View>
+  );
+});
+
+PriceOverview.displayName = "PriceOverview";
+
+type PriceIdentityProps = {
+  asset: MorphingAsset;
+  color: string;
+};
+
+const PriceIdentity = React.memo(function PriceIdentity({
+  asset,
+  color,
+}: PriceIdentityProps) {
+  return (
+    <View className="mb-0.5 flex-row items-center gap-2">
+      <Text
+        className="font-sf-bold text-[30px] leading-9"
+        style={{ color }}
+      >
+        Ethereum
+      </Text>
+      {asset === "ethereum" ? (
+        <SFIcon
+          name="checkmark.seal.fill"
+          size={31}
+          color="#4CAEFF"
+          weight="bold"
+          fallback="✓"
+          fallbackSize={25}
+        />
+      ) : null}
+    </View>
+  );
+});
+
+PriceIdentity.displayName = "PriceIdentity";
+
+type NumericReadoutProps = {
+  cursorIndexShared: SharedValue<number>;
+  displayValue: number;
+  meta: RangeMeta;
+  numberMode: MorphNumberMode;
+  priceFractionDigits: number;
+  tickerValues: readonly number[] | null;
+  backgroundColor: string;
+};
+
+const PriceReadout = React.memo(function PriceReadout({
+  cursorIndexShared,
+  displayValue,
+  numberMode,
+  priceFractionDigits,
+  tickerValues,
+  color,
+  backgroundColor,
+}: Omit<NumericReadoutProps, "meta"> & { color: string }) {
+  const priceText = `$${displayValue.toLocaleString("en-US", {
+    minimumFractionDigits: priceFractionDigits,
+    maximumFractionDigits: priceFractionDigits,
+  })}`;
+  const tickerPriceValues = React.useMemo(
+    () =>
+      tickerValues?.map(
+        (value) =>
+          `$${value.toLocaleString("en-US", {
+            minimumFractionDigits: priceFractionDigits,
+            maximumFractionDigits: priceFractionDigits,
+          })}`,
+      ) ?? [],
+    [priceFractionDigits, tickerValues],
+  );
+  const animatedPriceText = React.useMemo(
+    () =>
+      numberMode === "ticker" && tickerPriceValues.length > 0
+        ? { index: cursorIndexShared, values: tickerPriceValues }
+        : undefined,
+    [cursorIndexShared, numberMode, tickerPriceValues],
+  );
+  const priceTextStyle: TextStyle = React.useMemo(
+    () => ({
+      color,
+      fontVariant: ["tabular-nums"],
+      fontFamily: "Sf-bold",
+      fontWeight: "700" as const,
+      letterSpacing: -1.5,
+      lineHeight: 36,
+    }),
+    [color],
+  );
+  const numberShadow = React.useMemo(
+    () => ({ color: backgroundColor }),
+    [backgroundColor],
+  );
+
+  return (
+    <Laminar
+      animatedText={animatedPriceText}
+      text={priceText}
+      variant="number"
+      numberMode={numberMode}
+      align="left"
+      autoSize
+      clipToBounds={false}
+      fontSize={30}
+      shadow={numberShadow}
+      containerStyle={fullReadoutContainerStyle}
+      style={priceTextStyle}
+    />
+  );
+});
+
+PriceReadout.displayName = "PriceReadout";
+
+const PercentReadout = React.memo(function PercentReadout({
+  cursorIndexShared,
+  displayValue,
+  meta,
+  numberMode,
+  tickerValues,
+  backgroundColor,
+}: Omit<NumericReadoutProps, "priceFractionDigits">) {
   const displayPercentChange = getCursorDisplayPercent(
     meta.percentChange,
     meta.totalValue,
     displayValue,
   );
   const percentText = formatPercent(displayPercentChange);
-  const priceText = `$${displayValue.toLocaleString("en-US", {
-    minimumFractionDigits: priceFractionDigits,
-    maximumFractionDigits: priceFractionDigits,
-  })}`;
-  const priceTextStyle = {
-    color: theme.primary,
-    fontFamily: "Sf-bold",
-    fontWeight: "700" as const,
-    lineHeight: 36,
-  };
-
+  const tickerPercentValues = React.useMemo(
+    () =>
+      tickerValues?.map((value) =>
+        formatPercent(
+          getCursorDisplayPercent(meta.percentChange, meta.totalValue, value),
+        ),
+      ) ?? [],
+    [meta.percentChange, meta.totalValue, tickerValues],
+  );
+  const animatedPercentText = React.useMemo(
+    () =>
+      numberMode === "ticker" && tickerPercentValues.length > 0
+        ? { index: cursorIndexShared, values: tickerPercentValues }
+        : undefined,
+    [cursorIndexShared, numberMode, tickerPercentValues],
+  );
+  const percentTextStyle: TextStyle = React.useMemo(
+    () => ({
+      color: REFERENCE_GREEN,
+      fontVariant: ["tabular-nums"],
+      fontFamily: "Sf-bold",
+      fontWeight: "700" as const,
+      letterSpacing: -1.5,
+      lineHeight: 30,
+    }),
+    [],
+  );
+  const numberShadow = React.useMemo(
+    () => ({ color: backgroundColor }),
+    [backgroundColor],
+  );
+  const percentLeading = React.useMemo(
+    () => (
+      <SFIcon
+        name="arrow.up"
+        size={28}
+        color={REFERENCE_GREEN}
+        weight="bold"
+        fallback="↑"
+        fallbackSize={28}
+      />
+    ),
+    [],
+  );
   return (
-    <View
-      className="mt-6 flex-row items-end justify-between"
-      style={{ width }}
-    >
-      <View>
-        <View className="mb-0.5 flex-row items-center gap-2">
-          <Text
-            className="font-sf-bold text-[30px] leading-9"
-            style={{ color: theme.primary }}
-          >
-            Ethereum
-          </Text>
-          {asset === "ethereum" ? (
-            <SFIcon
-              name="checkmark.seal.fill"
-              size={31}
-              color="#4CAEFF"
-              weight="bold"
-              fallback="✓"
-              fallbackSize={25}
-            />
-          ) : null}
-        </View>
-        <Text
-          className="font-sf-bold text-[30px] leading-9 tracking-[-1.5px]"
-          style={priceTextStyle}
-        >
-          {priceText}
-        </Text>
-      </View>
-      <View className="items-end pb-1.25">
-        <View className="h-7.5 w-27.5 flex-row items-center justify-end gap-1">
-          <SFIcon
-            name="arrow.up"
-            size={28}
-            color={REFERENCE_GREEN}
-            weight="bold"
-            fallback="↑"
-            fallbackSize={28}
-          />
-          <Text
-            className="font-sf-bold text-[24px] leading-7.5 tracking-[-1.5px]"
-            style={{
-              color: REFERENCE_GREEN,
-              fontFamily: "Sf-bold",
-              fontWeight: "700",
-              lineHeight: 30,
-            }}
-          >
-            {percentText}
-          </Text>
-        </View>
-      </View>
+    <View className="items-end pb-1.25" style={{ flexShrink: 0 }}>
+      <Laminar
+        animatedText={animatedPercentText}
+        text={percentText}
+        variant="number"
+        numberMode={numberMode}
+        align="right"
+        leading={percentLeading}
+        leadingGap={4}
+        autoSize
+        clipToBounds={false}
+        fontSize={24}
+        shadow={numberShadow}
+        style={percentTextStyle}
+      />
     </View>
   );
-}
+});
+
+PercentReadout.displayName = "PercentReadout";

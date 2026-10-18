@@ -59,7 +59,7 @@ const REEL_MIN = -12;
 const REEL_MAX = 22;
 const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
 
-// wrap reel positions so a bounded strip can represent an endless digit wheel
+// wrap reel positions inside the bounded digit wheel
 const mod = (value: number, divisor: number) =>
   ((value % divisor) + divisor) % divisor;
 
@@ -70,7 +70,7 @@ type SlotReelProps = {
   readonly className?: string;
 };
 
-// compare flattened style values without treating a new array as a visual change
+// compare flattened styles without treating new arrays as changes
 const equalStyleValue = (left: unknown, right: unknown) =>
   left === right ||
   (Array.isArray(left) &&
@@ -78,7 +78,7 @@ const equalStyleValue = (left: unknown, right: unknown) =>
     left.length === right.length &&
     left.every((value, index) => value === right[index]));
 
-// prevent every parent update from rebuilding the bounded reel
+// prevent parent updates from rebuilding the bounded reel
 const areSlotReelPropsEqual = (
   previous: SlotReelProps,
   next: SlotReelProps
@@ -110,7 +110,7 @@ const SlotReel = React.memo(function SlotReel({
   textStyle,
   className,
 }: SlotReelProps) {
-  // translate one bounded reel instead of mounting a new animated digit per update
+  // translate one bounded reel for each digit update
   const animatedStyle = useAnimatedStyle(
     () => ({
       transform: [{ translateY: (-10 - current.value) * slotHeight }],
@@ -180,7 +180,7 @@ const SlotColumn = React.memo(function SlotColumn({
   className,
   shadow = false,
 }: SlotColumnProps) {
-  // cumulative positions let the reel move across digit wraparound without jumps
+  // use cumulative positions across digit wraparound
   const spinInDistance = Math.max(digit, 1);
   const initialDirection = direction || 1;
   const initialValue = animateIn
@@ -233,7 +233,7 @@ const SlotColumn = React.memo(function SlotColumn({
   };
 
   useEffect(() => {
-    // continue the current reel from its last committed target when the column exits
+    // continue the reel from its last target when the column exits
     return () => {
       const exitState = exitStateRef.current;
       const spinOutDistance = Math.max(exitState.digit, 1);
@@ -246,7 +246,7 @@ const SlotColumn = React.memo(function SlotColumn({
   }, [current]);
 
   useLayoutEffect(() => {
-    // keep the reel bounded by recentring after enough cumulative turns
+    // recenter the reel after enough cumulative turns
     if (initialRef.current) {
       initialRef.current = false;
 
@@ -259,7 +259,8 @@ const SlotColumn = React.memo(function SlotColumn({
     let target = cumulativeRef.current;
 
     if (target < REEL_MIN + 4 || target > REEL_MAX - 4) {
-      const shift = Math.trunc(target / 10) * 10;
+      // floor negative targets into the first cycle
+      const shift = Math.floor(target / 10) * 10;
 
       if (shift !== 0) {
         target -= shift;
@@ -285,17 +286,24 @@ const SlotColumn = React.memo(function SlotColumn({
     current.value = motionRecipe.driveNumber(target);
   }, [animateIn, current, digit, direction, motionRecipe]);
 
-  const reel = (
-    <SlotReel
-      current={current}
-      slotHeight={slotHeight}
-      textStyle={reelTextStyle ?? textStyle}
-      className={className}
-    />
+  // keep the reel child stable while the target changes
+  const reel = useMemo(
+    () => (
+      <SlotReel
+        current={current}
+        slotHeight={slotHeight}
+        textStyle={reelTextStyle ?? textStyle}
+        className={className}
+      />
+    ),
+    [className, current, reelTextStyle, slotHeight, textStyle],
   );
 
   return (
-    <View style={[slotFrameStyle, { height: slotHeight }]}>
+    <View
+      collapsable={false}
+      style={[slotFrameStyle, { height: slotHeight }]}
+    >
       <Text
         style={[textStyle, slotProbeStyle, { lineHeight: slotHeight }]}
         className={className}
@@ -318,6 +326,111 @@ const SlotColumn = React.memo(function SlotColumn({
   );
 });
 
+type SlotTextLaneProps = {
+  readonly unit: string;
+  readonly isLead: boolean;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly structureChanged: boolean;
+  readonly motionRecipe: MotionRecipe;
+  readonly slotHeight: number;
+  readonly reelTextStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+// keep punctuation and leading symbols outside digit reconciliation
+const SlotTextLane = React.memo(function SlotTextLane({
+  unit,
+  isLead,
+  isLast,
+  laneSpacing,
+  structureChanged,
+  motionRecipe,
+  slotHeight,
+  reelTextStyle,
+  className,
+}: SlotTextLaneProps) {
+  return (
+    <Animated.View
+      layout={
+        structureChanged ? motionRecipe.layoutTransition : undefined
+      }
+      exiting={!isLead ? motionRecipe.exitTransition : undefined}
+      style={{
+        height: slotHeight,
+        alignItems: "center",
+        justifyContent: "center",
+        ...(!isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined),
+      }}
+    >
+      <Animated.Text style={reelTextStyle} className={className}>
+        {unit}
+      </Animated.Text>
+    </Animated.View>
+  );
+});
+
+type SlotDigitLaneProps = {
+  readonly digit: number;
+  readonly direction: NumericFlowDirection;
+  readonly animateIn: boolean;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly structureChanged: boolean;
+  readonly motionRecipe: MotionRecipe;
+  readonly slotHeight: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly reelTextStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+  readonly shadow?: LaminarShadow;
+};
+
+const SlotDigitLane = React.memo(function SlotDigitLane({
+  digit,
+  direction,
+  animateIn,
+  isLast,
+  laneSpacing,
+  structureChanged,
+  motionRecipe,
+  slotHeight,
+  textStyle,
+  reelTextStyle,
+  className,
+  shadow,
+}: SlotDigitLaneProps) {
+  return (
+    <Animated.View
+      layout={
+        structureChanged ? motionRecipe.layoutTransition : undefined
+      }
+      entering={
+        structureChanged ? motionRecipe.enterTransition : undefined
+      }
+      exiting={motionRecipe.exitTransition}
+      style={
+        !isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined
+      }
+    >
+      <SlotColumn
+        digit={digit}
+        direction={direction}
+        animateIn={animateIn}
+        motionRecipe={motionRecipe}
+        slotHeight={slotHeight}
+        textStyle={textStyle}
+        reelTextStyle={reelTextStyle}
+        className={className}
+        shadow={shadow}
+      />
+    </Animated.View>
+  );
+});
+
 type SlotsRunProps = {
   readonly value: string;
   readonly motionRecipe: MotionRecipe;
@@ -332,7 +445,7 @@ type SlotsRunProps = {
   readonly shadow?: LaminarShadow;
 };
 
-// render text prefixes beside reusable digit reels
+// render prefixes beside reusable digit reels
 export const SlotsRun = React.memo(
   ({
     value,
@@ -385,11 +498,20 @@ export const SlotsRun = React.memo(
       leadingGap: visibleLeadingGap,
       motionRecipe,
     });
-    // numeric lane identity decides which columns stay mounted as values change
+    // use numeric lane identity to preserve columns across value changes
     const { units, direction, leadLength } = useNumericLanes(visibleValue);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
-    // derive one stable row height so every reel position shares the same baseline
+    // animate reels for value changes and layout for topology changes
+    const structureSignature = useMemo(
+      () =>
+        units
+          .map((unit) => (isAsciiDigit(unit) ? "digit" : unit))
+          .join("\u0000"),
+      [units],
+    );
+    const previousStructureSignatureRef = useRef(structureSignature);
+    // derive one row height for every reel position
     const slotHeight = useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
       const resolvedLineHeight =
@@ -406,17 +528,25 @@ export const SlotsRun = React.memo(
         Math.ceil(resolvedLineHeight ?? (resolvedFontSize ?? 16) * 1.18)
       );
     }, [fontSize, textStyle]);
-    // share the reel line box so prefixes align with native digit glyphs
+    // share the reel line box with prefix glyphs
     const slotTextStyle: StyleProp<TextStyle> = useMemo(
       () => [
         textStyle,
         {
           height: slotHeight,
           lineHeight: slotHeight,
+          // apply text spacing between separate slot lanes
+          letterSpacing: 0,
         },
       ],
       [slotHeight, textStyle]
     );
+    const laneSpacing = useMemo(() => {
+      const flattenedStyle = StyleSheet.flatten(textStyle);
+      return typeof flattenedStyle?.letterSpacing === "number"
+        ? flattenedStyle.letterSpacing
+        : 0;
+    }, [textStyle]);
     const reelTextStyle: StyleProp<TextStyle> | undefined = useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(slotTextStyle);
 
@@ -426,11 +556,13 @@ export const SlotsRun = React.memo(
 
       const {
         height: _height,
-        lineHeight: _lineHeight,
         ...visibleTextStyle
       } = flattenedStyle;
 
-      return visibleTextStyle;
+      return {
+        ...visibleTextStyle,
+        lineHeight: slotHeight,
+      };
     }, [slotTextStyle]);
 
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
@@ -439,6 +571,10 @@ export const SlotsRun = React.memo(
     }
 
     const hasAnimated = hasAnimatedRef.current;
+    const structureChanged =
+      hasAnimated &&
+      previousStructureSignatureRef.current !== structureSignature;
+    previousStructureSignatureRef.current = structureSignature;
 
     return (
       <View style={[rowStyle, rowAlignStyles[align]]}>
@@ -467,51 +603,37 @@ export const SlotsRun = React.memo(
 
             if (inLead || !isAsciiDigit(unit)) {
               return (
-                <Animated.View
+                <SlotTextLane
                   key={laneKey}
-                  layout={
-                    hasAnimated ? motionRecipe.layoutTransition : undefined
-                  }
-                  exiting={!inLead ? motionRecipe.exitTransition : undefined}
-                  style={{
-                    height: slotHeight,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Animated.Text
-                    style={reelTextStyle}
-                    className={className}
-                  >
-                    {unit}
-                  </Animated.Text>
-                </Animated.View>
+                  unit={unit}
+                  isLead={inLead}
+                  isLast={index === units.length - 1}
+                  laneSpacing={laneSpacing}
+                  structureChanged={structureChanged}
+                  motionRecipe={motionRecipe}
+                  slotHeight={slotHeight}
+                  reelTextStyle={reelTextStyle}
+                  className={className}
+                />
               );
             }
 
             return (
-              <Animated.View
+              <SlotDigitLane
                 key={laneKey}
-                layout={
-                  hasAnimated ? motionRecipe.layoutTransition : undefined
-                }
-                entering={
-                  hasAnimated ? motionRecipe.enterTransition : undefined
-                }
-                exiting={motionRecipe.exitTransition}
-              >
-                <SlotColumn
-                  digit={Number(unit)}
-                  direction={direction}
-                  animateIn={hasAnimated}
-                  motionRecipe={motionRecipe}
-                  slotHeight={slotHeight}
-                  textStyle={slotTextStyle}
-                  reelTextStyle={reelTextStyle}
-                  className={className}
-                  shadow={shadow}
-                />
-              </Animated.View>
+                digit={Number(unit)}
+                direction={direction}
+                animateIn={hasAnimated}
+                isLast={index === units.length - 1}
+                laneSpacing={laneSpacing}
+                structureChanged={structureChanged}
+                motionRecipe={motionRecipe}
+                slotHeight={slotHeight}
+                textStyle={slotTextStyle}
+                reelTextStyle={reelTextStyle}
+                className={className}
+                shadow={shadow}
+              />
             );
           })}
         </Animated.View>

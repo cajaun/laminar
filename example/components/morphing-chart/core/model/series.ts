@@ -5,12 +5,12 @@ function getPointY(value: number) {
   return BOTTOM - (value / 100) * RANGE;
 }
 
-/** Converts normalized chart samples into render-space Y coordinates. */
+// convert normalized samples into render space y coordinates
 export function buildChartYValues(data: number[]): number[] {
   return data.map(getPointY);
 }
 
-/** Converts normalized chart samples into the shared cursor lookup model. */
+// convert normalized samples into cursor lookup points
 export function buildChartPoints(
   data: number[],
   chartWidth: number = CHART_WIDTH,
