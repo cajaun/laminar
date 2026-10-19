@@ -28,10 +28,10 @@ import {
   useNumberFlowSliderDemoStore,
   useCyclicValueStoreSnapshot,
 } from "../../use-demo-state";
+import { useDemoTheme } from "../../demo-theme";
 import type { DemoPageProps } from "../types";
 
 const SCREEN = {
-  background: "#FFFFFF",
   primary: "#101114",
   secondary: "#818184",
   violet: "#9188FF",
@@ -42,16 +42,18 @@ type NumberFlowStore = ReturnType<typeof useNumberFlowSliderDemoStore>;
 const NumberFlowReadout = React.memo(function NumberFlowReadout({
   store,
   width,
+  isDark,
 }: {
   readonly store: NumberFlowStore;
   readonly width: number;
+  readonly isDark: boolean;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
   const fontSize = Math.min(66, Math.max(48, width * 0.164));
 
   return (
     <MaskedView
-      style={{ width: "100%", height: fontSize * 1.18 }}
+      style={{ width: "100%", height: fontSize * 1.5 }}
       maskElement={
         <View
           collapsable={false}
@@ -66,15 +68,15 @@ const NumberFlowReadout = React.memo(function NumberFlowReadout({
             variant="number"
             numberMode="ticker"
             animationPreset="ticker"
-            fontSize={fontSize}
+            fontSize={70}
             autoSize
             align="center"
             containerStyle={{ alignSelf: "center" }}
             style={{
               color: "black",
               fontFamily: "Sf-bold",
-              fontSize,
-              lineHeight: fontSize * 1.12,
+              // fontSize,
+              // lineHeight: fontSize * 1.12,
               textAlign: "center",
             }}
           />
@@ -82,7 +84,11 @@ const NumberFlowReadout = React.memo(function NumberFlowReadout({
       }
     >
       <LinearGradient
-        colors={["#0787F9", "#4187F7", "#8F83FF"]}
+        colors={
+          isDark
+            ? ["#B4D2FF", "#A6AFFA", "#998DFF"]
+            : ["#0787F9", "#4187F7", "#8F83FF"]
+        }
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={{ width: "100%", height: "100%" }}
@@ -94,9 +100,13 @@ const NumberFlowReadout = React.memo(function NumberFlowReadout({
 const GrowthChart = React.memo(function GrowthChart({
   width,
   height,
+  axisColor,
+  isDark,
 }: {
   readonly width: number;
   readonly height: number;
+  readonly axisColor: string;
+  readonly isDark: boolean;
 }) {
   const line = `M 0 ${height * 0.77} C ${width * 0.3} ${height * 0.69}, ${width * 0.7} ${height * 0.55}, ${width} 0`;
   const area = `${line} L ${width} ${height} L 0 ${height} Z`;
@@ -144,9 +154,7 @@ const GrowthChart = React.memo(function GrowthChart({
         Math.abs(verticalDelta) > Math.abs(horizontalDelta)
           ? verticalDelta
           : horizontalDelta;
-      markerProgress.set(
-        clamp(gestureStartProgress.get() + delta, 0.04, 0.96),
-      );
+      markerProgress.set(clamp(gestureStartProgress.get() + delta, 0.04, 0.96));
     })
     .onFinalize(() => {
       markerScale.set(withSpring(0.8));
@@ -157,12 +165,20 @@ const GrowthChart = React.memo(function GrowthChart({
       <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <Defs>
           <SvgLinearGradient id="projectionArea" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#238EFF" stopOpacity="0.17" />
-            <Stop offset="1" stopColor="#9A91FF" stopOpacity="0.18" />
+            <Stop
+              offset="0"
+              stopColor={isDark ? "#B9D6FC" : "#238EFF"}
+              stopOpacity={isDark ? 0.2 : 0.17}
+            />
+            <Stop
+              offset="1"
+              stopColor={isDark ? "#A5A4F7" : "#9A91FF"}
+              stopOpacity={isDark ? 0.2 : 0.18}
+            />
           </SvgLinearGradient>
           <SvgLinearGradient id="projectionLine" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#1688FF" />
-            <Stop offset="1" stopColor="#9287FF" />
+            <Stop offset="0" stopColor={isDark ? "#C0D3F9" : "#1688FF"} />
+            <Stop offset="1" stopColor={isDark ? "#9896F8" : "#9287FF"} />
           </SvgLinearGradient>
         </Defs>
         <Path d={area} fill="url(#projectionArea)" />
@@ -172,7 +188,7 @@ const GrowthChart = React.memo(function GrowthChart({
             <Path
               key={index}
               d={`M ${x} 0 L ${x} ${height}`}
-              stroke="#E1E1E5"
+              stroke={isDark ? "#26252E" : "#E1E1E5"}
               strokeDasharray="3 3"
               strokeWidth={1}
             />
@@ -199,7 +215,11 @@ const GrowthChart = React.memo(function GrowthChart({
         ]}
       >
         <LinearGradient
-          colors={["rgba(155, 146, 255, 0.02)", "rgba(155, 146, 255, 0.12)"]}
+          colors={
+            isDark
+              ? ["rgba(119, 132, 255, 0.01)", "rgba(119, 132, 255, 0.08)"]
+              : ["rgba(155, 146, 255, 0.02)", "rgba(155, 146, 255, 0.12)"]
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={{ flex: 1 }}
@@ -210,8 +230,8 @@ const GrowthChart = React.memo(function GrowthChart({
           {
             position: "absolute",
             width: 10,
-            backgroundColor: "#9B92FF",
-            opacity: 0.13,
+            backgroundColor: isDark ? "#7784FF" : "#9B92FF",
+            opacity: isDark ? 0.22 : 0.13,
           },
           lowerStemStyle,
         ]}
@@ -234,7 +254,7 @@ const GrowthChart = React.memo(function GrowthChart({
               width: 35,
               height: 35,
               borderRadius: 17.5,
-              backgroundColor: "white",
+              backgroundColor: isDark ? "#29283F" : "white",
               alignItems: "center",
               justifyContent: "center",
               shadowColor: "#4C4C65",
@@ -278,51 +298,71 @@ const GrowthChart = React.memo(function GrowthChart({
           justifyContent: "space-between",
         }}
       >
-        <Text style={chartAxisText}>Today</Text>
-        <Text style={chartAxisText}>30Y</Text>
+        <Text style={chartAxisText(axisColor)}>Today</Text>
+        <Text style={chartAxisText(axisColor)}>30Y</Text>
       </View>
     </View>
   );
 });
 
-const chartAxisText = {
-  color: SCREEN.secondary,
-  fontFamily: "Sf-semibold",
-  fontSize: 16,
-  lineHeight: 21,
-} as const;
+const chartAxisText = (color: string) =>
+  ({
+    color,
+    fontFamily: "Sf-semibold",
+    fontSize: 16,
+    lineHeight: 21,
+  }) as const;
 
-function RoundAction({ children }: { readonly children: React.ReactNode }) {
-  return (
-    <PressableScale
-      style={{
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#FFFFFF",
-        shadowColor: "#777777",
-        shadowOpacity: 0.13,
-        shadowRadius: 13,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 3,
-      }}
-    >
-      {children}
-    </PressableScale>
-  );
-}
+export const NumberFlowSliderHeaderAction = React.memo(
+  function NumberFlowSliderHeaderAction() {
+    const theme = useDemoTheme();
+    const iconColor = theme.isDark ? "#FFFFFF" : SCREEN.primary;
+
+    return (
+      <PressableScale
+        style={{
+          width: 44,
+          height: 44,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Svg width={27} height={27} viewBox="0 0 27 27">
+          <Circle
+            cx={13.5}
+            cy={13.5}
+            r={10}
+            fill="none"
+            stroke={iconColor}
+            strokeWidth={2.2}
+          />
+          <Path
+            d="M13.5 7.5v6.2l4.1 2.8"
+            fill="none"
+            stroke={iconColor}
+            strokeWidth={2.2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </Svg>
+      </PressableScale>
+    );
+  },
+);
 
 function NumberFlowSliderPage({ height, width }: DemoPageProps) {
+  const theme = useDemoTheme();
+  const pageBackground = theme.background;
+  const primaryColor = theme.isDark ? "#FFFFFF" : SCREEN.primary;
+  const secondaryColor = theme.isDark ? "#838596" : SCREEN.secondary;
+  const accentColor = theme.isDark ? "#9896F8" : SCREEN.violet;
   const initialIndex = numberFlowSliderValues.length - 1;
   const store = useNumberFlowSliderDemoStore(initialIndex);
   const progress = useSharedValue(1);
-  const sliderIndex = useDerivedValue(
-    () =>
-      Math.round(
-        clamp(progress.get(), 0, 1) * (numberFlowSliderValues.length - 1),
-      ),
+  const sliderIndex = useDerivedValue(() =>
+    Math.round(
+      clamp(progress.get(), 0, 1) * (numberFlowSliderValues.length - 1),
+    ),
   );
   // Even values are the last index published to React; odd values mark the
   // single outstanding UI-to-JS update.
@@ -331,16 +371,13 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
   const contentWidth = Math.max(0, width - horizontalInset * 2);
   const chartHeight = Math.min(242, Math.max(188, height * 0.27));
   const pickerSize = 35;
-  const publishLatestIndex = useCallback(
-    () => {
-      // runOnJS is asynchronous. Read the current shared index when JS handles
-      // the message instead of replaying the index captured by an older frame.
-      const latestIndex = sliderIndex.get();
-      store.setIndex(latestIndex);
-      bridgeState.set(latestIndex * 2);
-    },
-    [bridgeState, sliderIndex, store],
-  );
+  const publishLatestIndex = useCallback(() => {
+    // runOnJS is asynchronous. Read the current shared index when JS handles
+    // the message instead of replaying the index captured by an older frame.
+    const latestIndex = sliderIndex.get();
+    store.setIndex(latestIndex);
+    bridgeState.set(latestIndex * 2);
+  }, [bridgeState, sliderIndex, store]);
   useAnimatedReaction(
     () => {
       const valueCount = numberFlowSliderValues.length;
@@ -372,46 +409,14 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
     <View
       style={{
         flex: 1,
-        backgroundColor: SCREEN.background,
-        paddingHorizontal: horizontalInset,
-        paddingTop: 24,
+        backgroundColor: pageBackground,
+
         paddingBottom: 12,
         justifyContent: "space-between",
       }}
     >
-      <StatusBar style="dark" />
+      <StatusBar style={theme.isDark ? "light" : "dark"} />
       <View style={{ alignItems: "center" }}>
-        <View
-          style={{
-            width: "100%",
-            height: 44,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          <RoundAction>
-            <Svg width={27} height={27} viewBox="0 0 27 27">
-              <Circle
-                cx={13.5}
-                cy={13.5}
-                r={10}
-                fill="none"
-                stroke={SCREEN.primary}
-                strokeWidth={2.2}
-              />
-              <Path
-                d="M13.5 7.5v6.2l4.1 2.8"
-                fill="none"
-                stroke={SCREEN.primary}
-                strokeWidth={2.2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </RoundAction>
-        </View>
-
         <View
           style={{
             marginTop: 18,
@@ -422,7 +427,7 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
         >
           <Text
             style={{
-              color: SCREEN.secondary,
+              color: secondaryColor,
               fontFamily: "Sf-bold",
               fontSize: 20,
               lineHeight: 26,
@@ -437,14 +442,14 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
               height: 16,
               borderRadius: 8,
               borderWidth: 1.7,
-              borderColor: SCREEN.secondary,
+              borderColor: secondaryColor,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <Text
               style={{
-                color: SCREEN.secondary,
+                color: secondaryColor,
                 fontFamily: "Sf-bold",
                 fontSize: 11,
                 lineHeight: 14,
@@ -456,12 +461,16 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
         </View>
 
         <View style={{ width: "100%", marginTop: 17 }}>
-          <NumberFlowReadout store={store} width={contentWidth} />
+          <NumberFlowReadout
+            store={store}
+            width={contentWidth}
+            isDark={theme.isDark}
+          />
         </View>
         <Text
           style={{
             marginTop: 9,
-            color: SCREEN.secondary,
+            color: secondaryColor,
             fontFamily: "Sf-semibold",
             fontSize: 18,
             lineHeight: 24,
@@ -473,13 +482,24 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
       </View>
 
       <View style={{ width: contentWidth, alignSelf: "center" }}>
-        <GrowthChart width={contentWidth} height={chartHeight} />
+        <GrowthChart
+          width={contentWidth}
+          height={chartHeight}
+          axisColor={secondaryColor}
+          isDark={theme.isDark}
+        />
       </View>
 
-      <View style={{ width: "100%", alignItems: "center" }}>
+      <View
+        style={{
+          width: "100%",
+          alignItems: "center",
+          paddingHorizontal: horizontalInset,
+        }}
+      >
         <Text
           style={{
-            color: SCREEN.secondary,
+            color: secondaryColor,
             fontFamily: "Sf-semibold",
             fontSize: 16,
             lineHeight: 22,
@@ -491,7 +511,7 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
         <Text
           style={{
             marginTop: 4,
-            color: "#050505",
+            color: primaryColor,
             fontFamily: "Sf-bold",
             fontSize: 36,
             lineHeight: 44,
@@ -505,8 +525,8 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
             progress={progress}
             initialProgress={1}
             pickerSize={pickerSize}
-            color={SCREEN.violet}
-            trackColor="#F0EFFF"
+            color={accentColor}
+            trackColor={theme.isDark ? "#29283F" : "#F0EFFF"}
             style={{
               width: Math.max(0, contentWidth - pickerSize),
               height: 8,
@@ -522,7 +542,7 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
             borderRadius: 28,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: SCREEN.violet,
+            backgroundColor: accentColor,
           }}
         >
           <Text

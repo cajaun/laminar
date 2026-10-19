@@ -78,7 +78,7 @@ export const numberFlowValues = [
 
 export const numberFlowSliderValues = [
   "$1.79",
-  "$7.90",
+  "$8.95",
   "$17.90",
   "$35.81",
   "$89.54",
@@ -136,7 +136,6 @@ export const numberFlowSliderValues = [
   "$150,928",
   "$154,034",
   "$157,140",
-  "$335,807",
 ] as const;
 export const textIdentityWords = ["Laminar", "Linear", "Lamina"] as const;
 export const slotMechanismValues = [

@@ -216,11 +216,7 @@ export function DemoDetailScreen({
 
   return (
     <SafeAreaView
-      edges={
-        pageId === "numberFlowSlider"
-          ? ["top", "left", "right", "bottom"]
-          : ["left", "right", "bottom"]
-      }
+      edges={["left", "right", "bottom"]}
       style={{ flex: 1, backgroundColor: theme.background }}
     >
       <View
