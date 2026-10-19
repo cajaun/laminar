@@ -5,9 +5,25 @@ function getPointY(value: number) {
   return BOTTOM - (value / 100) * RANGE;
 }
 
+const chartYValuesCache = new WeakMap<readonly number[], number[]>();
+const chartPointsCache = new WeakMap<
+  readonly number[],
+  Map<number, CursorPoint[]>
+>();
+
 // convert normalized samples into render space y coordinates
 export function buildChartYValues(data: number[]): number[] {
   return data.map(getPointY);
+}
+
+// reuse immutable range geometry across the press and render phases
+export function getCachedChartYValues(data: number[]): number[] {
+  const cached = chartYValuesCache.get(data);
+  if (cached) return cached;
+
+  const next = buildChartYValues(data);
+  chartYValuesCache.set(data, next);
+  return next;
 }
 
 // convert normalized samples into cursor lookup points
@@ -22,4 +38,24 @@ export function buildChartPoints(
     y: getPointY(value),
     value,
   }));
+}
+
+// reuse cursor geometry while the selected range remains unchanged
+export function getCachedChartPoints(
+  data: number[],
+  chartWidth: number = CHART_WIDTH,
+): CursorPoint[] {
+  let widthCache = chartPointsCache.get(data);
+
+  if (!widthCache) {
+    widthCache = new Map();
+    chartPointsCache.set(data, widthCache);
+  }
+
+  const cached = widthCache.get(chartWidth);
+  if (cached) return cached;
+
+  const next = buildChartPoints(data, chartWidth);
+  widthCache.set(chartWidth, next);
+  return next;
 }

@@ -1,6 +1,11 @@
 import type { RangeType } from "@/components/morphing-chart/data/chart-data";
 import type { CursorPoint } from "@/components/morphing-chart/core/types";
 
+const cursorDisplayValuesCache = new WeakMap<
+  readonly CursorPoint[],
+  Map<string, readonly number[]>
+>();
+
 export type CursorPriceSample = {
   progress: number;
   value: number;
@@ -99,6 +104,31 @@ export function getCursorDisplayValue(
     samples,
     cursor.x / graphWidth,
   );
+}
+
+// reuse immutable cursor values across scrub sessions
+export function getCachedCursorDisplayValues(
+  range: RangeType,
+  totalValue: number,
+  points: readonly CursorPoint[],
+  graphWidth: number,
+): readonly number[] {
+  let rangeCache = cursorDisplayValuesCache.get(points);
+
+  if (!rangeCache) {
+    rangeCache = new Map();
+    cursorDisplayValuesCache.set(points, rangeCache);
+  }
+
+  const cacheKey = `${range}:${totalValue}:${graphWidth}`;
+  const cached = rangeCache.get(cacheKey);
+  if (cached) return cached;
+
+  const next = points.map((point) =>
+    getCursorDisplayValue(range, totalValue, point, graphWidth),
+  );
+  rangeCache.set(cacheKey, next);
+  return next;
 }
 
 export function getCursorDisplayPercent(

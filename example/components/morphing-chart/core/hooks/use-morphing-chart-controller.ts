@@ -18,9 +18,13 @@ import {
   getCursorLabel,
 } from "@/components/morphing-chart/core/model/chart-formatters";
 import {
+  getCachedCursorDisplayValues,
   getCursorDisplayValue,
 } from "@/components/morphing-chart/core/model/cursor-values";
-import { buildChartPoints, buildChartYValues } from "@/components/morphing-chart/core/model/series";
+import {
+  getCachedChartPoints,
+  getCachedChartYValues,
+} from "@/components/morphing-chart/core/model/series";
 import { useChartCursor } from "@/components/morphing-chart/core/hooks/use-chart-cursor";
 import { useChartMorph } from "@/components/morphing-chart/core/hooks/use-chart-morph";
 import type { MorphNumberMode } from "react-native-laminar";
@@ -50,10 +54,10 @@ export function useMorphingChartController({
   const meta = sourceData.rangeMetadata[selected];
   const graphWidth = chartWidth * REFERENCE_GRAPH_EXTENT[selected];
   const points = useMemo(
-    () => buildChartPoints(data, graphWidth),
+    () => getCachedChartPoints(data, graphWidth),
     [data, graphWidth],
   );
-  const targetYValues = useMemo(() => buildChartYValues(data), [data]);
+  const targetYValues = useMemo(() => getCachedChartYValues(data), [data]);
   const {
     animatedFillPath,
     animateTo,
@@ -125,7 +129,7 @@ export function useMorphingChartController({
 
       const nextData = sourceData.chartDataSets[range];
       const nextGraphWidth = chartWidth * REFERENCE_GRAPH_EXTENT[range];
-      const nextYValues = buildChartYValues(nextData);
+      const nextYValues = getCachedChartYValues(nextData);
 
       handlerStartedRangeRef.current = range;
       stopScrubbing();
@@ -151,8 +155,11 @@ export function useMorphingChartController({
       // skip ticker formatting while slots show the settled state
       if (!isScrubbing) return EMPTY_TICKER_VALUES;
 
-      return points.map((point) =>
-        getCursorDisplayValue(selected, meta.totalValue, point, graphWidth),
+      return getCachedCursorDisplayValues(
+        selected,
+        meta.totalValue,
+        points,
+        graphWidth,
       );
     },
     [graphWidth, isScrubbing, meta.totalValue, points, selected],

@@ -14,6 +14,45 @@ import { SFIcon } from "@/components/morphing-chart/ui/primitives/sf-icon";
 import { useMorphingChartTheme } from "@/components/morphing-chart/ui/morphing-chart-theme";
 
 const fullReadoutContainerStyle = { width: "100%" } as const;
+const priceFormatters = new Map<number, Intl.NumberFormat>();
+const formattedPriceValuesCache = new WeakMap<
+  readonly number[],
+  Map<number, readonly string[]>
+>();
+
+function formatPrice(value: number, fractionDigits: number) {
+  let formatter = priceFormatters.get(fractionDigits);
+
+  if (!formatter) {
+    formatter = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    });
+    priceFormatters.set(fractionDigits, formatter);
+  }
+
+  return `$${formatter.format(value)}`;
+}
+
+// reuse formatted ticker strings across scrub sessions
+function formatPriceValues(
+  values: readonly number[],
+  fractionDigits: number,
+): readonly string[] {
+  let fractionCache = formattedPriceValuesCache.get(values);
+
+  if (!fractionCache) {
+    fractionCache = new Map();
+    formattedPriceValuesCache.set(values, fractionCache);
+  }
+
+  const cached = fractionCache.get(fractionDigits);
+  if (cached) return cached;
+
+  const next = values.map((value) => formatPrice(value, fractionDigits));
+  fractionCache.set(fractionDigits, next);
+  return next;
+}
 
 type PriceOverviewProps = {
   asset: MorphingAsset;
@@ -126,19 +165,12 @@ const PriceReadout = React.memo(function PriceReadout({
   color,
   backgroundColor,
 }: Omit<NumericReadoutProps, "meta"> & { color: string }) {
-  const priceText = `$${displayValue.toLocaleString("en-US", {
-    minimumFractionDigits: priceFractionDigits,
-    maximumFractionDigits: priceFractionDigits,
-  })}`;
+  const priceText = formatPrice(displayValue, priceFractionDigits);
   const tickerPriceValues = React.useMemo(
     () =>
-      tickerValues?.map(
-        (value) =>
-          `$${value.toLocaleString("en-US", {
-            minimumFractionDigits: priceFractionDigits,
-            maximumFractionDigits: priceFractionDigits,
-          })}`,
-      ) ?? [],
+      tickerValues
+        ? formatPriceValues(tickerValues, priceFractionDigits)
+        : [],
     [priceFractionDigits, tickerValues],
   );
   const animatedPriceText = React.useMemo(
@@ -152,10 +184,7 @@ const PriceReadout = React.memo(function PriceReadout({
     () =>
       slotStartValue === null
         ? undefined
-        : `$${slotStartValue.toLocaleString("en-US", {
-            minimumFractionDigits: priceFractionDigits,
-            maximumFractionDigits: priceFractionDigits,
-          })}`,
+        : formatPrice(slotStartValue, priceFractionDigits),
     [priceFractionDigits, slotStartValue],
   );
   const priceTextStyle: TextStyle = React.useMemo(
