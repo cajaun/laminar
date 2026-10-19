@@ -24,8 +24,6 @@ const NumberFlowPreview = React.memo(function NumberFlowPreview({
     <View
       style={{
         width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
       <Laminar
@@ -59,7 +57,6 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumberFlowPreview store={store} />}
-      fillPreview
       settingsStore={store}
       renderSettings={(state, theme) => (
         <>

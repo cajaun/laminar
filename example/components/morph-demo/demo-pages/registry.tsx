@@ -19,6 +19,7 @@ import {
   TransactionDemoPage,
   WordsDemoPage,
 } from "./examples";
+import { NumberFlowSliderDemoPage } from "./components/number-flow-slider";
 
 export const demoPageComponents: Record<
   ExamplePageId,
@@ -38,4 +39,5 @@ export const demoPageComponents: Record<
   numbers: NumbersDemoPage,
   slots: SlotsExampleDemoPage,
   numberFlow: NumberFlowDemoPage,
+  numberFlowSlider: NumberFlowSliderDemoPage,
 };

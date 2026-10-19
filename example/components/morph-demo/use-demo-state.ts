@@ -10,6 +10,7 @@ import {
   multiIconValues,
   numberValues,
   numberFlowValues,
+  numberFlowSliderValues,
   slotMechanismValues,
   standaloneWords,
   singleIconValues,
@@ -35,6 +36,7 @@ export type DemoSnapshotStore<T> = Readonly<{
 export type CyclicValueStore<T> = DemoSnapshotStore<T> & Readonly<{
   next: () => void;
   previous: () => void;
+  setIndex: (index: number) => void;
 }>;
 
 function createCyclicValueStore<T>(
@@ -73,6 +75,8 @@ function createCyclicValueStore<T>(
     },
     next: () => setIndex(stepForward(index, values.length)),
     previous: () => setIndex(stepBackward(index, values.length)),
+    setIndex: (nextIndex) =>
+      setIndex(Math.max(0, Math.min(values.length - 1, Math.round(nextIndex)))),
   };
 }
 
@@ -196,6 +200,10 @@ export function useSlotMechanismDemoStore() {
 
 export function useNumberFlowDemoStore() {
   return useCyclicValueStore(numberFlowValues);
+}
+
+export function useNumberFlowSliderDemoStore() {
+  return useCyclicValueStore(numberFlowSliderValues);
 }
 
 export function useNumbersDemoStore() {

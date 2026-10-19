@@ -88,9 +88,8 @@ export const MorphDemoScreen = React.memo(function MorphDemoScreen() {
         }}
         separatorInset="content"
       >
-        {group.id === "components"
-          ? group.componentIds.map(renderComponentLink)
-          : group.pageIds.map(renderDemoLink)}
+        {group.pageIds.map(renderDemoLink)}
+        {group.componentIds.map(renderComponentLink)}
       </FormSection>
     ),
     [renderComponentLink, renderDemoLink, theme.catalogPanel],
