@@ -216,10 +216,21 @@ export function DemoDetailScreen({
 
   return (
     <SafeAreaView
-      edges={["left", "right", "bottom"]}
+      edges={
+        pageId === "numberFlowSlider"
+          ? ["top", "left", "right", "bottom"]
+          : ["left", "right", "bottom"]
+      }
       style={{ flex: 1, backgroundColor: theme.background }}
     >
-      <View style={{ flex: 1, paddingTop: headerHeight }}>{content}</View>
+      <View
+        style={{
+          flex: 1,
+          paddingTop: pageId === "numberFlowSlider" ? 0 : headerHeight,
+        }}
+      >
+        {content}
+      </View>
     </SafeAreaView>
   );
 }

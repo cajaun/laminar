@@ -18,6 +18,7 @@ export default function LaminarDemoRoute() {
       <Stack.Screen
         options={{
           title: examplePages.find((page) => page.id === pageId)?.label,
+          headerShown: pageId !== "numberFlowSlider",
         }}
       />
       <DemoDetailScreen pageId={pageId} width={width} height={height} />

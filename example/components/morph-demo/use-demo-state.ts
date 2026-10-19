@@ -202,8 +202,8 @@ export function useNumberFlowDemoStore() {
   return useCyclicValueStore(numberFlowValues);
 }
 
-export function useNumberFlowSliderDemoStore() {
-  return useCyclicValueStore(numberFlowSliderValues);
+export function useNumberFlowSliderDemoStore(initialIndex = 0) {
+  return useCyclicValueStore(numberFlowSliderValues, initialIndex);
 }
 
 export function useNumbersDemoStore() {
