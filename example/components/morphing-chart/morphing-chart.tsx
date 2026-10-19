@@ -134,6 +134,7 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
     panGesture,
     rangeSelectionProgress,
     rangeTransitionFrom,
+    rangeTransitionTo,
     selected,
     slotStartValue,
     tickerValues,
@@ -177,6 +178,7 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
         panGesture={panGesture}
         rangeSelectionProgress={rangeSelectionProgress}
         rangeTransitionFrom={rangeTransitionFrom}
+        rangeTransitionTo={rangeTransitionTo}
         selected={selected}
         showFill={showFill}
       />

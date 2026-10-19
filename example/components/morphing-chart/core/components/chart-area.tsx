@@ -42,7 +42,8 @@ type ChartAreaProps = Pick<
   onRangeSelect: (range: RangeType) => void;
   panGesture: ComposedGesture;
   rangeSelectionProgress: SharedValue<number>;
-  rangeTransitionFrom: RangeType | null;
+  rangeTransitionFrom: SharedValue<RangeType>;
+  rangeTransitionTo: SharedValue<RangeType>;
   selected: RangeType;
 };
 
@@ -67,6 +68,7 @@ export const ChartArea = React.memo(function ChartArea({
   panGesture,
   rangeSelectionProgress,
   rangeTransitionFrom,
+  rangeTransitionTo,
   selected,
   showFill,
 }: ChartAreaProps) {
@@ -98,6 +100,7 @@ export const ChartArea = React.memo(function ChartArea({
         onRangeSelect={onRangeSelect}
         rangeSelectionProgress={rangeSelectionProgress}
         rangeTransitionFrom={rangeTransitionFrom}
+        rangeTransitionTo={rangeTransitionTo}
         selected={selected}
       />
 
@@ -193,7 +196,8 @@ type RangeSelectorProps = {
   contentWidth: number;
   onRangeSelect: (range: RangeType) => void;
   rangeSelectionProgress: SharedValue<number>;
-  rangeTransitionFrom: RangeType | null;
+  rangeTransitionFrom: SharedValue<RangeType>;
+  rangeTransitionTo: SharedValue<RangeType>;
   selected: RangeType;
 };
 
@@ -202,6 +206,7 @@ const RangeSelector = React.memo(function RangeSelector({
   onRangeSelect,
   rangeSelectionProgress,
   rangeTransitionFrom,
+  rangeTransitionTo,
   selected,
 }: RangeSelectorProps) {
   return (
@@ -210,6 +215,7 @@ const RangeSelector = React.memo(function RangeSelector({
         width={Math.min(272, contentWidth)}
         selected={selected}
         transitionFrom={rangeTransitionFrom}
+        transitionTo={rangeTransitionTo}
         transitionProgress={rangeSelectionProgress}
         onSelect={onRangeSelect}
       />

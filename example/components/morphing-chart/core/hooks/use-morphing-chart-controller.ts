@@ -49,8 +49,6 @@ export function useMorphingChartController({
   source = "Revenue",
 }: UseMorphingChartControllerOptions) {
   const [selected, setSelected] = useState<RangeType>(initialRange);
-  const [rangeTransitionFrom, setRangeTransitionFrom] =
-    useState<RangeType | null>(null);
   const sourceData = chartData ?? CHART_DATA_BY_SOURCE[source];
   const data = sourceData.chartDataSets[selected];
   const meta = sourceData.rangeMetadata[selected];
@@ -66,9 +64,12 @@ export function useMorphingChartController({
     animatedGraphWidth,
     animatedLinePath,
     rangeSelectionProgress,
+    rangeTransitionFrom,
+    rangeTransitionTo,
   } = useChartMorph({
     initialGraphWidth: graphWidth,
     initialYValues: targetYValues,
+    initialRange,
     layoutWidth: chartWidth,
     showFill,
   });
@@ -93,10 +94,11 @@ export function useMorphingChartController({
   });
   const previousSelection = useRef({ source, selected });
   const selectedRef = useRef(selected);
+  const pendingRangeAnimationRef = useRef<RangeType | null>(null);
   selectedRef.current = selected;
   const numberMode: MorphNumberMode = isScrubbing ? "ticker" : "slots";
 
-  // start chart and readout motion from the same committed range update
+  // Handle source updates and range changes not already started by the tap.
   useLayoutEffect(() => {
     const previous = previousSelection.current;
     const rangeChanged = previous.selected !== selected;
@@ -105,7 +107,14 @@ export function useMorphingChartController({
     if (!rangeChanged && !sourceChanged) return;
 
     previousSelection.current = { source, selected };
-    animateTo(targetYValues, graphWidth, rangeChanged);
+    const rangeAnimationAlreadyStarted =
+      rangeChanged &&
+      !sourceChanged &&
+      pendingRangeAnimationRef.current === selected;
+    pendingRangeAnimationRef.current = null;
+    if (!rangeAnimationAlreadyStarted) {
+      animateTo(targetYValues, graphWidth, rangeChanged);
+    }
 
     if (sourceChanged) {
       stopScrubbing();
@@ -125,19 +134,29 @@ export function useMorphingChartController({
 
   const handleRangePress = useCallback(
     (range: RangeType) => {
-      if (range === selectedRef.current) return;
+      const previousRange = selectedRef.current;
+      if (range === previousRange) return;
 
-      setRangeTransitionFrom(selectedRef.current);
-      rangeSelectionProgress.value = 0;
+      pendingRangeAnimationRef.current = range;
+      selectedRef.current = range;
+      // Queue the chart and selector worklet before React reconciles the readouts.
+      animateTo(
+        getCachedChartYValues(sourceData.chartDataSets[range]),
+        chartWidth * REFERENCE_GRAPH_EXTENT[range],
+        true,
+        { from: previousRange, to: range },
+      );
       stopScrubbing();
       clearCursorReadout();
       clearCursor();
       setSelected(range);
     },
     [
+      animateTo,
       clearCursor,
       clearCursorReadout,
-      rangeSelectionProgress,
+      chartWidth,
+      sourceData,
       stopScrubbing,
     ],
   );
@@ -197,6 +216,7 @@ export function useMorphingChartController({
     points,
     rangeSelectionProgress,
     rangeTransitionFrom,
+    rangeTransitionTo,
     selected,
     slotStartValue,
     tickerValues,

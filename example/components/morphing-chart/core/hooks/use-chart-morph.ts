@@ -14,10 +14,12 @@ import {
   writeFillPath,
   writeLinePath,
 } from "@/components/morphing-chart/core/rendering/path-writers";
+import type { RangeType } from "@/components/morphing-chart/data/chart-data";
 
 type UseChartMorphOptions = {
   initialYValues: number[];
   initialGraphWidth: number;
+  initialRange: RangeType;
   layoutWidth: number;
   showFill?: boolean;
 };
@@ -26,6 +28,7 @@ type UseChartMorphOptions = {
 export function useChartMorph({
   initialYValues,
   initialGraphWidth,
+  initialRange,
   layoutWidth,
   showFill = false,
 }: UseChartMorphOptions) {
@@ -55,6 +58,8 @@ export function useChartMorph({
   const morphToFillPath = useSharedValue(initialFillPath);
   const morphProgress = useSharedValue(1);
   const rangeSelectionProgress = useSharedValue(1);
+  const rangeTransitionFrom = useSharedValue(initialRange);
+  const rangeTransitionTo = useSharedValue(initialRange);
   const graphWidthFrom = useSharedValue(initialGraphWidth);
   const graphWidthTo = useSharedValue(initialGraphWidth);
 
@@ -95,12 +100,14 @@ export function useChartMorph({
       nextYValues: number[],
       nextGraphWidth: number,
       animateRangeSelection: boolean,
+      rangeTransition?: { from: RangeType; to: RangeType },
     ) => {
       runOnUI(
         (
           nextValues: readonly number[],
           toWidth: number,
           animateRangeSelection: boolean,
+          rangeTransition?: { from: RangeType; to: RangeType },
         ) => {
           "worklet";
 
@@ -133,10 +140,15 @@ export function useChartMorph({
           };
           morphProgress.value = withTiming(1, transition);
           if (animateRangeSelection) {
+            if (rangeTransition) {
+              rangeTransitionFrom.value = rangeTransition.from;
+              rangeTransitionTo.value = rangeTransition.to;
+            }
+            rangeSelectionProgress.value = 0;
             rangeSelectionProgress.value = withTiming(1, transition);
           }
         },
-      )(nextYValues, nextGraphWidth, animateRangeSelection);
+      )(nextYValues, nextGraphWidth, animateRangeSelection, rangeTransition);
     },
     [
       graphWidthFrom,
@@ -146,6 +158,8 @@ export function useChartMorph({
       morphProgress,
       morphToFillPath,
       morphToLinePath,
+      rangeTransitionFrom,
+      rangeTransitionTo,
       rangeSelectionProgress,
     ],
   );
@@ -156,6 +170,8 @@ export function useChartMorph({
     animatedLinePath,
     animateTo,
     rangeSelectionProgress,
+    rangeTransitionFrom,
+    rangeTransitionTo,
   };
 }
 

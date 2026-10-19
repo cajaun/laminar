@@ -13,7 +13,8 @@ const RANGES: RangeType[] = ["1H", "1D", "1W", "1M", "1Y"];
 type PillsProps = {
   width?: number;
   selected: RangeType;
-  transitionFrom: RangeType | null;
+  transitionFrom: SharedValue<RangeType>;
+  transitionTo: SharedValue<RangeType>;
   transitionProgress: SharedValue<number>;
   onSelect: (range: RangeType, index: number) => void;
 };
@@ -22,7 +23,8 @@ type RangePillProps = {
   index: number;
   range: RangeType;
   selectedIndex: number;
-  fromIndex: number;
+  transitionFrom: SharedValue<RangeType>;
+  transitionTo: SharedValue<RangeType>;
   transitionProgress: SharedValue<number>;
   onSelect: (range: RangeType, index: number) => void;
 };
@@ -31,7 +33,8 @@ const RangePill = React.memo(function RangePill({
   index,
   range,
   selectedIndex,
-  fromIndex,
+  transitionFrom,
+  transitionTo,
   transitionProgress,
   onSelect,
 }: RangePillProps) {
@@ -40,9 +43,9 @@ const RangePill = React.memo(function RangePill({
   const selectionStyle = useAnimatedStyle(
     () => {
       const activeProgress =
-        index === selectedIndex
+        range === transitionTo.value
           ? transitionProgress.value
-          : index === fromIndex
+          : range === transitionFrom.value
             ? 1 - transitionProgress.value
             : 0;
 
@@ -51,14 +54,14 @@ const RangePill = React.memo(function RangePill({
         transform: [{ scale: activeProgress }],
       };
     },
-    [fromIndex, index, selectedIndex],
+    [range, transitionFrom, transitionProgress, transitionTo],
   );
   const labelStyle = useAnimatedStyle(
     () => {
       const activeProgress =
-        index === selectedIndex
+        range === transitionTo.value
           ? transitionProgress.value
-          : index === fromIndex
+          : range === transitionFrom.value
             ? 1 - transitionProgress.value
             : 0;
 
@@ -70,7 +73,14 @@ const RangePill = React.memo(function RangePill({
         ),
       };
     },
-    [fromIndex, index, selectedIndex, theme.primary, theme.secondary],
+    [
+      range,
+      theme.primary,
+      theme.secondary,
+      transitionFrom,
+      transitionProgress,
+      transitionTo,
+    ],
   );
 
   return (
@@ -101,11 +111,11 @@ function PillsComponent({
   width,
   selected,
   transitionFrom,
+  transitionTo,
   transitionProgress,
   onSelect,
 }: PillsProps) {
   const selectedIndex = RANGES.indexOf(selected);
-  const fromIndex = transitionFrom ? RANGES.indexOf(transitionFrom) : -1;
 
   return (
     <View
@@ -119,7 +129,8 @@ function PillsComponent({
           index={index}
           range={range}
           selectedIndex={selectedIndex}
-          fromIndex={fromIndex}
+          transitionFrom={transitionFrom}
+          transitionTo={transitionTo}
           transitionProgress={transitionProgress}
           onSelect={onSelect}
         />
