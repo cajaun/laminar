@@ -318,22 +318,54 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
   const initialIndex = numberFlowSliderValues.length - 1;
   const store = useNumberFlowSliderDemoStore(initialIndex);
   const progress = useSharedValue(1);
+  const sliderIndex = useDerivedValue(
+    () =>
+      Math.round(
+        clamp(progress.get(), 0, 1) * (numberFlowSliderValues.length - 1),
+      ),
+  );
+  // Even values are the last index published to React; odd values mark the
+  // single outstanding UI-to-JS update.
+  const bridgeState = useSharedValue(initialIndex * 2);
   const horizontalInset = Math.min(32, Math.max(24, width * 0.082));
   const contentWidth = Math.max(0, width - horizontalInset * 2);
   const chartHeight = Math.min(242, Math.max(188, height * 0.27));
   const pickerSize = 35;
-  const updateIndex = useCallback(
-    (index: number) => store.setIndex(index),
-    [store],
+  const publishLatestIndex = useCallback(
+    () => {
+      // runOnJS is asynchronous. Read the current shared index when JS handles
+      // the message instead of replaying the index captured by an older frame.
+      const latestIndex = sliderIndex.get();
+      store.setIndex(latestIndex);
+      bridgeState.set(latestIndex * 2);
+    },
+    [bridgeState, sliderIndex, store],
   );
   useAnimatedReaction(
-    () => Math.round(progress.get() * (numberFlowSliderValues.length - 1)),
-    (index, previousIndex) => {
-      if (index !== previousIndex) {
-        runOnJS(updateIndex)(index);
-      }
+    () => {
+      const valueCount = numberFlowSliderValues.length;
+      const index = sliderIndex.get();
+      const publishedState = bridgeState.get();
+
+      // Pack the current target and bridge state into a scalar so the reaction
+      // only runs when one changes, not on every UI frame.
+      return index * valueCount * 2 + publishedState;
     },
-    [updateIndex],
+    (state) => {
+      const valueCount = numberFlowSliderValues.length;
+      const publishedState = state % (valueCount * 2);
+      const publishedIndex = Math.floor(publishedState / 2);
+      const pending = publishedState % 2 === 1;
+      const index = Math.floor(state / (valueCount * 2));
+
+      if (pending || index === publishedIndex) {
+        return;
+      }
+
+      bridgeState.set(publishedIndex * 2 + 1);
+      runOnJS(publishLatestIndex)();
+    },
+    [bridgeState, publishLatestIndex, sliderIndex],
   );
 
   return (
