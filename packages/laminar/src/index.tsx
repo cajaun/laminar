@@ -181,6 +181,7 @@ export const Laminar = React.memo(function Laminar({
           <NumericRunSwitch
             mode="ticker"
             value={resolvedValue}
+            fromValue={fromValue}
             animatedText={animatedText}
             preloadValue={preloadValue}
             slotsMotionRecipe={slotsMotionRecipe}

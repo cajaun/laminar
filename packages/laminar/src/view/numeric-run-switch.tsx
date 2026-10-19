@@ -61,12 +61,22 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   ready = true,
   shadow = false,
 }: Readonly<NumericRunSwitchProps>) {
+  const lastSlotsFromValue = React.useRef(fromValue);
+  React.useLayoutEffect(() => {
+    if (mode === "slots") {
+      lastSlotsFromValue.current = fromValue;
+    }
+  }, [fromValue, mode]);
+
+  const slotsFromValue =
+    mode === "slots" ? fromValue : lastSlotsFromValue.current;
+
   return (
     <View style={switchStyle}>
       <View style={mode === "slots" ? undefined : hiddenLayerStyle}>
         <SlotsRun
           value={mode === "ticker" ? preloadValue ?? value : value}
-          fromValue={mode === "slots" ? fromValue : undefined}
+          fromValue={slotsFromValue}
           motionRecipe={slotsMotionRecipe}
           align={align}
           fontSize={fontSize}

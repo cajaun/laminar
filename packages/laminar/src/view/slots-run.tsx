@@ -158,11 +158,7 @@ const SlotReel = React.memo(function SlotReel({
 }, areSlotReelPropsEqual);
 
 type SlotColumnProps = {
-  readonly digit: number;
-  readonly initialDigit?: number;
-  readonly direction: NumericFlowDirection;
-  readonly animateIn: boolean;
-  readonly motionRecipe: MotionRecipe;
+  readonly current: SharedValue<number>;
   readonly slotHeight: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly reelTextStyle?: StyleProp<TextStyle>;
@@ -171,127 +167,19 @@ type SlotColumnProps = {
 };
 
 const SlotColumn = React.memo(function SlotColumn({
-  digit,
-  initialDigit,
-  direction,
-  animateIn,
-  motionRecipe,
+  current,
   slotHeight,
   textStyle,
   reelTextStyle,
   className,
   shadow = false,
 }: SlotColumnProps) {
-  // use cumulative positions across digit wraparound
-  const spinInDistance = Math.max(digit, 1);
-  const initialDirection = direction || 1;
-  const targetStart = initialDigit ?? digit;
-  const initialValue =
-    initialDigit !== undefined
-      ? initialDigit
-      : animateIn
-        ? digit - spinInDistance * initialDirection
-        : digit;
-  const current = useSharedValue(initialValue);
-  // keep the reel target separate from its visual spin-in position
-  const cumulativeRef = useRef(targetStart);
-  const previousDigitRef = useRef(targetStart);
-  const initialRef = useRef(true);
-  const drivenTargetRef = useRef<number | null>(null);
-  const exitStateRef = useRef({
-    digit,
-    direction,
-    motionRecipe,
-    target: targetStart,
-  });
   const shadowOptions =
     shadow !== null && typeof shadow === "object"
       ? shadow
       : shadow
         ? {}
         : undefined;
-  if (digit !== previousDigitRef.current) {
-    const previousDigit = previousDigitRef.current;
-    let digitDelta: number;
-
-    if (direction > 0) {
-      digitDelta =
-        digit >= previousDigit
-          ? digit - previousDigit
-          : 10 - previousDigit + digit;
-    } else if (direction < 0) {
-      digitDelta =
-        previousDigit >= digit
-          ? -(previousDigit - digit)
-          : -(10 - digit + previousDigit);
-    } else {
-      digitDelta = digit - previousDigit;
-    }
-
-    cumulativeRef.current += digitDelta;
-    previousDigitRef.current = digit;
-  }
-
-  exitStateRef.current = {
-    digit,
-    direction,
-    motionRecipe,
-    target: cumulativeRef.current,
-  };
-
-  useEffect(() => {
-    return () => {
-      const exitState = exitStateRef.current;
-      const spinOutDistance = Math.max(exitState.digit, 1);
-      const exitDirection = exitState.direction || 1;
-
-      current.value = exitState.motionRecipe.driveNumber(
-        exitState.target + spinOutDistance * exitDirection
-      );
-    };
-  }, [current]);
-
-  useLayoutEffect(() => {
-    // recenter the reel after enough cumulative turns
-    if (initialRef.current) {
-      initialRef.current = false;
-
-      if (!animateIn && initialDigit === undefined) {
-        drivenTargetRef.current = cumulativeRef.current;
-        return;
-      }
-    }
-
-    let target = cumulativeRef.current;
-
-    if (target < REEL_MIN + 4 || target > REEL_MAX - 4) {
-      // floor negative targets into the first cycle
-      const shift = Math.floor(target / 10) * 10;
-
-      if (shift !== 0) {
-        target -= shift;
-        cumulativeRef.current = target;
-        current.value -= shift;
-      }
-    }
-
-    exitStateRef.current = {
-      digit,
-      direction,
-      motionRecipe,
-      target,
-    };
-
-    // keep unchanged reels still during direction changes
-    if (drivenTargetRef.current === target) {
-      return;
-    }
-
-    drivenTargetRef.current = target;
-
-    current.value = motionRecipe.driveNumber(target);
-  }, [animateIn, current, digit, direction, initialDigit, motionRecipe]);
-
   // keep the reel child stable while the target changes
   const reel = useMemo(
     () => (
@@ -409,6 +297,111 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
   className,
   shadow,
 }: SlotDigitLaneProps) {
+  // use cumulative positions across digit wraparound
+  const spinInDistance = Math.max(digit, 1);
+  const initialDirection = direction || 1;
+  const targetStart = initialDigit ?? digit;
+  const initialValue =
+    initialDigit !== undefined
+      ? initialDigit
+      : animateIn
+        ? digit - spinInDistance * initialDirection
+        : digit;
+  const current = useSharedValue(initialValue);
+  // keep the reel target separate from its visual spin-in position
+  const cumulativeRef = useRef(targetStart);
+  const previousDigitRef = useRef(targetStart);
+  const initialRef = useRef(true);
+  const drivenTargetRef = useRef<number | null>(null);
+  const exitStateRef = useRef({
+    digit,
+    direction,
+    motionRecipe,
+    target: targetStart,
+  });
+
+  if (digit !== previousDigitRef.current) {
+    const previousDigit = previousDigitRef.current;
+    let digitDelta: number;
+
+    if (direction > 0) {
+      digitDelta =
+        digit >= previousDigit
+          ? digit - previousDigit
+          : 10 - previousDigit + digit;
+    } else if (direction < 0) {
+      digitDelta =
+        previousDigit >= digit
+          ? -(previousDigit - digit)
+          : -(10 - digit + previousDigit);
+    } else {
+      digitDelta = digit - previousDigit;
+    }
+
+    cumulativeRef.current += digitDelta;
+    previousDigitRef.current = digit;
+  }
+
+  exitStateRef.current = {
+    digit,
+    direction,
+    motionRecipe,
+    target: cumulativeRef.current,
+  };
+
+  useEffect(() => {
+    return () => {
+      const exitState = exitStateRef.current;
+      const spinOutDistance = Math.max(exitState.digit, 1);
+      const exitDirection = exitState.direction || 1;
+
+      current.value = exitState.motionRecipe.driveNumber(
+        exitState.target + spinOutDistance * exitDirection
+      );
+    };
+  }, [current]);
+
+  useLayoutEffect(() => {
+    // recenter the reel after enough cumulative turns
+    if (initialRef.current) {
+      initialRef.current = false;
+
+      if (!animateIn && initialDigit === undefined) {
+        drivenTargetRef.current = cumulativeRef.current;
+        return;
+      }
+    }
+
+    let target = cumulativeRef.current;
+
+    if (target < REEL_MIN + 4 || target > REEL_MAX - 4) {
+      // floor negative targets into the first cycle
+      const shift = Math.floor(target / 10) * 10;
+
+      if (shift !== 0) {
+        target -= shift;
+        cumulativeRef.current = target;
+        current.value -= shift;
+      }
+    }
+
+    exitStateRef.current = {
+      digit,
+      direction,
+      motionRecipe,
+      target,
+    };
+
+    // keep unchanged reels still during direction changes
+    if (drivenTargetRef.current === target) {
+      return;
+    }
+
+    drivenTargetRef.current = target;
+
+    current.value = motionRecipe.driveNumber(target);
+  }, [animateIn, current, digit, direction, initialDigit, motionRecipe]);
+
   return (
     <Animated.View
       layout={
@@ -425,11 +418,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
       }
     >
       <SlotColumn
-        digit={digit}
-        initialDigit={initialDigit}
-        direction={direction}
-        animateIn={animateIn}
-        motionRecipe={motionRecipe}
+        current={current}
         slotHeight={slotHeight}
         textStyle={textStyle}
         reelTextStyle={reelTextStyle}
