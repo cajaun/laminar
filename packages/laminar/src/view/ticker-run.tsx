@@ -33,6 +33,10 @@ const glyphSlotStyle = {
   alignSelf: "flex-start",
 } as const;
 
+const nativeGlyphSlotStyle = {
+  alignSelf: "center",
+} as const;
+
 const rowAlignStyles = {
   left: { alignSelf: "flex-start" },
   center: { alignSelf: "center" },
@@ -68,7 +72,136 @@ type NativeTickerRunProps = {
   readonly textStyle?: StyleProp<TextStyle>;
 };
 
-// Use one native text field so changing a ticker value updates one native view.
+type NativeTickerLaneProps = {
+  readonly animatedText: LaminarAnimatedText;
+  readonly fallbackValue: string;
+  readonly laneIndex: number;
+  readonly unit: string;
+  readonly align: LaminarAlign;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly lineHeight?: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+// Keep one native text field per glyph so ticker lanes use the same geometry as slots.
+const NativeTickerLane = React.memo(function NativeTickerLane({
+  animatedText,
+  fallbackValue,
+  laneIndex,
+  unit,
+  align,
+  isLast,
+  laneSpacing,
+  lineHeight,
+  className,
+  textStyle,
+}: NativeTickerLaneProps) {
+  const animatedProps = useAnimatedProps<{ text: string }>(
+    () => {
+      "worklet";
+
+      const lastIndex = Math.max(0, animatedText.values.length - 1);
+      const index = Math.max(
+        0,
+        Math.min(lastIndex, Math.round(animatedText.index.value)),
+      );
+      const nextValue = animatedText.values[index] ?? fallbackValue;
+      const lengthDifference = Math.max(
+        0,
+        fallbackValue.length - nextValue.length,
+      );
+      const valueOffset =
+        align === "right"
+          ? lengthDifference
+          : align === "center"
+            ? Math.floor(lengthDifference / 2)
+            : 0;
+      const valueIndex = laneIndex - valueOffset;
+
+      return {
+        text:
+          valueIndex >= 0 && valueIndex < nextValue.length
+            ? nextValue.charAt(valueIndex) || " "
+            : " ",
+      };
+    },
+    [align, animatedText.values, fallbackValue, laneIndex],
+  );
+  // React Native's iOS TextInput distributes explicit lineHeight differently
+  // from Text. Keep the line box on the wrapper/probe and let the single-line
+  // native field center its font inside the fixed-height lane.
+  const nativeTextBoxStyle = {
+    margin: 0,
+    padding: 0,
+    includeFontPadding: false,
+    letterSpacing: 0,
+    textAlign: "center" as const,
+    textAlignVertical: "center" as const,
+    lineHeight: undefined,
+  };
+  const nativeProbeStyle = {
+    ...nativeTextBoxStyle,
+    ...(lineHeight !== undefined
+      ? { height: lineHeight, lineHeight }
+      : undefined),
+  };
+
+  return (
+    <View
+      style={[
+        nativeGlyphSlotStyle,
+        {
+          position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
+          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+        },
+        !isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined,
+      ]}
+    >
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[textStyle, nativeProbeStyle, { opacity: 0 }]}
+        className={className}
+      >
+        {unit}
+      </Text>
+      <AnimatedTextInput
+        accessibilityElementsHidden
+        caretHidden
+        defaultValue={unit}
+        editable={false}
+        multiline={false}
+        pointerEvents="none"
+        style={[
+          textStyle,
+          nativeTextBoxStyle,
+          {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            borderWidth: 0,
+          },
+        ]}
+        animatedProps={
+          animatedProps as unknown as React.ComponentProps<
+            typeof AnimatedTextInput
+          >["animatedProps"]
+        }
+      />
+    </View>
+  );
+});
+
+// Keep native ticker lanes aligned with slot lanes.
 const NativeTickerRun = React.memo(function NativeTickerRun({
   fallbackValue,
   animatedText,
@@ -84,30 +217,11 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     typeof flattenedTextStyle?.lineHeight === "number"
       ? flattenedTextStyle.lineHeight
       : undefined;
-  const animatedProps = useAnimatedProps<{ text: string }>(
-    () => {
-      "worklet";
-
-      const lastIndex = Math.max(0, animatedText.values.length - 1);
-      const index = Math.max(
-        0,
-        Math.min(lastIndex, Math.round(animatedText.index.value)),
-      );
-
-      return { text: animatedText.values[index] ?? fallbackValue };
-    },
-    [animatedText.values, fallbackValue],
-  );
-  const nativeTextBoxStyle = {
-    margin: 0,
-    padding: 0,
-    includeFontPadding: false,
-    textAlign: "right" as const,
-    textAlignVertical: "center" as const,
-    ...(lineHeight !== undefined
-      ? { height: lineHeight, lineHeight }
-      : undefined),
-  };
+  const laneSpacing =
+    typeof flattenedTextStyle?.letterSpacing === "number"
+      ? flattenedTextStyle.letterSpacing
+      : 0;
+  const { units } = useNumericLanes(fallbackValue);
 
   return (
     <View
@@ -125,49 +239,21 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         leadingKey={leadingKey}
         leadingGap={leadingGap}
       />
-      <View
-        pointerEvents="none"
-        style={{
-          position: "relative",
-          alignSelf: "flex-start",
-          flexShrink: 0,
-          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
-        }}
-      >
-        <Text
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          numberOfLines={1}
-          style={[textStyle, nativeTextBoxStyle, { opacity: 0 }]}
+      {units.map((unit, index) => (
+        <NativeTickerLane
+          key={`native:${index}`}
+          animatedText={animatedText}
+          fallbackValue={fallbackValue}
+          laneIndex={index}
+          unit={unit}
+          align={align}
+          isLast={index === units.length - 1}
+          laneSpacing={laneSpacing}
+          lineHeight={lineHeight}
+          textStyle={textStyle}
           className={className}
-        >
-          {fallbackValue}
-        </Text>
-        <AnimatedTextInput
-          accessibilityElementsHidden
-          caretHidden
-          defaultValue={fallbackValue}
-          editable={false}
-          multiline={false}
-          pointerEvents="none"
-          style={[
-            textStyle,
-            nativeTextBoxStyle,
-            {
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: "100%",
-              borderWidth: 0,
-            },
-          ]}
-          animatedProps={
-            animatedProps as unknown as React.ComponentProps<
-              typeof AnimatedTextInput
-            >["animatedProps"]
-          }
         />
-      </View>
+      ))}
     </View>
   );
 });

@@ -25,7 +25,7 @@ export default function AnimatedText({
 
   return (
     <Text
-      className={`text-[#111318] tracking-[-1.5px] leading-[62px] ${className ?? ""}`}
+      className={`text-[#111318] tracking-[-1.5px] leading-15.5 ${className ?? ""}`}
       style={[textStyle, style]}
     >
       {displayText}

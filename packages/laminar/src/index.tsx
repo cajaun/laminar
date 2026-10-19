@@ -51,6 +51,10 @@ export const Laminar = React.memo(function Laminar({
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
+    const layoutTransitionKey =
+      isSlotsVariant || isTickerVariant
+        ? `${variant}:${isTickerVariant ? "ticker" : "slots"}`
+        : undefined;
     const useLayoutAutoSize =
       autoSize &&
       ((variant === "text" && !leading && isCenteredStandaloneShell) ||
@@ -131,6 +135,7 @@ export const Laminar = React.memo(function Laminar({
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
+        layoutTransitionKey={layoutTransitionKey}
         measurement={
           shouldMeasure ? (
             <View

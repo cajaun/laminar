@@ -55,6 +55,7 @@ type MorphViewportProps = {
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
   // support layout driven auto size for aligned content
   readonly autoSizeLayoutTransition?: BaseAnimationBuilder;
+  readonly layoutTransitionKey?: string | number;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -68,12 +69,20 @@ export const MorphViewport = React.memo(
     containerStyle,
     animatedWidthStyle,
     autoSizeLayoutTransition,
+    layoutTransitionKey,
     measurement,
     children,
   }: MorphViewportProps) => {
     const hasRenderedRef = useRef(false);
+    const previousLayoutTransitionKeyRef = useRef(layoutTransitionKey);
+    const rendererChanged =
+      previousLayoutTransitionKeyRef.current !== layoutTransitionKey;
+    previousLayoutTransitionKeyRef.current = layoutTransitionKey;
+    // Renderer handoffs change glyph metrics; don't animate the shell's layout for them.
     const shouldAnimateAutoSizeLayout =
-      autoSizeLayoutTransition !== undefined && hasRenderedRef.current;
+      autoSizeLayoutTransition !== undefined &&
+      hasRenderedRef.current &&
+      !rendererChanged;
     hasRenderedRef.current = true;
     // share alignment between the shell and viewport
     const resolvedViewportStyle = useMemo(
