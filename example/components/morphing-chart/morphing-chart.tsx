@@ -2,7 +2,6 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { ScrollView, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@/helpers/use-header-height";
 import type { DataSourceOption, RangeType } from "@/components/morphing-chart/data";
 import { ChartArea } from "@/components/morphing-chart/core/components/chart-area";
 import { useMorphingChartController } from "@/components/morphing-chart/core/hooks/use-morphing-chart-controller";
@@ -49,9 +48,8 @@ export function MorphingChart({
   source = "Revenue",
 }: MorphingChartProps = {}) {
   const [detailsReady, setDetailsReady] = React.useState(false);
-  const { bottom } = useSafeAreaInsets();
+  const { bottom, top } = useSafeAreaInsets();
   const theme = useMorphingChartTheme();
-  const headerHeight = useHeaderHeight();
   const { width: screenWidth } = useWindowDimensions();
   const contentWidth = Math.min(560, Math.max(320, screenWidth - 48));
   const assetConfig = MORPHING_ASSET_CONFIG[asset];
@@ -70,7 +68,7 @@ export function MorphingChart({
       contentContainerStyle={{
         alignItems: "center",
         backgroundColor: theme.background,
-        paddingTop: headerHeight + 8,
+        paddingTop: top + 8,
         paddingBottom: Math.max(24, bottom + 24),
       }}
     >
@@ -134,6 +132,8 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
     meta,
     numberMode,
     panGesture,
+    rangeSelectionProgress,
+    rangeTransitionFrom,
     selected,
     slotStartValue,
     tickerValues,
@@ -175,6 +175,8 @@ const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
         lineColor={theme.chartLine}
         onRangeSelect={handleRangePress}
         panGesture={panGesture}
+        rangeSelectionProgress={rangeSelectionProgress}
+        rangeTransitionFrom={rangeTransitionFrom}
         selected={selected}
         showFill={showFill}
       />

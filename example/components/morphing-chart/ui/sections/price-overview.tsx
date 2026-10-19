@@ -275,7 +275,7 @@ const PercentReadout = React.memo(function PercentReadout({
       fontFamily: "Sf-bold",
       fontWeight: "700" as const,
       letterSpacing: -1.5,
-      lineHeight: 30,
+      lineHeight: 36,
     }),
     [],
   );
@@ -287,11 +287,11 @@ const PercentReadout = React.memo(function PercentReadout({
     () => (
       <SFIcon
         name="arrow.up"
-        size={28}
+        size={20}
         color={REFERENCE_GREEN}
-        weight="bold"
+        weight="semibold"
         fallback="↑"
-        fallbackSize={28}
+        fallbackSize={20}
       />
     ),
     [],
@@ -310,7 +310,7 @@ const PercentReadout = React.memo(function PercentReadout({
         leadingGap={4}
         autoSize
         clipToBounds={false}
-        fontSize={24}
+        fontSize={30}
         shadow={numberShadow}
         style={percentTextStyle}
       />

@@ -41,6 +41,8 @@ type ChartAreaProps = Pick<
   cursorLabels: readonly string[];
   onRangeSelect: (range: RangeType) => void;
   panGesture: ComposedGesture;
+  rangeSelectionProgress: SharedValue<number>;
+  rangeTransitionFrom: RangeType | null;
   selected: RangeType;
 };
 
@@ -63,6 +65,8 @@ export const ChartArea = React.memo(function ChartArea({
   lineColor,
   onRangeSelect,
   panGesture,
+  rangeSelectionProgress,
+  rangeTransitionFrom,
   selected,
   showFill,
 }: ChartAreaProps) {
@@ -92,6 +96,8 @@ export const ChartArea = React.memo(function ChartArea({
       <RangeSelector
         contentWidth={contentWidth}
         onRangeSelect={onRangeSelect}
+        rangeSelectionProgress={rangeSelectionProgress}
+        rangeTransitionFrom={rangeTransitionFrom}
         selected={selected}
       />
 
@@ -186,12 +192,16 @@ ChartSurface.displayName = "ChartSurface";
 type RangeSelectorProps = {
   contentWidth: number;
   onRangeSelect: (range: RangeType) => void;
+  rangeSelectionProgress: SharedValue<number>;
+  rangeTransitionFrom: RangeType | null;
   selected: RangeType;
 };
 
 const RangeSelector = React.memo(function RangeSelector({
   contentWidth,
   onRangeSelect,
+  rangeSelectionProgress,
+  rangeTransitionFrom,
   selected,
 }: RangeSelectorProps) {
   return (
@@ -199,6 +209,8 @@ const RangeSelector = React.memo(function RangeSelector({
       <Pills
         width={Math.min(272, contentWidth)}
         selected={selected}
+        transitionFrom={rangeTransitionFrom}
+        transitionProgress={rangeSelectionProgress}
         onSelect={onRangeSelect}
       />
     </View>

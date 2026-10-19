@@ -28,7 +28,7 @@ function OwnedByCardComponent({ asset, width }: OwnedByCardProps) {
         </View>
       </View>
       <Text
-        className="font-sf-bold text-[18px]"
+        className="font-sf-semibold text-[18px]"
         style={{ color: theme.primary }}
       >
         valmiera.eth

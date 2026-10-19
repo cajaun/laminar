@@ -51,7 +51,7 @@ function StatsSectionComponent({ width }: StatsSectionProps) {
       <View className="flex-row items-center gap-4">
         <View className="h-px flex-1" style={{ backgroundColor: theme.divider }} />
         <Text
-          className="font-sf-bold text-[16px] leading-5"
+          className="font-sf-semibold text-[16px] leading-5"
           style={{ color: theme.secondary }}
         >
           STATS
@@ -68,7 +68,7 @@ function StatsSectionComponent({ width }: StatsSectionProps) {
             Rank
           </Text>
           <Text
-            className="font-sf-bold text-[24px] leading-7"
+            className="font-sf-semibold text-[24px] leading-7"
             style={{ color: theme.primary }}
           >
             #76
@@ -83,7 +83,7 @@ function StatsSectionComponent({ width }: StatsSectionProps) {
             Market Cap
           </Text>
           <Text
-            className="font-sf-bold text-[24px] leading-7"
+            className="font-sf-semibold text-[24px] leading-7"
             style={{ color: theme.primary }}
           >
             $994.4m

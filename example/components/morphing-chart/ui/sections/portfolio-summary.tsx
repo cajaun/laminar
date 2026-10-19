@@ -29,7 +29,7 @@ function PortfolioSummaryComponent({ asset, width }: PortfolioSummaryProps) {
         <View className="flex-row items-center gap-2">
           <EthereumIcon size={16} />
           <Text
-            className="font-sf-bold text-[23px] leading-7"
+            className="font-sf-semibold text-[23px] leading-7"
             style={{ color: theme.primary }}
           >
             {assetConfig.balance}
@@ -50,7 +50,7 @@ function PortfolioSummaryComponent({ asset, width }: PortfolioSummaryProps) {
           Value
         </Text>
         <Text
-          className="font-sf-bold text-[23px] leading-7"
+          className="font-sf-semibold text-[23px] leading-7"
           style={{ color: theme.primary }}
         >
           {assetConfig.value}

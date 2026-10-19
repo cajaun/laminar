@@ -16,7 +16,7 @@ function AssetHeaderComponent({ asset, width }: AssetHeaderProps) {
   return (
     <View className="max-w-140" style={{ width }}>
       <View
-        className="h-[5px] w-9 self-center rounded-full"
+        className="h-2 w-14 self-center rounded-full"
         style={{ backgroundColor: theme.headerHandle }}
       />
       <View className="mt-5.5 flex-row items-center justify-between">

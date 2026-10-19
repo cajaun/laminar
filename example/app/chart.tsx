@@ -10,6 +10,7 @@ const ChartRoute = React.memo(function ChartRoute() {
       <Stack.Screen
         options={{
           title: "Ethereum",
+          headerShown: false,
         }}
       />
       <MorphingChartScreen />

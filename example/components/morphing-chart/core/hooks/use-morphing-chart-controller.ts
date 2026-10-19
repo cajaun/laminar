@@ -49,6 +49,8 @@ export function useMorphingChartController({
   source = "Revenue",
 }: UseMorphingChartControllerOptions) {
   const [selected, setSelected] = useState<RangeType>(initialRange);
+  const [rangeTransitionFrom, setRangeTransitionFrom] =
+    useState<RangeType | null>(null);
   const sourceData = chartData ?? CHART_DATA_BY_SOURCE[source];
   const data = sourceData.chartDataSets[selected];
   const meta = sourceData.rangeMetadata[selected];
@@ -63,6 +65,7 @@ export function useMorphingChartController({
     animateTo,
     animatedGraphWidth,
     animatedLinePath,
+    rangeSelectionProgress,
   } = useChartMorph({
     initialGraphWidth: graphWidth,
     initialYValues: targetYValues,
@@ -102,7 +105,7 @@ export function useMorphingChartController({
     if (!rangeChanged && !sourceChanged) return;
 
     previousSelection.current = { source, selected };
-    animateTo(targetYValues, graphWidth);
+    animateTo(targetYValues, graphWidth, rangeChanged);
 
     if (sourceChanged) {
       stopScrubbing();
@@ -124,6 +127,8 @@ export function useMorphingChartController({
     (range: RangeType) => {
       if (range === selectedRef.current) return;
 
+      setRangeTransitionFrom(selectedRef.current);
+      rangeSelectionProgress.value = 0;
       stopScrubbing();
       clearCursorReadout();
       clearCursor();
@@ -132,6 +137,7 @@ export function useMorphingChartController({
     [
       clearCursor,
       clearCursorReadout,
+      rangeSelectionProgress,
       stopScrubbing,
     ],
   );
@@ -189,6 +195,8 @@ export function useMorphingChartController({
     numberMode,
     panGesture,
     points,
+    rangeSelectionProgress,
+    rangeTransitionFrom,
     selected,
     slotStartValue,
     tickerValues,

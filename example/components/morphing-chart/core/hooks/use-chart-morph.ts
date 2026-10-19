@@ -54,6 +54,7 @@ export function useChartMorph({
   const morphFromFillPath = useSharedValue(initialFillPath);
   const morphToFillPath = useSharedValue(initialFillPath);
   const morphProgress = useSharedValue(1);
+  const rangeSelectionProgress = useSharedValue(1);
   const graphWidthFrom = useSharedValue(initialGraphWidth);
   const graphWidthTo = useSharedValue(initialGraphWidth);
 
@@ -93,11 +94,13 @@ export function useChartMorph({
     (
       nextYValues: number[],
       nextGraphWidth: number,
+      animateRangeSelection: boolean,
     ) => {
       runOnUI(
         (
           nextValues: readonly number[],
           toWidth: number,
+          animateRangeSelection: boolean,
         ) => {
           "worklet";
 
@@ -124,12 +127,16 @@ export function useChartMorph({
           graphWidthFrom.value = currentGraphWidth;
           graphWidthTo.value = toWidth;
           morphProgress.value = 0;
-          morphProgress.value = withTiming(1, {
+          const transition = {
             duration: CHART_MORPH_DURATION,
             easing: Easing.out(Easing.cubic),
-          });
+          };
+          morphProgress.value = withTiming(1, transition);
+          if (animateRangeSelection) {
+            rangeSelectionProgress.value = withTiming(1, transition);
+          }
         },
-      )(nextYValues, nextGraphWidth);
+      )(nextYValues, nextGraphWidth, animateRangeSelection);
     },
     [
       graphWidthFrom,
@@ -139,6 +146,7 @@ export function useChartMorph({
       morphProgress,
       morphToFillPath,
       morphToLinePath,
+      rangeSelectionProgress,
     ],
   );
 
@@ -147,6 +155,7 @@ export function useChartMorph({
     animatedGraphWidth,
     animatedLinePath,
     animateTo,
+    rangeSelectionProgress,
   };
 }
 
