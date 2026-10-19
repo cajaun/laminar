@@ -6,15 +6,21 @@ import { useDemoTheme } from "./demo-theme";
 
 type PreviewStageProps = {
   readonly metrics: DemoMetrics;
+  readonly fill?: boolean;
   readonly children: React.ReactNode;
 };
 
-export function PreviewStage({ metrics, children }: PreviewStageProps) {
+export function PreviewStage({
+  metrics,
+  fill = false,
+  children,
+}: PreviewStageProps) {
   return (
     <View
       style={{
         width: "100%",
         minHeight: metrics.previewMinHeight,
+        flex: fill ? 1 : undefined,
         alignItems: "center",
         justifyContent: "center",
       }}

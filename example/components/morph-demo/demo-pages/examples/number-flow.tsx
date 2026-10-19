@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { Laminar } from "react-native-laminar";
 import { DemoPageLayout, settingsRow } from "../shared";
 import type { DemoPageProps } from "../types";
@@ -21,36 +21,29 @@ const NumberFlowPreview = React.memo(function NumberFlowPreview({
   const theme = useDemoTheme();
 
   return (
-    <View style={{ alignItems: "center" }}>
-      <View style={{ width: 290, alignSelf: "center" }}>
-        <Laminar
-          text={state.value}
-          variant="number"
-          numberMode="ticker"
-          animationPreset="ticker"
-          fontSize={48}
-          autoSize
-          align="right"
-          containerStyle={{ width: "100%" }}
-          style={{
-            color: theme.primary,
-            fontFamily: "Sf-semibold",
-            fontSize: 48,
-            fontVariant: ["tabular-nums"],
-            textAlign: "right",
-          }}
-        />
-      </View>
-      <Text
+    <View
+      style={{
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Laminar
+        text={state.value}
+        variant="number"
+        numberMode="ticker"
+        animationPreset="ticker"
+        fontSize={64}
+        autoSize
+        align="center"
+        containerStyle={{ alignSelf: "center" }}
         style={{
-          marginTop: 12,
-          color: theme.secondary,
-          fontSize: 13,
+          color: theme.primary,
+          fontFamily: "Sf-semibold",
+          fontSize: 64,
           textAlign: "center",
         }}
-      >
-        each place value flows independently
-      </Text>
+      />
     </View>
   );
 });
@@ -66,6 +59,7 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
       onReverse={store.previous}
       onMorph={store.next}
       preview={<NumberFlowPreview store={store} />}
+      fillPreview
       settingsStore={store}
       renderSettings={(state, theme) => (
         <>
@@ -76,7 +70,7 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
             theme,
           })}
           {settingsRow({ label: "Mode", value: "Ticker", theme })}
-          {settingsRow({ label: "Alignment", value: "Right", theme })}
+          {settingsRow({ label: "Alignment", value: "Center", theme })}
         </>
       )}
     />

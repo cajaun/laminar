@@ -1,4 +1,9 @@
-import React, { useMemo, useRef, type ReactNode } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   StyleSheet,
   Text,
@@ -10,10 +15,16 @@ import {
 import Animated, {
   createAnimatedComponent,
   useAnimatedProps,
+  useAnimatedStyle,
 } from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
-import { isAsciiDigit } from "../model/display-units";
+import {
+  findNumericLeadLength,
+  isAsciiDigit,
+  normalizeDisplayUnit,
+  splitDisplayUnits,
+} from "../model/display-units";
 import type {
   LaminarAlign,
   LaminarAnimatedText,
@@ -28,7 +39,7 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
-// keep each glyph in the legacy non-animated ticker flow
+// Keep each glyph in its own layout box for horizontal ticker reflow.
 const glyphSlotStyle = {
   alignSelf: "flex-start",
 } as const;
@@ -74,10 +85,10 @@ type NativeTickerRunProps = {
 
 type NativeTickerLaneProps = {
   readonly animatedText: LaminarAnimatedText;
-  readonly fallbackValue: string;
-  readonly laneIndex: number;
+  readonly laneValues: readonly (string | null)[];
+  readonly glyphWidths: Readonly<Record<string, number>>;
+  readonly glyphMetricsReady: boolean;
   readonly unit: string;
-  readonly align: LaminarAlign;
   readonly isLast: boolean;
   readonly laneSpacing: number;
   readonly lineHeight?: number;
@@ -85,13 +96,72 @@ type NativeTickerLaneProps = {
   readonly className?: string;
 };
 
+type NativeTickerFrame = {
+  readonly units: readonly string[];
+  readonly leadLength: number;
+};
+
+// Map each formatted value into stable prefix and trailing numeric lanes.
+const getTickerLaneUnit = (
+  frame: NativeTickerFrame,
+  laneIndex: number,
+  layoutLeadLength: number,
+  layoutBodyLength: number,
+): string | null => {
+  let valueIndex = -1;
+  if (laneIndex < layoutLeadLength) {
+    if (laneIndex < frame.leadLength) valueIndex = laneIndex;
+  } else {
+    const laneFromRight =
+      layoutBodyLength - 1 - (laneIndex - layoutLeadLength);
+    const frameBodyLength = frame.units.length - frame.leadLength;
+    const frameBodyIndex = frameBodyLength - 1 - laneFromRight;
+    if (frameBodyIndex >= 0 && frameBodyIndex < frameBodyLength) {
+      valueIndex = frame.leadLength + frameBodyIndex;
+    }
+  }
+
+  if (valueIndex < 0 || valueIndex >= frame.units.length) {
+    return null;
+  }
+
+  return frame.units[valueIndex] ?? null;
+};
+
+const getTickerFrame = (value: string): NativeTickerFrame => {
+  const units = splitDisplayUnits(value);
+  return { units, leadLength: findNumericLeadLength(units) };
+};
+
+const nativeMeasureRowStyle = {
+  position: "absolute",
+  left: 0,
+  top: 0,
+  flexDirection: "row",
+  opacity: 0,
+} as const;
+
+const nativeMeasureTextStyle = {
+  alignSelf: "flex-start",
+  margin: 0,
+  padding: 0,
+  includeFontPadding: false,
+  letterSpacing: 0,
+} as const;
+
+type GlyphMetricsState = {
+  readonly key: string;
+  readonly styleKey: string;
+  readonly widths: Readonly<Record<string, number>>;
+};
+
 // Keep one native text field per glyph so ticker lanes use the same geometry as slots.
 const NativeTickerLane = React.memo(function NativeTickerLane({
   animatedText,
-  fallbackValue,
-  laneIndex,
+  laneValues,
+  glyphWidths,
+  glyphMetricsReady,
   unit,
-  align,
   isLast,
   laneSpacing,
   lineHeight,
@@ -102,32 +172,46 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
     () => {
       "worklet";
 
-      const lastIndex = Math.max(0, animatedText.values.length - 1);
-      const index = Math.max(
+      const frameIndex = Math.max(
         0,
-        Math.min(lastIndex, Math.round(animatedText.index.value)),
+        Math.min(laneValues.length - 1, Math.round(animatedText.index.value)),
       );
-      const nextValue = animatedText.values[index] ?? fallbackValue;
-      const lengthDifference = Math.max(
+      const laneValue = laneValues[frameIndex] ?? null;
+
+      return { text: laneValue ?? " " };
+    },
+    [animatedText.index, laneValues],
+  );
+  const animatedLaneStyle = useAnimatedStyle(
+    () => {
+      "worklet";
+
+      // The shared index drives glyph and width together; a second timing
+      // animation would trail the chart during continuous scrubbing.
+      const frameIndex = Math.max(
         0,
-        fallbackValue.length - nextValue.length,
+        Math.min(laneValues.length - 1, Math.round(animatedText.index.value)),
       );
-      const valueOffset =
-        align === "right"
-          ? lengthDifference
-          : align === "center"
-            ? Math.floor(lengthDifference / 2)
-            : 0;
-      const valueIndex = laneIndex - valueOffset;
+      const laneValue = laneValues[frameIndex] ?? null;
+      const hasUnit = laneValue !== null;
+      let laneWidth = 0;
+      if (laneValue !== null && glyphMetricsReady) {
+        laneWidth = glyphWidths[laneValue] ?? 0;
+      }
 
       return {
-        text:
-          valueIndex >= 0 && valueIndex < nextValue.length
-            ? nextValue.charAt(valueIndex) || " "
-            : " ",
+        ...(!hasUnit || glyphMetricsReady ? { width: laneWidth } : {}),
+        marginRight: hasUnit && !isLast ? laneSpacing : 0,
       };
     },
-    [align, animatedText.values, fallbackValue, laneIndex],
+    [
+      animatedText.index,
+      laneValues,
+      glyphWidths,
+      glyphMetricsReady,
+      isLast,
+      laneSpacing,
+    ],
   );
   // React Native's iOS TextInput distributes explicit lineHeight differently
   // from Text. Keep the line box on the wrapper/probe and let the single-line
@@ -149,7 +233,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
   };
 
   return (
-    <View
+    <Animated.View
       style={[
         nativeGlyphSlotStyle,
         {
@@ -158,9 +242,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
           justifyContent: "center",
           ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
         },
-        !isLast && laneSpacing !== 0
-          ? { marginRight: laneSpacing }
-          : undefined,
+        animatedLaneStyle,
       ]}
     >
       <Text
@@ -179,6 +261,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
         editable={false}
         multiline={false}
         pointerEvents="none"
+        className={className}
         style={[
           textStyle,
           nativeTextBoxStyle,
@@ -197,7 +280,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
           >["animatedProps"]
         }
       />
-    </View>
+    </Animated.View>
   );
 });
 
@@ -221,7 +304,96 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     typeof flattenedTextStyle?.letterSpacing === "number"
       ? flattenedTextStyle.letterSpacing
       : 0;
-  const { units } = useNumericLanes(fallbackValue);
+  const frames = useMemo(
+    () =>
+      animatedText.values.length > 0
+        ? animatedText.values.map(getTickerFrame)
+        : [getTickerFrame(fallbackValue)],
+    [animatedText.values, fallbackValue],
+  );
+  const allFrames = useMemo(
+    () => [...frames, getTickerFrame(fallbackValue)],
+    [fallbackValue, frames],
+  );
+  const layoutLeadLength = allFrames.reduce(
+    (longest, frame) => Math.max(longest, frame.leadLength),
+    0,
+  );
+  const layoutBodyLength = allFrames.reduce(
+    (longest, frame) =>
+      Math.max(longest, frame.units.length - frame.leadLength),
+    0,
+  );
+  const laneCount = layoutLeadLength + layoutBodyLength;
+  const laneValues = useMemo(
+    () =>
+      Array.from({ length: laneCount }, (_, laneIndex) =>
+        frames.map((frame) =>
+          getTickerLaneUnit(
+            frame,
+            laneIndex,
+            layoutLeadLength,
+            layoutBodyLength,
+          ),
+        ),
+      ),
+    [frames, laneCount, layoutBodyLength, layoutLeadLength],
+  );
+  const measureUnits = useMemo(() => {
+    const uniqueUnits = new Set<string>();
+    for (const frame of allFrames) {
+      for (const unit of frame.units) uniqueUnits.add(unit);
+    }
+    return Array.from(uniqueUnits);
+  }, [allFrames]);
+  const metricsStyleKey = JSON.stringify({
+    className,
+    fontFamily: flattenedTextStyle?.fontFamily,
+    fontSize: flattenedTextStyle?.fontSize,
+    fontStyle: flattenedTextStyle?.fontStyle,
+    fontVariant: flattenedTextStyle?.fontVariant,
+    fontWeight: flattenedTextStyle?.fontWeight,
+    textTransform: flattenedTextStyle?.textTransform,
+    writingDirection: flattenedTextStyle?.writingDirection,
+  });
+  const metricsKey = `${metricsStyleKey}\u0000${measureUnits.join("\u0000")}`;
+  const [glyphMetrics, setGlyphMetrics] = useState<GlyphMetricsState>({
+    key: "",
+    styleKey: "",
+    widths: {},
+  });
+  const pendingMetricsRef = useRef<{
+    key: string;
+    widths: Record<string, number>;
+  }>({
+    key: metricsKey,
+    widths: {},
+  });
+  if (pendingMetricsRef.current.key !== metricsKey) {
+    pendingMetricsRef.current = {
+      key: metricsKey,
+      widths:
+        glyphMetrics.styleKey === metricsStyleKey
+          ? { ...glyphMetrics.widths }
+          : {},
+    };
+  }
+  const glyphMetricsReady = glyphMetrics.key === metricsKey;
+
+  const fallbackFrame = getTickerFrame(fallbackValue);
+  const fallbackLaneUnit = (laneIndex: number) => {
+    if (laneIndex < layoutLeadLength) {
+      return fallbackFrame.units[laneIndex] ?? "0";
+    }
+
+    const laneFromRight =
+      layoutBodyLength - 1 - (laneIndex - layoutLeadLength);
+    const bodyLength = fallbackFrame.units.length - fallbackFrame.leadLength;
+    const bodyIndex = bodyLength - 1 - laneFromRight;
+    return bodyIndex >= 0
+      ? fallbackFrame.units[fallbackFrame.leadLength + bodyIndex] ?? "0"
+      : "0";
+  };
 
   return (
     <View
@@ -239,21 +411,72 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         leadingKey={leadingKey}
         leadingGap={leadingGap}
       />
-      {units.map((unit, index) => (
-        <NativeTickerLane
-          key={`native:${index}`}
-          animatedText={animatedText}
-          fallbackValue={fallbackValue}
-          laneIndex={index}
-          unit={unit}
-          align={align}
-          isLast={index === units.length - 1}
-          laneSpacing={laneSpacing}
-          lineHeight={lineHeight}
-          textStyle={textStyle}
-          className={className}
-        />
-      ))}
+      {Array.from({ length: laneCount }, (_, index) => {
+        const unit = fallbackLaneUnit(index);
+        const isLeadLane = index < layoutLeadLength;
+        const laneFromRight = isLeadLane
+          ? undefined
+          : layoutBodyLength - 1 - (index - layoutLeadLength);
+
+        return (
+          <NativeTickerLane
+            key={
+              isLeadLane
+                ? `native:lead:${index}`
+                : `native:body:${laneFromRight}`
+            }
+            animatedText={animatedText}
+            laneValues={laneValues[index] ?? []}
+            glyphWidths={glyphMetrics.widths}
+            glyphMetricsReady={glyphMetricsReady}
+            unit={unit}
+            isLast={index === laneCount - 1}
+            laneSpacing={laneSpacing}
+            lineHeight={lineHeight}
+            textStyle={textStyle}
+            className={className}
+          />
+        );
+      })}
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={nativeMeasureRowStyle}
+      >
+        {measureUnits.map((unit) => (
+          <Text
+            key={`measure:${metricsStyleKey}:${unit}`}
+            onLayout={(event) => {
+              const width = event.nativeEvent.layout.width;
+              const pending = pendingMetricsRef.current;
+              if (pending.key !== metricsKey || pending.widths[unit] === width) {
+                return;
+              }
+
+              pending.widths[unit] = width;
+              if (
+                measureUnits.every((measuredUnit) =>
+                  Object.prototype.hasOwnProperty.call(
+                    pending.widths,
+                    measuredUnit,
+                  ),
+                )
+              ) {
+                setGlyphMetrics({
+                  key: metricsKey,
+                  styleKey: metricsStyleKey,
+                  widths: { ...pending.widths },
+                });
+              }
+            }}
+            style={[textStyle, nativeMeasureTextStyle]}
+            className={className}
+          >
+            {normalizeDisplayUnit(unit)}
+          </Text>
+        ))}
+      </View>
     </View>
   );
 });
@@ -264,18 +487,20 @@ type TickerLaneProps = {
   readonly laneSpacing: number;
   readonly lineHeight?: number;
   readonly animateLayout: boolean;
+  readonly structureChanged: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
 };
 
-// keep unchanged lanes out of scrub reconciliation
+// Keep unchanged glyph lanes out of React reconciliation.
 const TickerLane = React.memo(function TickerLane({
   unit,
   isLast,
   laneSpacing,
   lineHeight,
   animateLayout,
+  structureChanged,
   motionRecipe,
   textStyle,
   className,
@@ -283,6 +508,10 @@ const TickerLane = React.memo(function TickerLane({
   return (
     <Animated.View
       layout={animateLayout ? motionRecipe.layoutTransition : undefined}
+      entering={
+        structureChanged ? motionRecipe.enterTransition : undefined
+      }
+      exiting={motionRecipe.exitTransition}
       style={[
         glyphSlotStyle,
         {
@@ -328,7 +557,8 @@ type FlowTickerRunProps = {
   readonly leadingGap: number;
 };
 
-// keep ticker lanes inline with crisp replacements
+// Keep ticker lanes horizontally reflowing. Fade only lanes added or removed
+// when the formatted value's structure changes, matching the slots renderer.
 const FlowTickerRun = React.memo(function FlowTickerRun({
   value,
   motionRecipe,
@@ -357,6 +587,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
   }, [flattenedTextStyle]);
   const lastValueRef = useRef(value);
   const hasAnimatedRef = useRef(false);
+  const previousValue = lastValueRef.current;
   const structureSignature = useMemo(
     () =>
       units
@@ -365,8 +596,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     [units],
   );
   const previousStructureSignatureRef = useRef(structureSignature);
-
-  if (value !== lastValueRef.current || isLeadingChange) {
+  if (value !== previousValue || isLeadingChange) {
     hasAnimatedRef.current = true;
     lastValueRef.current = value;
   }
@@ -412,7 +642,8 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
               isLast={index === units.length - 1}
               laneSpacing={laneSpacing}
               lineHeight={lineHeight}
-              animateLayout={structureChanged}
+              animateLayout={hasAnimated}
+              structureChanged={structureChanged}
               motionRecipe={motionRecipe}
               textStyle={textStyle}
               className={className}

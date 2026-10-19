@@ -118,6 +118,7 @@ type DemoPageLayoutProps<T> = {
   readonly onReverse: () => void;
   readonly onMorph: () => void;
   readonly preview: React.ReactNode;
+  readonly fillPreview?: boolean;
   readonly settingsStore: DemoSnapshotStore<T>;
   readonly renderSettingsSection?: (metrics: DemoMetrics) => React.ReactNode;
   readonly renderSettings?: (
@@ -134,6 +135,7 @@ function DemoPageLayoutImpl<T>({
   onReverse,
   onMorph,
   preview,
+  fillPreview = false,
   settingsStore,
   renderSettingsSection,
   renderSettings,
@@ -144,8 +146,12 @@ function DemoPageLayoutImpl<T>({
   return (
     <View style={{ flex: 1 }}>
       <DemoPageScroll metrics={metrics}>
-        <PreviewStage metrics={metrics}>{preview}</PreviewStage>
-        <View style={{ flex: 1, minHeight: metrics.controlStackGap }} />
+        <PreviewStage metrics={metrics} fill={fillPreview}>
+          {preview}
+        </PreviewStage>
+        {!fillPreview ? (
+          <View style={{ flex: 1, minHeight: metrics.controlStackGap }} />
+        ) : null}
         {renderSettingsSection ? (
           renderSettingsSection(metrics)
         ) : renderStaticSettings ? (
