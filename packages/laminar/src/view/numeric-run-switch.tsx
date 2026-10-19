@@ -70,25 +70,28 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
 
   const slotsFromValue =
     mode === "slots" ? fromValue : lastSlotsFromValue.current;
+  const shouldRenderSlots = mode === "slots" || preloadValue !== undefined;
 
   return (
     <View style={switchStyle}>
-      <View style={mode === "slots" ? undefined : hiddenLayerStyle}>
-        <SlotsRun
-          value={mode === "ticker" ? preloadValue ?? value : value}
-          fromValue={slotsFromValue}
-          motionRecipe={slotsMotionRecipe}
-          align={align}
-          fontSize={fontSize}
-          textStyle={textStyle}
-          className={className}
-          leading={leading}
-          leadingKey={leadingKey}
-          leadingGap={leadingGap}
-          ready={ready}
-          shadow={shadow}
-        />
-      </View>
+      {shouldRenderSlots ? (
+        <View style={mode === "slots" ? undefined : hiddenLayerStyle}>
+          <SlotsRun
+            value={mode === "ticker" ? preloadValue ?? value : value}
+            fromValue={slotsFromValue}
+            motionRecipe={slotsMotionRecipe}
+            align={align}
+            fontSize={fontSize}
+            textStyle={textStyle}
+            className={className}
+            leading={leading}
+            leadingKey={leadingKey}
+            leadingGap={leadingGap}
+            ready={ready}
+            shadow={shadow}
+          />
+        </View>
+      ) : null}
       {mode === "ticker" ? (
         <TickerRun
           value={value}

@@ -54,6 +54,17 @@ function formatPriceValues(
   return next;
 }
 
+// Keep the inactive slots renderer at the last settled value while ticker
+// mode follows the cursor through its shared value on the UI thread.
+function useSlotsPreloadValue(value: string, numberMode: MorphNumberMode) {
+  const settledValueRef = React.useRef(value);
+  if (numberMode !== "ticker") {
+    settledValueRef.current = value;
+  }
+
+  return numberMode === "ticker" ? settledValueRef.current : value;
+}
+
 type PriceOverviewProps = {
   asset: MorphingAsset;
   cursorIndexShared: SharedValue<number>;
@@ -166,6 +177,7 @@ const PriceReadout = React.memo(function PriceReadout({
   backgroundColor,
 }: Omit<NumericReadoutProps, "meta"> & { color: string }) {
   const priceText = formatPrice(displayValue, priceFractionDigits);
+  const slotsPreloadValue = useSlotsPreloadValue(priceText, numberMode);
   const tickerPriceValues = React.useMemo(
     () =>
       tickerValues
@@ -207,7 +219,7 @@ const PriceReadout = React.memo(function PriceReadout({
     <Laminar
       animatedText={animatedPriceText}
       fromValue={slotStartPriceText}
-      preloadValue={priceText}
+      preloadValue={slotsPreloadValue}
       text={priceText}
       variant="number"
       numberMode={numberMode}
@@ -239,6 +251,7 @@ const PercentReadout = React.memo(function PercentReadout({
     displayValue,
   );
   const percentText = formatPercent(displayPercentChange);
+  const slotsPreloadValue = useSlotsPreloadValue(percentText, numberMode);
   const slotStartPercentText = React.useMemo(
     () =>
       slotStartValue === null
@@ -301,7 +314,7 @@ const PercentReadout = React.memo(function PercentReadout({
       <Laminar
         animatedText={animatedPercentText}
         fromValue={slotStartPercentText}
-        preloadValue={percentText}
+        preloadValue={slotsPreloadValue}
         text={percentText}
         variant="number"
         numberMode={numberMode}
