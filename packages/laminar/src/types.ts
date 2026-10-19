@@ -74,6 +74,8 @@ export type MorphingTextProps = {
   readonly variant?: MorphContentVariant;
   // number mode selects the numeric renderer
   readonly numberMode?: MorphNumberMode;
+  // scale the decimal separator and fractional digits in ticker mode (0.1–1; default 1)
+  readonly fractionScale?: number;
   readonly animatedText?: LaminarAnimatedText;
   // start a slot handoff from the last displayed numeric value
   readonly fromValue?: string;

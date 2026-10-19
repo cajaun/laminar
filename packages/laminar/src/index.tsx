@@ -4,6 +4,7 @@ import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
 import {
+  findFractionStartIndex,
   normalizeDisplayUnit,
   splitDisplayUnits,
 } from "./model/display-units";
@@ -12,6 +13,7 @@ import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
 import { TextRun } from "./view/text-run";
 import { NumericRunSwitch } from "./view/numeric-run-switch";
+import { getFractionalTextStyle } from "./view/fractional-text-style";
 
 // connect the content variant to the shared viewport and measurement flow
 export const Laminar = React.memo(function Laminar({
@@ -19,6 +21,7 @@ export const Laminar = React.memo(function Laminar({
     variant = "text",
     fontSize,
     color,
+    fractionScale: fractionScaleProp = 1,
     align = "left",
     className,
     leading,
@@ -51,6 +54,10 @@ export const Laminar = React.memo(function Laminar({
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
+    const fractionScale = Number.isFinite(fractionScaleProp)
+      ? Math.max(0.1, Math.min(1, fractionScaleProp))
+      : 1;
+    const tickerFractionScale = isTickerVariant ? fractionScale : 1;
     const layoutTransitionKey =
       isSlotsVariant || isTickerVariant
         ? `${variant}:${isTickerVariant ? "ticker" : "slots"}`
@@ -99,6 +106,7 @@ export const Laminar = React.memo(function Laminar({
         flattenedStyle?.letterSpacing,
         flattenedStyle?.lineHeight,
         flattenedStyle?.textTransform,
+        tickerFractionScale,
         Boolean(resolvedLeading),
         resolvedLeadingKey,
         leadingGap,
@@ -109,6 +117,7 @@ export const Laminar = React.memo(function Laminar({
       resolvedLeadingKey,
       resolvedValue,
       textStyle,
+      tickerFractionScale,
       variant,
     ]);
     const {
@@ -132,6 +141,13 @@ export const Laminar = React.memo(function Laminar({
         .map(normalizeDisplayUnit)
         .join("");
     }, [autoSize, resolvedValue]);
+    const measuredUnits = React.useMemo(
+      () => splitDisplayUnits(measuredValue),
+      [measuredValue],
+    );
+    const measuredFractionStartIndex = isTickerVariant
+      ? findFractionStartIndex(measuredUnits)
+      : measuredUnits.length;
 
     return (
       <MorphViewport
@@ -163,8 +179,19 @@ export const Laminar = React.memo(function Laminar({
                   {resolvedLeading}
                 </View>
               ) : null}
-              {splitDisplayUnits(measuredValue).map((unit, index) => (
-                <Text key={`${unit}-${index}`} style={textStyle}>
+              {measuredUnits.map((unit, index) => (
+                <Text
+                  key={`${unit}-${index}`}
+                  style={
+                    index >= measuredFractionStartIndex
+                      ? getFractionalTextStyle(
+                          textStyle,
+                          fontSize,
+                          tickerFractionScale,
+                        )
+                      : textStyle
+                  }
+                >
                   {normalizeDisplayUnit(unit)}
                 </Text>
               ))}
@@ -203,6 +230,7 @@ export const Laminar = React.memo(function Laminar({
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
+            fractionScale={tickerFractionScale}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}

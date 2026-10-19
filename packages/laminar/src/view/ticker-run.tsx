@@ -19,6 +19,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import {
+  findFractionStartIndex,
   findNumericLeadLength,
   isAsciiDigit,
   normalizeDisplayUnit,
@@ -31,6 +32,7 @@ import type {
   MotionRecipe,
 } from "../types";
 import { LeadingElement } from "./leading-element";
+import { getFractionalTextStyle } from "./fractional-text-style";
 
 const rowStyle = {
   flexDirection: "row",
@@ -61,6 +63,7 @@ type TickerRunProps = {
   readonly motionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
   readonly fontSize?: number;
+  readonly fractionScale?: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
   readonly leading?: ReactNode;
@@ -79,6 +82,8 @@ type NativeTickerRunProps = {
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
+  readonly fontSize?: number;
+  readonly fractionScale: number;
   readonly textStyle?: StyleProp<TextStyle>;
 };
 
@@ -91,6 +96,8 @@ type NativeTickerLaneProps = {
   readonly isLast: boolean;
   readonly laneSpacing: number;
   readonly lineHeight?: number;
+  readonly isFractional: boolean;
+  readonly fractionalTextStyle?: StyleProp<TextStyle>;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
 };
@@ -98,6 +105,27 @@ type NativeTickerLaneProps = {
 type NativeTickerFrame = {
   readonly units: readonly string[];
   readonly leadLength: number;
+};
+
+type MeasuredTickerGlyph = {
+  readonly key: string;
+  readonly unit: string;
+  readonly isFractional: boolean;
+};
+
+const getTickerGlyphMetricKey = (unit: string, isFractional: boolean) =>
+  `${isFractional ? "fraction" : "main"}:${unit}`;
+
+const getBodyLaneFractionRole = (
+  frame: NativeTickerFrame,
+  laneFromRight: number,
+) => {
+  const unitIndex = frame.units.length - 1 - laneFromRight;
+  if (unitIndex < frame.leadLength || unitIndex >= frame.units.length) {
+    return undefined;
+  }
+
+  return unitIndex >= findFractionStartIndex(frame.units);
 };
 
 // Map each formatted value into stable prefix and trailing numeric lanes.
@@ -164,9 +192,12 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
   isLast,
   laneSpacing,
   lineHeight,
+  isFractional,
+  fractionalTextStyle,
   className,
   textStyle,
 }: NativeTickerLaneProps) {
+  const glyphTextStyle = isFractional ? fractionalTextStyle : textStyle;
   const animatedProps = useAnimatedProps<{ text: string }>(
     () => {
       "worklet";
@@ -195,7 +226,8 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
       const hasUnit = laneValue !== null;
       let laneWidth = 0;
       if (laneValue !== null && glyphMetricsReady) {
-        laneWidth = glyphWidths[laneValue] ?? 0;
+        laneWidth =
+          glyphWidths[getTickerGlyphMetricKey(laneValue, isFractional)] ?? 0;
       }
 
       return {
@@ -208,6 +240,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
       laneValues,
       glyphWidths,
       glyphMetricsReady,
+      isFractional,
       isLast,
       laneSpacing,
     ],
@@ -248,7 +281,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
         pointerEvents="none"
-        style={[textStyle, nativeProbeStyle, { opacity: 0 }]}
+        style={[glyphTextStyle, nativeProbeStyle, { opacity: 0 }]}
         className={className}
       >
         {unit}
@@ -262,7 +295,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
         pointerEvents="none"
         className={className}
         style={[
-          textStyle,
+          glyphTextStyle,
           nativeTextBoxStyle,
           {
             position: "absolute",
@@ -292,8 +325,14 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
   leading,
   leadingKey,
   leadingGap = 0,
+  fontSize,
+  fractionScale,
   textStyle,
 }: NativeTickerRunProps) {
+  const fractionalTextStyle = useMemo(
+    () => getFractionalTextStyle(textStyle, fontSize, fractionScale),
+    [fractionScale, fontSize, textStyle],
+  );
   const flattenedTextStyle = StyleSheet.flatten(textStyle);
   const lineHeight =
     typeof flattenedTextStyle?.lineHeight === "number"
@@ -338,15 +377,35 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
       ),
     [frames, laneCount, layoutBodyLength, layoutLeadLength],
   );
+  const fractionalBodyLanes = useMemo(
+    () =>
+      Array.from({ length: layoutBodyLength }, (_, laneFromRight) => {
+        const roles = allFrames
+          .map((frame) => getBodyLaneFractionRole(frame, laneFromRight))
+          .filter((role): role is boolean => role !== undefined);
+
+        return (
+          fractionScale < 1 && roles.length > 0 && roles.every(Boolean)
+        );
+      }),
+    [allFrames, fractionScale, layoutBodyLength],
+  );
   const measureUnits = useMemo(() => {
-    const uniqueUnits = new Set<string>();
+    const uniqueUnits = new Map<string, MeasuredTickerGlyph>();
     for (const frame of allFrames) {
-      for (const unit of frame.units) uniqueUnits.add(unit);
+      const fractionStartIndex = findFractionStartIndex(frame.units);
+      frame.units.forEach((unit, index) => {
+        const isFractional =
+          fractionScale < 1 && index >= fractionStartIndex;
+        const key = getTickerGlyphMetricKey(unit, isFractional);
+        uniqueUnits.set(key, { key, unit, isFractional });
+      });
     }
-    return Array.from(uniqueUnits);
-  }, [allFrames]);
+    return Array.from(uniqueUnits.values());
+  }, [allFrames, fractionScale]);
   const metricsStyleKey = JSON.stringify({
     className,
+    fractionScale,
     fontFamily: flattenedTextStyle?.fontFamily,
     fontSize: flattenedTextStyle?.fontSize,
     fontStyle: flattenedTextStyle?.fontStyle,
@@ -355,7 +414,9 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     textTransform: flattenedTextStyle?.textTransform,
     writingDirection: flattenedTextStyle?.writingDirection,
   });
-  const metricsKey = `${metricsStyleKey}\u0000${measureUnits.join("\u0000")}`;
+  const metricsKey = `${metricsStyleKey}\u0000${measureUnits
+    .map((item) => item.key)
+    .join("\u0000")}`;
   const [glyphMetrics, setGlyphMetrics] = useState<GlyphMetricsState>({
     key: "",
     styleKey: "",
@@ -416,6 +477,9 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         const laneFromRight = isLeadLane
           ? undefined
           : layoutBodyLength - 1 - (index - layoutLeadLength);
+        const isFractional =
+          laneFromRight !== undefined &&
+          fractionalBodyLanes[laneFromRight] === true;
 
         return (
           <NativeTickerLane
@@ -432,6 +496,8 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
             isLast={index === laneCount - 1}
             laneSpacing={laneSpacing}
             lineHeight={lineHeight}
+            isFractional={isFractional}
+            fractionalTextStyle={fractionalTextStyle}
             textStyle={textStyle}
             className={className}
           />
@@ -443,22 +509,25 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         pointerEvents="none"
         style={nativeMeasureRowStyle}
       >
-        {measureUnits.map((unit) => (
+        {measureUnits.map((measurement) => (
           <Text
-            key={`measure:${metricsStyleKey}:${unit}`}
+            key={`measure:${metricsStyleKey}:${measurement.key}`}
             onLayout={(event) => {
               const width = event.nativeEvent.layout.width;
               const pending = pendingMetricsRef.current;
-              if (pending.key !== metricsKey || pending.widths[unit] === width) {
+              if (
+                pending.key !== metricsKey ||
+                pending.widths[measurement.key] === width
+              ) {
                 return;
               }
 
-              pending.widths[unit] = width;
+              pending.widths[measurement.key] = width;
               if (
                 measureUnits.every((measuredUnit) =>
                   Object.prototype.hasOwnProperty.call(
                     pending.widths,
-                    measuredUnit,
+                    measuredUnit.key,
                   ),
                 )
               ) {
@@ -469,10 +538,13 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
                 });
               }
             }}
-            style={[textStyle, nativeMeasureTextStyle]}
+            style={[
+              measurement.isFractional ? fractionalTextStyle : textStyle,
+              nativeMeasureTextStyle,
+            ]}
             className={className}
           >
-            {normalizeDisplayUnit(unit)}
+            {normalizeDisplayUnit(measurement.unit)}
           </Text>
         ))}
       </View>
@@ -593,6 +665,8 @@ type FlowTickerRunProps = {
   readonly value: string;
   readonly motionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
+  readonly fontSize?: number;
+  readonly fractionScale: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
   readonly leading?: ReactNode;
@@ -606,6 +680,8 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
   value,
   motionRecipe,
   align,
+  fontSize,
+  fractionScale,
   textStyle,
   className,
   leading,
@@ -619,6 +695,12 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
   } = useLeadingAnimation({ leading, leadingKey, leadingGap, motionRecipe });
   // This path only needs formatted units; lane IDs and direction are unused.
   const units = useMemo(() => splitDisplayUnits(value), [value]);
+  const fractionStartIndex = findFractionStartIndex(units);
+  const hasFraction = fractionStartIndex < units.length;
+  const fractionalTextStyle = useMemo(
+    () => getFractionalTextStyle(textStyle, fontSize, fractionScale),
+    [fractionScale, fontSize, textStyle],
+  );
   const leadLength = findNumericLeadLength(units);
   const flattenedTextStyle = StyleSheet.flatten(textStyle);
   const lineHeight =
@@ -650,7 +732,10 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     hasAnimated &&
     previousStructureSignatureRef.current !== structureSignature;
   previousStructureSignatureRef.current = structureSignature;
-  const bodyLength = Math.max(units.length - leadLength, 0);
+  const integerBodyLength = Math.max(
+    (hasFraction ? fractionStartIndex : units.length) - leadLength,
+    0,
+  );
   const rowHeightStyle = useMemo(() => ({ height: lineHeight }), [lineHeight]);
   const outerRowStyle = useMemo(
     () => [rowStyle, rowAlignStyles[align], rowHeightStyle],
@@ -681,10 +766,13 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
         {units.map((unit, index) => {
           const inLead = index < leadLength;
           const bodyIndex = index - leadLength;
+          const inFraction = hasFraction && index >= fractionStartIndex;
           const isDigit = !inLead && isAsciiDigit(unit);
           const laneKey = inLead
             ? `flow:lead:${index}`
-            : `flow:${bodyLength - 1 - bodyIndex}`;
+            : inFraction
+              ? `flow:fraction:${index - fractionStartIndex}`
+              : `flow:integer:${integerBodyLength - 1 - bodyIndex}`;
           const unitKey = isDigit ? laneKey : `${laneKey}:${unit}`;
 
           return (
@@ -698,7 +786,9 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
               animateLayout={hasAnimated}
               structureChanged={structureChanged}
               motionRecipe={motionRecipe}
-              textStyle={textStyle}
+              textStyle={
+                index >= fractionStartIndex ? fractionalTextStyle : textStyle
+              }
               className={className}
             />
           );
@@ -714,6 +804,8 @@ export const TickerRun = React.memo(function TickerRun({
   animatedText,
   motionRecipe,
   align,
+  fontSize,
+  fractionScale = 1,
   textStyle,
   className,
   leading,
@@ -764,6 +856,8 @@ export const TickerRun = React.memo(function TickerRun({
         leading={visibleLeading}
         leadingKey={visibleLeadingKey}
         leadingGap={visibleLeadingGap}
+        fontSize={fontSize}
+        fractionScale={fractionScale}
         textStyle={textStyle}
       />
     );
@@ -774,6 +868,8 @@ export const TickerRun = React.memo(function TickerRun({
       value={visibleValue}
       motionRecipe={motionRecipe}
       align={align}
+      fontSize={fontSize}
+      fractionScale={fractionScale}
       textStyle={textStyle}
       className={className}
       leading={visibleLeading}

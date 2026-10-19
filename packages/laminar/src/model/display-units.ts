@@ -29,3 +29,23 @@ export const findNumericLeadLength = (units: readonly string[]) => {
 
   return firstDigitIndex === -1 ? units.length : firstDigitIndex;
 };
+
+// Locate a trailing decimal section without treating a 3-digit grouping comma
+// such as "1,000" as a fractional separator.
+export const findFractionStartIndex = (units: readonly string[]) => {
+  for (let index = units.length - 2; index >= 0; index -= 1) {
+    const separator = units[index];
+    if (separator !== "." && separator !== ",") continue;
+
+    const fraction = units.slice(index + 1);
+    if (
+      fraction.length > 0 &&
+      (separator === "." || fraction.length <= 2) &&
+      fraction.every(isAsciiDigit)
+    ) {
+      return index;
+    }
+  }
+
+  return units.length;
+};

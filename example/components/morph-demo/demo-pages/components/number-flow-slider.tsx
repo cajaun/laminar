@@ -68,6 +68,7 @@ const NumberFlowReadout = React.memo(function NumberFlowReadout({
             variant="number"
             numberMode="ticker"
             animationPreset="ticker"
+            fractionScale={0.66}
             fontSize={70}
             autoSize
             align="center"

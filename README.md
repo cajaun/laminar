@@ -111,6 +111,7 @@ the transition-local number mode:
   text="$2,459.70"
   variant="number"
   numberMode="ticker"
+  fractionScale={0.66}
 />
 ```
 
@@ -195,6 +196,7 @@ icon replacement transition:
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
 | `numberMode` | `"morph" \| "ticker"` | `"morph"` | Number-only renderer mode; `ticker` uses crisp in-place digit flow |
+| `fractionScale` | `number` | `1` | In ticker mode, scales the decimal separator and fractional digits relative to the main digits |
 | `fontSize` | `number` | inherited | Font size and numeric travel input |
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |

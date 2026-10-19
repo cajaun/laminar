@@ -33,6 +33,7 @@ type NumericRunSwitchProps = {
   readonly tickerMotionRecipe: MotionRecipe;
   readonly align: LaminarAlign;
   readonly fontSize?: number;
+  readonly fractionScale?: number;
   readonly textStyle?: React.ComponentProps<typeof SlotsRun>["textStyle"];
   readonly className?: string;
   readonly leading?: React.ReactNode;
@@ -53,6 +54,7 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   tickerMotionRecipe,
   align,
   fontSize,
+  fractionScale,
   textStyle,
   className,
   leading,
@@ -99,6 +101,7 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
           motionRecipe={tickerMotionRecipe}
           align={align}
           fontSize={fontSize}
+          fractionScale={fractionScale}
           textStyle={textStyle}
           className={className}
           leading={leading}
