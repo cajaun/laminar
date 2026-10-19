@@ -1,4 +1,5 @@
 import React, {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -184,14 +185,25 @@ const SlotColumn = React.memo(function SlotColumn({
   // use cumulative positions across digit wraparound
   const spinInDistance = Math.max(digit, 1);
   const initialDirection = direction || 1;
-  const initialValue = animateIn
-    ? digit - spinInDistance * initialDirection
-    : initialDigit ?? digit;
+  const targetStart = initialDigit ?? digit;
+  const initialValue =
+    initialDigit !== undefined
+      ? initialDigit
+      : animateIn
+        ? digit - spinInDistance * initialDirection
+        : digit;
   const current = useSharedValue(initialValue);
-  const cumulativeRef = useRef(initialValue);
-  const previousDigitRef = useRef(initialDigit ?? digit);
+  // keep the reel target separate from its visual spin-in position
+  const cumulativeRef = useRef(targetStart);
+  const previousDigitRef = useRef(targetStart);
   const initialRef = useRef(true);
   const drivenTargetRef = useRef<number | null>(null);
+  const exitStateRef = useRef({
+    digit,
+    direction,
+    motionRecipe,
+    target: targetStart,
+  });
   const shadowOptions =
     shadow !== null && typeof shadow === "object"
       ? shadow
@@ -220,6 +232,25 @@ const SlotColumn = React.memo(function SlotColumn({
     previousDigitRef.current = digit;
   }
 
+  exitStateRef.current = {
+    digit,
+    direction,
+    motionRecipe,
+    target: cumulativeRef.current,
+  };
+
+  useEffect(() => {
+    return () => {
+      const exitState = exitStateRef.current;
+      const spinOutDistance = Math.max(exitState.digit, 1);
+      const exitDirection = exitState.direction || 1;
+
+      current.value = exitState.motionRecipe.driveNumber(
+        exitState.target + spinOutDistance * exitDirection
+      );
+    };
+  }, [current]);
+
   useLayoutEffect(() => {
     // recenter the reel after enough cumulative turns
     if (initialRef.current) {
@@ -243,6 +274,13 @@ const SlotColumn = React.memo(function SlotColumn({
         current.value -= shift;
       }
     }
+
+    exitStateRef.current = {
+      digit,
+      direction,
+      motionRecipe,
+      target,
+    };
 
     // keep unchanged reels still during direction changes
     if (drivenTargetRef.current === target) {
@@ -296,6 +334,7 @@ const SlotColumn = React.memo(function SlotColumn({
 
 type SlotTextLaneProps = {
   readonly unit: string;
+  readonly isLead: boolean;
   readonly isLast: boolean;
   readonly laneSpacing: number;
   readonly structureChanged: boolean;
@@ -308,6 +347,7 @@ type SlotTextLaneProps = {
 // keep punctuation and leading symbols outside digit reconciliation
 const SlotTextLane = React.memo(function SlotTextLane({
   unit,
+  isLead,
   isLast,
   laneSpacing,
   structureChanged,
@@ -321,6 +361,7 @@ const SlotTextLane = React.memo(function SlotTextLane({
       layout={
         structureChanged ? motionRecipe.layoutTransition : undefined
       }
+      exiting={!isLead ? motionRecipe.exitTransition : undefined}
       style={{
         height: slotHeight,
         alignItems: "center",
@@ -376,6 +417,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
+      exiting={motionRecipe.exitTransition}
       style={
         !isLast && laneSpacing !== 0
           ? { marginRight: laneSpacing }
@@ -597,6 +639,7 @@ export const SlotsRun = React.memo(
                 <SlotTextLane
                   key={laneKey}
                   unit={unit}
+                  isLead={inLead}
                   isLast={index === units.length - 1}
                   laneSpacing={laneSpacing}
                   structureChanged={structureChanged}

@@ -40,7 +40,7 @@ export const transactionStates = [
 ] as const;
 export const confirmContinueWords = ["Continue", "Confirm"] as const;
 export const numberValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
-// Distinct black-price snapshots from number-ticker.mov, in source order.
+
 export const numberFlowValues = [
   "$2,462.78",
   "$2,465.45",

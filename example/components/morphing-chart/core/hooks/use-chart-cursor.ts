@@ -39,6 +39,7 @@ type UseChartCursorOptions = {
 
 export type ChartCursorState = {
   clearCursor: () => void;
+  clearCursorReadout: () => void;
   cursor: CursorPoint | null;
   releasedCursor: CursorPoint | null;
   cursorIndex: number | null;
@@ -262,6 +263,12 @@ export function useChartCursor({
     setCursorIndex(null);
   }, []);
 
+  // settle numeric readouts immediately while the visual cursor fades away
+  const clearCursorReadout = useCallback(() => {
+    setCursor(null);
+    setReleasedCursor(null);
+  }, []);
+
   const stopScrubbing = useCallback(() => {
     setReleasedCursor(null);
     setIsScrubbing(false);
@@ -408,6 +415,7 @@ export function useChartCursor({
 
   return {
     clearCursor,
+    clearCursorReadout,
     cursor,
     releasedCursor,
     cursorIndex,

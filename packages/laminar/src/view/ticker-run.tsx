@@ -28,7 +28,7 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
-// keep each glyph in the row so surrounding digits can reflow
+// keep each glyph in the legacy non-animated ticker flow
 const glyphSlotStyle = {
   alignSelf: "flex-start",
 } as const;
@@ -68,112 +68,7 @@ type NativeTickerRunProps = {
   readonly textStyle?: StyleProp<TextStyle>;
 };
 
-type NativeTickerLaneProps = {
-  readonly animatedText: LaminarAnimatedText;
-  readonly fallbackValue: string;
-  readonly laneIndex: number;
-  readonly unit: string;
-  readonly isLast: boolean;
-  readonly laneSpacing: number;
-  readonly lineHeight?: number;
-  readonly textStyle?: StyleProp<TextStyle>;
-  readonly className?: string;
-};
-
-// update one displayed unit on the ui thread
-const NativeTickerLane = React.memo(function NativeTickerLane({
-  animatedText,
-  fallbackValue,
-  laneIndex,
-  unit,
-  isLast,
-  laneSpacing,
-  lineHeight,
-  textStyle,
-  className,
-}: NativeTickerLaneProps) {
-  const animatedProps = useAnimatedProps<{ text: string }>(
-    () => {
-      "worklet";
-
-      const lastIndex = Math.max(0, animatedText.values.length - 1);
-      const index = Math.max(
-        0,
-        Math.min(lastIndex, Math.round(animatedText.index.value)),
-      );
-      const nextValue = animatedText.values[index] ?? fallbackValue;
-      const valueOffset = Math.max(0, fallbackValue.length - nextValue.length);
-      const valueIndex = laneIndex - valueOffset;
-
-      return {
-        text: valueIndex >= 0 ? nextValue.charAt(valueIndex) || " " : " ",
-      };
-    },
-    [animatedText.values, fallbackValue, laneIndex, unit],
-  );
-  const nativeTextBoxStyle = {
-    margin: 0,
-    padding: 0,
-    includeFontPadding: false,
-    letterSpacing: 0,
-    textAlign: "center" as const,
-    textAlignVertical: "center" as const,
-    ...(lineHeight !== undefined
-      ? { height: lineHeight, lineHeight }
-      : undefined),
-  };
-
-  return (
-    <View
-      style={[
-        glyphSlotStyle,
-        {
-          position: "relative",
-          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
-        },
-        !isLast && laneSpacing !== 0
-          ? { marginRight: laneSpacing }
-          : undefined,
-      ]}
-    >
-      <Text
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[textStyle, nativeTextBoxStyle, { opacity: 0 }]}
-        className={className}
-      >
-        {unit}
-      </Text>
-      <AnimatedTextInput
-        accessibilityElementsHidden
-        caretHidden
-        defaultValue={unit}
-        editable={false}
-        multiline={false}
-        pointerEvents="none"
-        style={[
-          textStyle,
-          nativeTextBoxStyle,
-          {
-            position: "absolute",
-            left: 0,
-            top: 0,
-            width: "100%",
-            borderWidth: 0,
-          },
-        ]}
-        animatedProps={
-          animatedProps as unknown as React.ComponentProps<
-            typeof AnimatedTextInput
-          >["animatedProps"]
-        }
-      />
-    </View>
-  );
-});
-
-// keep native ticker lanes aligned with slot lanes
+// Use one native text field so changing a ticker value updates one native view.
 const NativeTickerRun = React.memo(function NativeTickerRun({
   fallbackValue,
   animatedText,
@@ -189,11 +84,30 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     typeof flattenedTextStyle?.lineHeight === "number"
       ? flattenedTextStyle.lineHeight
       : undefined;
-  const laneSpacing =
-    typeof flattenedTextStyle?.letterSpacing === "number"
-      ? flattenedTextStyle.letterSpacing
-      : 0;
-  const { units } = useNumericLanes(fallbackValue);
+  const animatedProps = useAnimatedProps<{ text: string }>(
+    () => {
+      "worklet";
+
+      const lastIndex = Math.max(0, animatedText.values.length - 1);
+      const index = Math.max(
+        0,
+        Math.min(lastIndex, Math.round(animatedText.index.value)),
+      );
+
+      return { text: animatedText.values[index] ?? fallbackValue };
+    },
+    [animatedText.values, fallbackValue],
+  );
+  const nativeTextBoxStyle = {
+    margin: 0,
+    padding: 0,
+    includeFontPadding: false,
+    textAlign: "right" as const,
+    textAlignVertical: "center" as const,
+    ...(lineHeight !== undefined
+      ? { height: lineHeight, lineHeight }
+      : undefined),
+  };
 
   return (
     <View
@@ -211,20 +125,49 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         leadingKey={leadingKey}
         leadingGap={leadingGap}
       />
-      {units.map((unit, index) => (
-        <NativeTickerLane
-          key={`native:${index}`}
-          animatedText={animatedText}
-          fallbackValue={fallbackValue}
-          laneIndex={index}
-          unit={unit}
-          isLast={index === units.length - 1}
-          laneSpacing={laneSpacing}
-          lineHeight={lineHeight}
-          textStyle={textStyle}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "relative",
+          alignSelf: "flex-start",
+          flexShrink: 0,
+          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+        }}
+      >
+        <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          numberOfLines={1}
+          style={[textStyle, nativeTextBoxStyle, { opacity: 0 }]}
           className={className}
+        >
+          {fallbackValue}
+        </Text>
+        <AnimatedTextInput
+          accessibilityElementsHidden
+          caretHidden
+          defaultValue={fallbackValue}
+          editable={false}
+          multiline={false}
+          pointerEvents="none"
+          style={[
+            textStyle,
+            nativeTextBoxStyle,
+            {
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: "100%",
+              borderWidth: 0,
+            },
+          ]}
+          animatedProps={
+            animatedProps as unknown as React.ComponentProps<
+              typeof AnimatedTextInput
+            >["animatedProps"]
+          }
         />
-      ))}
+      </View>
     </View>
   );
 });
@@ -288,159 +231,186 @@ const TickerLane = React.memo(function TickerLane({
 
 TickerLane.displayName = "TickerLane";
 
+type FlowTickerRunProps = {
+  readonly value: string;
+  readonly motionRecipe: MotionRecipe;
+  readonly align: LaminarAlign;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+  readonly leading?: ReactNode;
+  readonly leadingKey?: string | number;
+  readonly leadingGap: number;
+};
+
 // keep ticker lanes inline with crisp replacements
-export const TickerRun = React.memo(
-  ({
-    value,
-    animatedText,
-    motionRecipe,
-    align,
-    textStyle,
-    className,
-    leading,
-    leadingKey,
-    leadingGap = 0,
-    ready = true,
-  }: Readonly<TickerRunProps>) => {
-    const hasDisplayedRef = useRef(false);
-    const displayedValueRef = useRef(value);
-    const displayedLeadingRef = useRef(leading);
-    const displayedLeadingKeyRef = useRef(leadingKey);
-    const displayedLeadingGapRef = useRef(leadingGap);
-    const shouldDisplayTarget = ready || !hasDisplayedRef.current;
-    const visibleValue = shouldDisplayTarget
-      ? value
-      : displayedValueRef.current;
-    const visibleLeading = shouldDisplayTarget
-      ? leading
-      : displayedLeadingRef.current;
-    const visibleLeadingKey = shouldDisplayTarget
-      ? leadingKey
-      : displayedLeadingKeyRef.current;
-    const visibleLeadingGap = shouldDisplayTarget
-      ? leadingGap
-      : displayedLeadingGapRef.current;
+const FlowTickerRun = React.memo(function FlowTickerRun({
+  value,
+  motionRecipe,
+  align,
+  textStyle,
+  className,
+  leading,
+  leadingKey,
+  leadingGap,
+}: FlowTickerRunProps) {
+  const {
+    elementEnterTransition,
+    isLeadingChange,
+    isLeadingSwap,
+  } = useLeadingAnimation({ leading, leadingKey, leadingGap, motionRecipe });
+  const { units, leadLength } = useNumericLanes(value);
+  const flattenedTextStyle = StyleSheet.flatten(textStyle);
+  const lineHeight =
+    typeof flattenedTextStyle?.lineHeight === "number"
+      ? flattenedTextStyle.lineHeight
+      : undefined;
+  const laneSpacing = useMemo(() => {
+    return typeof flattenedTextStyle?.letterSpacing === "number"
+      ? flattenedTextStyle.letterSpacing
+      : 0;
+  }, [flattenedTextStyle]);
+  const lastValueRef = useRef(value);
+  const hasAnimatedRef = useRef(false);
+  const structureSignature = useMemo(
+    () =>
+      units
+        .map((unit) => (isAsciiDigit(unit) ? "digit" : unit))
+        .join("\u0000"),
+    [units],
+  );
+  const previousStructureSignatureRef = useRef(structureSignature);
 
-    if (shouldDisplayTarget) {
-      hasDisplayedRef.current = true;
-      displayedValueRef.current = value;
-      displayedLeadingRef.current = leading;
-      displayedLeadingKeyRef.current = leadingKey;
-      displayedLeadingGapRef.current = leadingGap;
-    }
+  if (value !== lastValueRef.current || isLeadingChange) {
+    hasAnimatedRef.current = true;
+    lastValueRef.current = value;
+  }
 
-    const {
-      elementEnterTransition,
-      isLeadingChange,
-      isLeadingSwap,
-    } = useLeadingAnimation({
-      leading: visibleLeading,
-      leadingKey: visibleLeadingKey,
-      leadingGap: visibleLeadingGap,
-      motionRecipe,
-    });
-    const { units, leadLength } = useNumericLanes(visibleValue);
-    const flattenedTextStyle = StyleSheet.flatten(textStyle);
-    const lineHeight =
-      typeof flattenedTextStyle?.lineHeight === "number"
-        ? flattenedTextStyle.lineHeight
-        : undefined;
-    const laneSpacing = useMemo(() => {
-      return typeof flattenedTextStyle?.letterSpacing === "number"
-        ? flattenedTextStyle.letterSpacing
-        : 0;
-    }, [flattenedTextStyle]);
-    const lastValueRef = useRef(visibleValue);
-    const hasAnimatedRef = useRef(false);
-    const structureSignature = useMemo(
-      () =>
-        units
-          .map((unit) => (isAsciiDigit(unit) ? "digit" : unit))
-          .join("\u0000"),
-      [units],
+  const hasAnimated = hasAnimatedRef.current;
+  const structureChanged =
+    hasAnimated &&
+    previousStructureSignatureRef.current !== structureSignature;
+  previousStructureSignatureRef.current = structureSignature;
+  const bodyLength = Math.max(units.length - leadLength, 0);
+
+  return (
+    <View style={[rowStyle, rowAlignStyles[align], { height: lineHeight }]}>
+      <LeadingElement
+        leading={leading}
+        leadingKey={leadingKey}
+        leadingGap={leadingGap}
+        enterTransition={
+          hasAnimated ? motionRecipe.enterTransition : undefined
+        }
+        elementEnterTransition={
+          isLeadingSwap ? elementEnterTransition : undefined
+        }
+      />
+      <Animated.View
+        layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
+        style={[rowStyle, { height: lineHeight }]}
+      >
+        {units.map((unit, index) => {
+          const inLead = index < leadLength;
+          const bodyIndex = index - leadLength;
+          const isDigit = !inLead && isAsciiDigit(unit);
+          const laneKey = inLead
+            ? `flow:lead:${index}`
+            : `flow:${bodyLength - 1 - bodyIndex}`;
+          const unitKey = isDigit ? laneKey : `${laneKey}:${unit}`;
+
+          return (
+            <TickerLane
+              // keep each lane mounted so width changes move following digits
+              key={unitKey}
+              unit={unit}
+              isLast={index === units.length - 1}
+              laneSpacing={laneSpacing}
+              lineHeight={lineHeight}
+              animateLayout={structureChanged}
+              motionRecipe={motionRecipe}
+              textStyle={textStyle}
+              className={className}
+            />
+          );
+        })}
+      </Animated.View>
+    </View>
+  );
+});
+
+// update either a native animated text field or the regular React ticker
+export const TickerRun = React.memo(function TickerRun({
+  value,
+  animatedText,
+  motionRecipe,
+  align,
+  textStyle,
+  className,
+  leading,
+  leadingKey,
+  leadingGap = 0,
+  ready = true,
+}: Readonly<TickerRunProps>) {
+  const hasDisplayedRef = useRef(false);
+  const displayedValueRef = useRef(value);
+  const displayedLeadingRef = useRef(leading);
+  const displayedLeadingKeyRef = useRef(leadingKey);
+  const displayedLeadingGapRef = useRef(leadingGap);
+  const shouldDisplayTarget = ready || !hasDisplayedRef.current;
+  const visibleValue = shouldDisplayTarget
+    ? value
+    : displayedValueRef.current;
+  const visibleLeading = shouldDisplayTarget
+    ? leading
+    : displayedLeadingRef.current;
+  const visibleLeadingKey = shouldDisplayTarget
+    ? leadingKey
+    : displayedLeadingKeyRef.current;
+  const visibleLeadingGap = shouldDisplayTarget
+    ? leadingGap
+    : displayedLeadingGapRef.current;
+
+  if (shouldDisplayTarget) {
+    hasDisplayedRef.current = true;
+    displayedValueRef.current = value;
+    displayedLeadingRef.current = leading;
+    displayedLeadingKeyRef.current = leadingKey;
+    displayedLeadingGapRef.current = leadingGap;
+  }
+
+  if (animatedText) {
+    const tickerLayoutValue = animatedText.values.reduce(
+      (longest, candidate) =>
+        candidate.length > longest.length ? candidate : longest,
+      visibleValue,
     );
-    const previousStructureSignatureRef = useRef(structureSignature);
-
-    if (visibleValue !== lastValueRef.current || isLeadingChange) {
-      hasAnimatedRef.current = true;
-      lastValueRef.current = visibleValue;
-    }
-
-    const hasAnimated = hasAnimatedRef.current;
-    const structureChanged =
-      hasAnimated &&
-      previousStructureSignatureRef.current !== structureSignature;
-    previousStructureSignatureRef.current = structureSignature;
-    const bodyLength = Math.max(units.length - leadLength, 0);
-
-    if (animatedText) {
-      const tickerLayoutValue = animatedText.values.reduce(
-        (longest, candidate) =>
-          candidate.length > longest.length ? candidate : longest,
-        visibleValue,
-      );
-
-      return (
-        <NativeTickerRun
-          animatedText={animatedText}
-          align={align}
-          fallbackValue={tickerLayoutValue}
-          className={className}
-          leading={visibleLeading}
-          leadingKey={visibleLeadingKey}
-          leadingGap={visibleLeadingGap}
-          textStyle={textStyle}
-        />
-      );
-    }
 
     return (
-      <View
-        style={[rowStyle, rowAlignStyles[align], { height: lineHeight }]}
-      >
-        <LeadingElement
-          leading={visibleLeading}
-          leadingKey={visibleLeadingKey}
-          leadingGap={visibleLeadingGap}
-          enterTransition={
-            hasAnimated ? motionRecipe.enterTransition : undefined
-          }
-          elementEnterTransition={
-            isLeadingSwap ? elementEnterTransition : undefined
-          }
-        />
-        <Animated.View
-          layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
-          style={[rowStyle, { height: lineHeight }]}
-        >
-          {units.map((unit, index) => {
-            const inLead = index < leadLength;
-            const bodyIndex = index - leadLength;
-            const isDigit = !inLead && isAsciiDigit(unit);
-            const laneKey = inLead
-              ? `flow:lead:${index}`
-              : `flow:${bodyLength - 1 - bodyIndex}`;
-            const unitKey = isDigit ? laneKey : `${laneKey}:${unit}`;
-
-            return (
-              <TickerLane
-                // keep each lane mounted so width changes move following digits
-                key={unitKey}
-                unit={unit}
-                isLast={index === units.length - 1}
-                laneSpacing={laneSpacing}
-                lineHeight={lineHeight}
-                animateLayout={structureChanged}
-                motionRecipe={motionRecipe}
-                textStyle={textStyle}
-                className={className}
-              />
-            );
-          })}
-        </Animated.View>
-      </View>
+      <NativeTickerRun
+        animatedText={animatedText}
+        align={align}
+        fallbackValue={tickerLayoutValue}
+        className={className}
+        leading={visibleLeading}
+        leadingKey={visibleLeadingKey}
+        leadingGap={visibleLeadingGap}
+        textStyle={textStyle}
+      />
     );
   }
-);
+
+  return (
+    <FlowTickerRun
+      value={visibleValue}
+      motionRecipe={motionRecipe}
+      align={align}
+      textStyle={textStyle}
+      className={className}
+      leading={visibleLeading}
+      leadingKey={visibleLeadingKey}
+      leadingGap={visibleLeadingGap}
+    />
+  );
+});
 
 TickerRun.displayName = "TickerRun";

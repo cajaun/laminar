@@ -71,6 +71,7 @@ export function useMorphingChartController({
   });
   const {
     clearCursor,
+    clearCursorReadout,
     cursor,
     cursorIndex,
     cursorIndexShared,
@@ -90,10 +91,9 @@ export function useMorphingChartController({
   const previousSelection = useRef({ source, selected });
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
-  const handlerStartedRangeRef = useRef<RangeType | null>(null);
   const numberMode: MorphNumberMode = isScrubbing ? "ticker" : "slots";
 
-  // start chart motion in the press handler before the range state commit
+  // start chart and readout motion from the same committed range update
   useLayoutEffect(() => {
     const previous = previousSelection.current;
     const rangeChanged = previous.selected !== selected;
@@ -102,20 +102,17 @@ export function useMorphingChartController({
     if (!rangeChanged && !sourceChanged) return;
 
     previousSelection.current = { source, selected };
-    const startedInHandler = handlerStartedRangeRef.current === selected;
-    handlerStartedRangeRef.current = null;
-
-    if (!startedInHandler) {
-      animateTo(targetYValues, graphWidth);
-    }
+    animateTo(targetYValues, graphWidth);
 
     if (sourceChanged) {
       stopScrubbing();
+      clearCursorReadout();
       clearCursor();
     }
   }, [
     animateTo,
     clearCursor,
+    clearCursorReadout,
     graphWidth,
     selected,
     source,
@@ -127,17 +124,16 @@ export function useMorphingChartController({
     (range: RangeType) => {
       if (range === selectedRef.current) return;
 
-      const nextData = sourceData.chartDataSets[range];
-      const nextGraphWidth = chartWidth * REFERENCE_GRAPH_EXTENT[range];
-      const nextYValues = getCachedChartYValues(nextData);
-
-      handlerStartedRangeRef.current = range;
       stopScrubbing();
+      clearCursorReadout();
       clearCursor();
-      animateTo(nextYValues, nextGraphWidth);
       setSelected(range);
     },
-    [animateTo, chartWidth, clearCursor, sourceData, stopScrubbing],
+    [
+      clearCursor,
+      clearCursorReadout,
+      stopScrubbing,
+    ],
   );
 
   const displayValue = getCursorDisplayValue(
