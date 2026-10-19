@@ -55,6 +55,14 @@ export const Laminar = React.memo(function Laminar({
       isSlotsVariant || isTickerVariant
         ? `${variant}:${isTickerVariant ? "ticker" : "slots"}`
         : undefined;
+    // On scrub release, animate a width change from the sampled value together
+    // with its slot reels so right-aligned readouts with a leading icon don't
+    // jump ahead of digits.
+    const animateLayoutOnRendererChange =
+      isSlotsVariant &&
+      Boolean(resolvedLeading) &&
+      fromValue !== undefined &&
+      fromValue !== resolvedValue;
     const useLayoutAutoSize =
       autoSize &&
       ((variant === "text" && !leading && isCenteredStandaloneShell) ||
@@ -136,6 +144,7 @@ export const Laminar = React.memo(function Laminar({
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
         layoutTransitionKey={layoutTransitionKey}
+        animateLayoutOnRendererChange={animateLayoutOnRendererChange}
         measurement={
           shouldMeasure ? (
             <View
