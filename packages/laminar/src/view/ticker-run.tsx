@@ -18,7 +18,6 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
-import { useNumericLanes } from "../hooks/use-numeric-lanes";
 import {
   findNumericLeadLength,
   isAsciiDigit,
@@ -493,6 +492,43 @@ type TickerLaneProps = {
   readonly className?: string;
 };
 
+const areTextStylesEqual = (
+  previous: StyleProp<TextStyle> | undefined,
+  next: StyleProp<TextStyle> | undefined,
+): boolean => {
+  if (previous === next) return true;
+
+  const previousStyle = StyleSheet.flatten(previous);
+  const nextStyle = StyleSheet.flatten(next);
+  if (previousStyle === nextStyle) return true;
+  if (previousStyle == null || nextStyle == null) {
+    return previousStyle === nextStyle;
+  }
+
+  const previousKeys = Object.keys(previousStyle) as Array<
+    keyof typeof previousStyle
+  >;
+  const nextKeys = Object.keys(nextStyle) as Array<keyof typeof nextStyle>;
+  return (
+    previousKeys.length === nextKeys.length &&
+    previousKeys.every((key) => Object.is(previousStyle[key], nextStyle[key]))
+  );
+};
+
+const areTickerLanePropsEqual = (
+  previous: TickerLaneProps,
+  next: TickerLaneProps,
+): boolean =>
+  previous.unit === next.unit &&
+  previous.isLast === next.isLast &&
+  previous.laneSpacing === next.laneSpacing &&
+  previous.lineHeight === next.lineHeight &&
+  previous.animateLayout === next.animateLayout &&
+  previous.structureChanged === next.structureChanged &&
+  previous.motionRecipe === next.motionRecipe &&
+  previous.className === next.className &&
+  areTextStylesEqual(previous.textStyle, next.textStyle);
+
 // Keep unchanged glyph lanes out of React reconciliation.
 const TickerLane = React.memo(function TickerLane({
   unit,
@@ -505,6 +541,35 @@ const TickerLane = React.memo(function TickerLane({
   textStyle,
   className,
 }: TickerLaneProps) {
+  const laneStyle = useMemo(
+    () => [
+      glyphSlotStyle,
+      {
+        alignItems: "center" as const,
+        justifyContent: "center" as const,
+        ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+      },
+      !isLast && laneSpacing !== 0
+        ? { marginRight: laneSpacing }
+        : undefined,
+    ],
+    [isLast, laneSpacing, lineHeight],
+  );
+  const glyphTextStyle = useMemo(
+    () => [
+      textStyle,
+      {
+        includeFontPadding: false,
+        letterSpacing: 0,
+        textAlignVertical: "center" as const,
+        ...(lineHeight !== undefined
+          ? { height: lineHeight, lineHeight }
+          : undefined),
+      },
+    ],
+    [lineHeight, textStyle],
+  );
+
   return (
     <Animated.View
       layout={animateLayout ? motionRecipe.layoutTransition : undefined}
@@ -512,37 +577,15 @@ const TickerLane = React.memo(function TickerLane({
         structureChanged ? motionRecipe.enterTransition : undefined
       }
       exiting={motionRecipe.exitTransition}
-      style={[
-        glyphSlotStyle,
-        {
-          alignItems: "center",
-          justifyContent: "center",
-          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
-        },
-        !isLast && laneSpacing !== 0
-          ? { marginRight: laneSpacing }
-          : undefined,
-      ]}
+      style={laneStyle}
     >
-      <Animated.Text
-        style={[
-          textStyle,
-          {
-            includeFontPadding: false,
-            letterSpacing: 0,
-            textAlignVertical: "center",
-            ...(lineHeight !== undefined
-              ? { height: lineHeight, lineHeight }
-              : undefined),
-          },
-        ]}
-        className={className}
-      >
+      {/* The wrapper owns layout/entry transitions; the glyph needs no animated props. */}
+      <Text style={glyphTextStyle} className={className}>
         {unit}
-      </Animated.Text>
+      </Text>
     </Animated.View>
   );
-});
+}, areTickerLanePropsEqual);
 
 TickerLane.displayName = "TickerLane";
 
@@ -574,17 +617,18 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     isLeadingChange,
     isLeadingSwap,
   } = useLeadingAnimation({ leading, leadingKey, leadingGap, motionRecipe });
-  const { units, leadLength } = useNumericLanes(value);
+  // This path only needs formatted units; lane IDs and direction are unused.
+  const units = useMemo(() => splitDisplayUnits(value), [value]);
+  const leadLength = findNumericLeadLength(units);
   const flattenedTextStyle = StyleSheet.flatten(textStyle);
   const lineHeight =
     typeof flattenedTextStyle?.lineHeight === "number"
       ? flattenedTextStyle.lineHeight
       : undefined;
-  const laneSpacing = useMemo(() => {
-    return typeof flattenedTextStyle?.letterSpacing === "number"
+  const laneSpacing =
+    typeof flattenedTextStyle?.letterSpacing === "number"
       ? flattenedTextStyle.letterSpacing
       : 0;
-  }, [flattenedTextStyle]);
   const lastValueRef = useRef(value);
   const hasAnimatedRef = useRef(false);
   const previousValue = lastValueRef.current;
@@ -607,9 +651,18 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     previousStructureSignatureRef.current !== structureSignature;
   previousStructureSignatureRef.current = structureSignature;
   const bodyLength = Math.max(units.length - leadLength, 0);
+  const rowHeightStyle = useMemo(() => ({ height: lineHeight }), [lineHeight]);
+  const outerRowStyle = useMemo(
+    () => [rowStyle, rowAlignStyles[align], rowHeightStyle],
+    [align, rowHeightStyle],
+  );
+  const tickerRowStyle = useMemo(
+    () => [rowStyle, rowHeightStyle],
+    [rowHeightStyle],
+  );
 
   return (
-    <View style={[rowStyle, rowAlignStyles[align], { height: lineHeight }]}>
+    <View style={outerRowStyle}>
       <LeadingElement
         leading={leading}
         leadingKey={leadingKey}
@@ -623,7 +676,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
       />
       <Animated.View
         layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
-        style={[rowStyle, { height: lineHeight }]}
+        style={tickerRowStyle}
       >
         {units.map((unit, index) => {
           const inLead = index < leadLength;
