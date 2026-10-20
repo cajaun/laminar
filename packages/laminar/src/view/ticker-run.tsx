@@ -564,32 +564,36 @@ const TickerLane = React.memo(function TickerLane({
   textStyle,
   className,
 }: TickerLaneProps) {
+  const laneStyle = useMemo(
+    () => ({
+      alignItems: "baseline" as const,
+      flexDirection: "row" as const,
+      overflow: "visible" as const,
+      ...(!isLast && laneSpacing !== 0
+        ? { marginRight: laneSpacing }
+        : undefined),
+    }),
+    [isLast, laneSpacing],
+  );
   const glyphTextStyle = useMemo(
-    () => [
-      textStyle,
-      {
-        includeFontPadding: false,
-        letterSpacing: 0,
-        ...(!isLast && laneSpacing !== 0
-          ? { marginRight: laneSpacing }
-          : undefined),
-      },
-    ],
-    [isLast, laneSpacing, textStyle],
+    () => [textStyle, { includeFontPadding: false, letterSpacing: 0 }],
+    [textStyle],
   );
 
   return (
-    <Animated.Text
+    <Animated.View
+      collapsable={false}
       layout={animateLayout ? motionRecipe.layoutTransition : undefined}
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
       exiting={motionRecipe.exitTransition}
-      style={glyphTextStyle}
-      className={className}
+      style={laneStyle}
     >
-      {unit}
-    </Animated.Text>
+      <Text style={glyphTextStyle} className={className}>
+        {unit}
+      </Text>
+    </Animated.View>
   );
 }, areTickerLanePropsEqual);
 
