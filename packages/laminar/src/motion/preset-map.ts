@@ -86,6 +86,8 @@ export const resolveMotionRecipe = (
 
   if ("type" in preset && preset.type === "spring") {
     const dampingRatio = toDampingRatio(preset.bounce);
+    const driveDampingRatio = clampSpring ? 1 : dampingRatio;
+    const driveOvershootClamping = clampSpring || preset.bounce === 0;
     const easing = Easing.bezier(...DEFAULT_CURVE);
 
     return {
@@ -98,10 +100,12 @@ export const resolveMotionRecipe = (
       enterTransition: createOpacityTransition(0, 1, durationMs, easing),
       exitTransition: createOpacityTransition(1, 0, durationMs, easing),
       driveNumber: (toValue) => {
+        "worklet";
+
         return withSpring(toValue, {
           duration: durationMs,
-          dampingRatio: clampSpring ? 1 : dampingRatio,
-          overshootClamping: clampSpring || preset.bounce === 0,
+          dampingRatio: driveDampingRatio,
+          overshootClamping: driveOvershootClamping,
         });
       },
     };
@@ -123,6 +127,8 @@ export const resolveMotionRecipe = (
     enterTransition: createOpacityTransition(0, 1, durationMs, easing),
     exitTransition: createOpacityTransition(1, 0, durationMs, easing),
     driveNumber: (toValue) => {
+      "worklet";
+
       return withTiming(toValue, {
         duration: durationMs,
         easing,

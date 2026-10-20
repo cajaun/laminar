@@ -129,7 +129,7 @@ const createSlotRollExitTransition = (
   motionRecipe: MotionRecipe,
 ): EntryExitAnimationFunction => {
   const distance = slotHeight ?? 0;
-  const { durationMs, easing } = motionRecipe;
+  const driveNumber = motionRecipe.driveNumber;
 
   return () => {
     "worklet";
@@ -140,7 +140,7 @@ const createSlotRollExitTransition = (
       },
       animations: {
         transform: [
-          { translateY: withTiming(0, { duration: durationMs, easing }) },
+          { translateY: driveNumber(0) },
         ],
       },
     };
@@ -393,7 +393,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
         ? {}
         : undefined;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (slotHeight === undefined || !animateIn) {
       current.value = 1;
       return;
@@ -458,7 +458,11 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
 
   return (
     <Animated.View
+      collapsable={false}
       layout={structureChanged ? motionRecipe.layoutTransition : undefined}
+      entering={
+        structureChanged ? motionRecipe.enterTransition : undefined
+      }
       exiting={motionRecipe.exitTransition}
       style={{
         ...(slotHeight !== undefined ? { height: slotHeight } : undefined),
@@ -567,9 +571,10 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
       ]}
     >
       <View
+        collapsable={false}
         style={[
           reelStepViewportStyle,
-          { flexDirection: "row" },
+          { flexDirection: "row", overflow: "hidden" },
           reelStepJustifyStyles[align],
         ]}
       >
