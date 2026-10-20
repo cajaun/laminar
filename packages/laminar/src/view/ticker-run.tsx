@@ -40,15 +40,6 @@ const rowStyle = {
   alignSelf: "flex-start",
 } as const;
 
-// Keep each glyph in its own layout box for horizontal ticker reflow.
-const glyphSlotStyle = {
-  alignSelf: "flex-start",
-} as const;
-
-const nativeGlyphSlotStyle = {
-  alignSelf: "center",
-} as const;
-
 const rowAlignStyles = {
   left: { alignSelf: "flex-start" },
   center: { alignSelf: "center" },
@@ -95,7 +86,6 @@ type NativeTickerLaneProps = {
   readonly unit: string;
   readonly isLast: boolean;
   readonly laneSpacing: number;
-  readonly lineHeight?: number;
   readonly isFractional: boolean;
   readonly fractionalTextStyle?: StyleProp<TextStyle>;
   readonly textStyle?: StyleProp<TextStyle>;
@@ -182,7 +172,8 @@ type GlyphMetricsState = {
   readonly widths: Readonly<Record<string, number>>;
 };
 
-// Keep one native text field per glyph so ticker lanes use the same geometry as slots.
+// Keep the native text field as the row child so Yoga can align its real text
+// baseline with the other glyph lanes.
 const NativeTickerLane = React.memo(function NativeTickerLane({
   animatedText,
   laneValues,
@@ -191,7 +182,6 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
   unit,
   isLast,
   laneSpacing,
-  lineHeight,
   isFractional,
   fractionalTextStyle,
   className,
@@ -245,74 +235,34 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
       laneSpacing,
     ],
   );
-  // React Native's iOS TextInput distributes explicit lineHeight differently
-  // from Text. Keep the line box on the wrapper/probe and let the single-line
-  // native field center its font inside the fixed-height lane.
-  const nativeTextBoxStyle = {
-    margin: 0,
-    padding: 0,
-    includeFontPadding: false,
-    letterSpacing: 0,
-    textAlign: "center" as const,
-    textAlignVertical: "center" as const,
-    lineHeight: undefined,
-  };
-  const nativeProbeStyle = {
-    ...nativeTextBoxStyle,
-    ...(lineHeight !== undefined
-      ? { height: lineHeight, lineHeight }
-      : undefined),
-  };
-
   return (
-    <Animated.View
+    <AnimatedTextInput
+      accessibilityElementsHidden
+      caretHidden
+      defaultValue={unit}
+      editable={false}
+      multiline={false}
+      pointerEvents="none"
+      className={className}
       style={[
-        nativeGlyphSlotStyle,
+        glyphTextStyle,
         {
-          position: "relative",
-          alignItems: "center",
-          justifyContent: "center",
-          ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
+          margin: 0,
+          padding: 0,
+          includeFontPadding: false,
+          letterSpacing: 0,
+          textAlign: "center" as const,
+          textAlignVertical: "center" as const,
+          borderWidth: 0,
         },
         animatedLaneStyle,
       ]}
-    >
-      <Text
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={[glyphTextStyle, nativeProbeStyle, { opacity: 0 }]}
-        className={className}
-      >
-        {unit}
-      </Text>
-      <AnimatedTextInput
-        accessibilityElementsHidden
-        caretHidden
-        defaultValue={unit}
-        editable={false}
-        multiline={false}
-        pointerEvents="none"
-        className={className}
-        style={[
-          glyphTextStyle,
-          nativeTextBoxStyle,
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            borderWidth: 0,
-          },
-        ]}
-        animatedProps={
-          animatedProps as unknown as React.ComponentProps<
-            typeof AnimatedTextInput
-          >["animatedProps"]
-        }
-      />
-    </Animated.View>
+      animatedProps={
+        animatedProps as unknown as React.ComponentProps<
+          typeof AnimatedTextInput
+        >["animatedProps"]
+      }
+    />
   );
 });
 
@@ -459,6 +409,7 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     <View
       style={[
         rowStyle,
+        { alignItems: "baseline" as const },
         rowAlignStyles[align],
         {
           position: "relative",
@@ -466,11 +417,15 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
         },
       ]}
     >
-      <LeadingElement
-        leading={leading}
-        leadingKey={leadingKey}
-        leadingGap={leadingGap}
-      />
+      {leading ? (
+        <View style={{ alignSelf: "center" }}>
+          <LeadingElement
+            leading={leading}
+            leadingKey={leadingKey}
+            leadingGap={leadingGap}
+          />
+        </View>
+      ) : null}
       {Array.from({ length: laneCount }, (_, index) => {
         const unit = fallbackLaneUnit(index);
         const isLeadLane = index < layoutLeadLength;
@@ -495,7 +450,6 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
             unit={unit}
             isLast={index === laneCount - 1}
             laneSpacing={laneSpacing}
-            lineHeight={lineHeight}
             isFractional={isFractional}
             fractionalTextStyle={fractionalTextStyle}
             textStyle={textStyle}
@@ -556,7 +510,6 @@ type TickerLaneProps = {
   readonly unit: string;
   readonly isLast: boolean;
   readonly laneSpacing: number;
-  readonly lineHeight?: number;
   readonly animateLayout: boolean;
   readonly structureChanged: boolean;
   readonly motionRecipe: MotionRecipe;
@@ -594,7 +547,6 @@ const areTickerLanePropsEqual = (
   previous.unit === next.unit &&
   previous.isLast === next.isLast &&
   previous.laneSpacing === next.laneSpacing &&
-  previous.lineHeight === next.lineHeight &&
   previous.animateLayout === next.animateLayout &&
   previous.structureChanged === next.structureChanged &&
   previous.motionRecipe === next.motionRecipe &&
@@ -606,56 +558,38 @@ const TickerLane = React.memo(function TickerLane({
   unit,
   isLast,
   laneSpacing,
-  lineHeight,
   animateLayout,
   structureChanged,
   motionRecipe,
   textStyle,
   className,
 }: TickerLaneProps) {
-  const laneStyle = useMemo(
-    () => [
-      glyphSlotStyle,
-      {
-        alignItems: "center" as const,
-        justifyContent: "center" as const,
-        ...(lineHeight !== undefined ? { height: lineHeight } : undefined),
-      },
-      !isLast && laneSpacing !== 0
-        ? { marginRight: laneSpacing }
-        : undefined,
-    ],
-    [isLast, laneSpacing, lineHeight],
-  );
   const glyphTextStyle = useMemo(
     () => [
       textStyle,
       {
         includeFontPadding: false,
         letterSpacing: 0,
-        textAlignVertical: "center" as const,
-        ...(lineHeight !== undefined
-          ? { height: lineHeight, lineHeight }
+        ...(!isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
           : undefined),
       },
     ],
-    [lineHeight, textStyle],
+    [isLast, laneSpacing, textStyle],
   );
 
   return (
-    <Animated.View
+    <Animated.Text
       layout={animateLayout ? motionRecipe.layoutTransition : undefined}
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
       exiting={motionRecipe.exitTransition}
-      style={laneStyle}
+      style={glyphTextStyle}
+      className={className}
     >
-      {/* The wrapper owns layout/entry transitions; the glyph needs no animated props. */}
-      <Text style={glyphTextStyle} className={className}>
-        {unit}
-      </Text>
-    </Animated.View>
+      {unit}
+    </Animated.Text>
   );
 }, areTickerLanePropsEqual);
 
@@ -742,7 +676,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     [align, rowHeightStyle],
   );
   const tickerRowStyle = useMemo(
-    () => [rowStyle, rowHeightStyle],
+    () => [rowStyle, { alignItems: "baseline" as const }, rowHeightStyle],
     [rowHeightStyle],
   );
 
@@ -782,7 +716,6 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
               unit={unit}
               isLast={index === units.length - 1}
               laneSpacing={laneSpacing}
-              lineHeight={lineHeight}
               animateLayout={hasAnimated}
               structureChanged={structureChanged}
               motionRecipe={motionRecipe}

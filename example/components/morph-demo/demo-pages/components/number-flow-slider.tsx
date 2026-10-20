@@ -30,6 +30,7 @@ import {
 } from "../../use-demo-state";
 import { useDemoTheme } from "../../demo-theme";
 import type { DemoPageProps } from "../types";
+import { SymbolView } from "expo-symbols";
 
 const SCREEN = {
   primary: "#101114",
@@ -328,24 +329,7 @@ export const NumberFlowSliderHeaderAction = React.memo(
           justifyContent: "center",
         }}
       >
-        <Svg width={27} height={27} viewBox="0 0 27 27">
-          <Circle
-            cx={13.5}
-            cy={13.5}
-            r={10}
-            fill="none"
-            stroke={iconColor}
-            strokeWidth={2.2}
-          />
-          <Path
-            d="M13.5 7.5v6.2l4.1 2.8"
-            fill="none"
-            stroke={iconColor}
-            strokeWidth={2.2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+        <SymbolView name="clock" tintColor={iconColor} weight="medium" size={30} />
       </PressableScale>
     );
   },
@@ -521,7 +505,7 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
         >
           $100,000
         </Text>
-        <View style={{ width: "100%", marginTop: 20 }}>
+        <View style={{ width: "100%", marginTop: 34 }}>
           <AnimatedSlider
             progress={progress}
             initialProgress={1}
@@ -539,7 +523,7 @@ function NumberFlowSliderPage({ height, width }: DemoPageProps) {
           style={{
             width: "100%",
             height: 52,
-            marginTop: 22,
+            marginTop: 47,
             borderRadius: 28,
             alignItems: "center",
             justifyContent: "center",

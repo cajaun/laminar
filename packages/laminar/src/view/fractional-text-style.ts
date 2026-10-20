@@ -10,18 +10,13 @@ export const getFractionalTextStyle = (
   const flattenedStyle = StyleSheet.flatten(textStyle);
   const baseFontSize = flattenedStyle?.fontSize ?? fontSize ?? 14;
   const fractionalFontSize = baseFontSize * fractionScale;
-  // Flex rows center each glyph's line box; move the smaller run down to keep
-  // its baseline aligned with the full-size digits.
-  const baselineOffset = baseFontSize - fractionalFontSize;
 
+  // Ticker rows baseline-align their native text children; avoid a synthetic
+  // translateY here because font metrics differ across fonts and platforms.
   return [
     textStyle,
     {
       fontSize: fractionalFontSize,
-      transform: [
-        ...(flattenedStyle?.transform ?? []),
-        { translateY: baselineOffset },
-      ],
     },
   ];
 };
