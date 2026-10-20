@@ -21,6 +21,7 @@ import {
   WordsDemoPage,
 } from "./examples";
 import { NumberTickerSliderDemoPage } from "@/components/number-ticker-slider";
+import { NumberInputDemoPage } from "@/components/number-input";
 
 export const demoPageComponents: Record<
   ExamplePageId,
@@ -42,4 +43,5 @@ export const demoPageComponents: Record<
   reelStep: ReelStepDemoPage,
   numberTicker: NumberTickerDemoPage,
   numberTickerSlider: NumberTickerSliderDemoPage,
+  numberInput: NumberInputDemoPage,
 };

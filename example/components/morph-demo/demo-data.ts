@@ -184,6 +184,7 @@ export const examplePages = [
   { id: "reelStep", label: "Reel Step" },
   { id: "numberTicker", label: "Number Ticker" },
   { id: "numberTickerSlider", label: "Number Ticker Slider" },
+  { id: "numberInput", label: "Number Input" },
 ] as const;
 
 export const componentPages = [
@@ -223,7 +224,7 @@ export const demoTabGroups = [
   {
     id: "components",
     label: "Components",
-    pageIds: ["numberTickerSlider"],
+    pageIds: ["numberTickerSlider", "numberInput"],
     componentIds: ["ethereum"],
   },
 ] as const;
