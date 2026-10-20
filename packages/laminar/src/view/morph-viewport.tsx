@@ -97,7 +97,7 @@ export const MorphViewport = React.memo(
       ],
       [align, clipToBounds]
     );
-    const measurementView = measurement ? (
+    const measurementView = (autoSize || fillWidth) && measurement ? (
       <View
         accessibilityElementsHidden
         collapsable={false}

@@ -75,6 +75,33 @@ describe("useInlineAutoWidth", () => {
     expect(driveToWidth).not.toHaveBeenCalled();
   });
 
+  test("HAW-ST-004 tracks measured widths without animating them", () => {
+    const driveToWidth = jest.fn((value: number) => value + 1);
+    const hook = renderHook(
+      ({ measurementKey }: { measurementKey: string }) =>
+        useInlineAutoWidth({
+          enabled: true,
+          driveToWidth,
+          measurementKey,
+          trackMeasuredWidth: true,
+        }),
+      { measurementKey: "tracked" },
+    );
+
+    expect(hook.result.isReady).toBe(false);
+    expect(hook.result.shouldMeasure).toBe(true);
+
+    act(() => hook.result.captureLayout(layoutEvent(18.2)));
+
+    expect(hook.result.measuredWidth).toBe(19);
+    expect(hook.result.isReady).toBe(true);
+    expect(hook.result.shouldMeasure).toBe(false);
+    expect(driveToWidth).not.toHaveBeenCalled();
+
+    act(() => hook.result.captureLayout(layoutEvent(18.2)));
+    expect(hook.result.measuredWidth).toBe(19);
+  });
+
   test("HAW-ST-003 ignores layout events from replaced measurement probes", () => {
     const driveToWidth = jest.fn((value: number) => value);
     const hook = renderHook(

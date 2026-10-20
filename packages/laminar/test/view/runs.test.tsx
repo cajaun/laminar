@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { withTiming } from "react-native-reanimated";
 import TestRenderer, { act } from "react-test-renderer";
 import type { MotionRecipe } from "../../src/types";
 import { NumberRun } from "../../src/view/number-run";
@@ -410,6 +411,116 @@ describe("rendered run contracts", () => {
         />
       );
     });
+
+    expect(driveNumber).toHaveBeenCalled();
+  });
+
+  test("RUN-REEL-001 ReelStep animates symbol and digit lanes inside the fitted viewport", () => {
+    driveNumber.mockClear();
+    (withTiming as jest.Mock).mockClear();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    const renderReelStep = (value: string, fitContentWidth: number) => (
+      <SlotsRun
+        value={value}
+        fromValue="$9,999.99"
+        motionRecipe={motionRecipe}
+        align="center"
+        fontSize={40}
+        textStyle={{ fontWeight: "700", letterSpacing: 1 }}
+        className="amount"
+        shadow={{ color: "black", size: 4 }}
+        slotMode="reelStep"
+        fitContentWidth={fitContentWidth}
+      />
+    );
+
+    act(() => {
+      renderer = TestRenderer.create(renderReelStep("$12,345.67", 400));
+    });
+
+    const viewport = renderer.root
+      .findAllByType(View)
+      .find((node) => typeof node.props.onLayout === "function");
+    expect(viewport).toBeDefined();
+
+    act(() => {
+      viewport!.props.onLayout({ nativeEvent: { layout: { width: 200 } } });
+    });
+
+    const fittedRow = renderer.root.findAllByType(View).find((node) => {
+      const style = StyleSheet.flatten(node.props.style);
+      return style?.flexDirection === "row" && style?.alignSelf === "flex-start";
+    });
+    expect(fittedRow).toBeDefined();
+    expect(StyleSheet.flatten(fittedRow!.props.style)?.transform).toEqual([
+      { scale: 0.5 },
+    ]);
+
+    const symbolStrip = renderer.root.findAll((node) =>
+      node.props.pointerEvents === "none" &&
+      typeof node.props.exiting === "function",
+    )[0];
+    expect(symbolStrip).toBeDefined();
+    const exitAnimation = symbolStrip!.props.exiting();
+    expect(exitAnimation.initialValues.transform[0].translateY).toBe(-48);
+    expect(exitAnimation.animations.transform[0].translateY).toBe(0);
+
+    act(() => {
+      renderer.update(renderReelStep("$12345.89", 100));
+    });
+
+    expect(withTiming).toHaveBeenCalledWith(1, {
+      duration: motionRecipe.durationMs,
+      easing: motionRecipe.easing,
+    });
+    expect(driveNumber).toHaveBeenCalled();
+
+    act(() => {
+      viewport!.props.onLayout({ nativeEvent: { layout: { width: 200 } } });
+      viewport!.props.onLayout({ nativeEvent: { layout: { width: 0 } } });
+    });
+  });
+
+  test("RUN-REEL-002 standard reels recenter after repeated forward and reverse wraps", () => {
+    driveNumber.mockClear();
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="19"
+          motionRecipe={motionRecipe}
+          align="left"
+          fontSize={24}
+        />
+      );
+    });
+
+    for (let value = 20; value <= 31; value += 1) {
+      act(() => {
+        renderer.update(
+          <SlotsRun
+            value={String(value)}
+            motionRecipe={motionRecipe}
+            align="left"
+            fontSize={24}
+          />
+        );
+      });
+    }
+
+    for (let value = 30; value >= 19; value -= 1) {
+      act(() => {
+        renderer.update(
+          <SlotsRun
+            value={String(value)}
+            motionRecipe={motionRecipe}
+            align="left"
+            fontSize={24}
+          />
+        );
+      });
+    }
 
     expect(driveNumber).toHaveBeenCalled();
   });

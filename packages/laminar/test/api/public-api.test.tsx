@@ -201,16 +201,14 @@ describe("public Laminar API", () => {
         .some((node) => typeof node.props.onLayout === "function")
     ).toBe(false);
 
-    const shell = renderer.root.findAllByType(View).find((node) => {
-      const style = Array.isArray(node.props.style)
-        ? node.props.style
-        : [node.props.style];
+    const shell = renderer.root.findAll((node) => {
+      const style = StyleSheet.flatten(node.props.style);
 
       return (
-        StyleSheet.flatten(style[0])?.position === "relative" &&
-        StyleSheet.flatten(style[1])?.alignSelf === "flex-start"
+        style?.position === "relative" &&
+        style?.alignSelf === "flex-start"
       );
-    });
+    })[0];
 
     expect(shell).toBeDefined();
     expect(shell?.props.layout).toBeUndefined();
