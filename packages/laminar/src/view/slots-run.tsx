@@ -559,9 +559,9 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
     >
       <Animated.View
         layout={layoutTransition}
-        style={[rowStyle, rowAlignStyles[align], fitStyle]}
+        style={[rowStyle, rowAlignStyles[align]]}
       >
-        {children}
+        <Animated.View style={[rowStyle, fitStyle]}>{children}</Animated.View>
       </Animated.View>
       {measurement}
     </View>
@@ -1264,7 +1264,7 @@ export const SlotsRun = React.memo(
           fitContentWidth={fitContentWidth}
           motionRecipe={motionRecipe}
           layoutTransition={
-            hasAnimated && (structureChanged || isLeadingChange)
+            hasAnimated
               ? motionRecipe.layoutTransition
               : undefined
           }
