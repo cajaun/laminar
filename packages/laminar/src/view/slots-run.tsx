@@ -1119,17 +1119,13 @@ export const SlotsRun = React.memo(
           : `slot:${units.length - 1 - index}`;
 
       if (isMagnitudeMode && !inLead && unit === ",") {
-        const decimalIndex = units.indexOf(".", index + 1);
-        const digitsToRight = units
-          .slice(
-            index + 1,
-            decimalIndex === -1 ? units.length : decimalIndex,
-          )
+        const digitsToLeft = units
+          .slice(0, index)
           .filter(isAsciiDigit).length;
 
         return (
           <SlotSymbolLane
-            key={`slot:comma:${Math.floor(digitsToRight / 3)}`}
+            key={`slot:comma:${digitsToLeft}`}
             symbol={unit}
             isLast={index === units.length - 1}
             laneSpacing={laneSpacing}
