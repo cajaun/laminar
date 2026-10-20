@@ -410,7 +410,6 @@ const NativeTickerRun = React.memo(function NativeTickerRun({
     <View
       style={[
         rowStyle,
-        { alignItems: "baseline" as const },
         rowAlignStyles[align],
         {
           position: "relative",

@@ -59,7 +59,7 @@ export const InitialDeposit = React.memo(function InitialDeposit({
       <View style={{ width: "100%", marginTop: 34 }}>
         <AnimatedSlider
           progress={progress}
-          initialProgress={1}
+          initialProgress={0}
           pickerSize={pickerSize}
           color={accentColor}
           trackColor={trackColor}

@@ -10,9 +10,9 @@ import { numberTickerSliderValues } from "@/components/morph-demo/demo-data";
 import { useNumberTickerSliderDemoStore } from "@/components/morph-demo/use-demo-state";
 
 export function useNumberTickerSlider() {
-  const initialIndex = numberTickerSliderValues.length - 1;
+  const initialIndex = 0;
   const store = useNumberTickerSliderDemoStore(initialIndex);
-  const progress = useSharedValue(1);
+  const progress = useSharedValue(0);
   const sliderIndex = useDerivedValue(() =>
     Math.round(
       clamp(progress.get(), 0, 1) * (numberTickerSliderValues.length - 1),

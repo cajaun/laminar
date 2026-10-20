@@ -22,7 +22,6 @@ export const getFractionalTextStyle = (
 
   const fractionalFontSize = baseFontSize * fractionScale;
 
-  // let ticker rows align native text baselines across fonts and platforms
   return [
     textStyle,
     {
