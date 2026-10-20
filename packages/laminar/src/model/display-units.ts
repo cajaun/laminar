@@ -4,7 +4,7 @@ const graphemeSegmenter =
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
     : null;
 
-// segment graphemes so combining marks stay whole
+// segment graphemes so combining marks stay with their base character
 export const splitDisplayUnits = (input: string): string[] => {
   if (graphemeSegmenter) {
     return Array.from(
@@ -16,22 +16,21 @@ export const splitDisplayUnits = (input: string): string[] => {
   return Array.from(input);
 };
 
-// replace plain spaces so native measurement preserves them
+// replace spaces so native text measurement keeps their width
 export const normalizeDisplayUnit = (unit: string) =>
   unit === " " ? NBSP : unit;
 
-// treat ascii digits as place value columns
+// treat digits as place value columns
 export const isAsciiDigit = (unit: string) => unit >= "0" && unit <= "9";
 
-// attach leading symbols and punctuation to the number prefix
+// group leading symbols and punctuation with the number prefix
 export const findNumericLeadLength = (units: readonly string[]) => {
   const firstDigitIndex = units.findIndex(isAsciiDigit);
 
   return firstDigitIndex === -1 ? units.length : firstDigitIndex;
 };
 
-// Locate a trailing decimal section without treating a 3-digit grouping comma
-// such as "1,000" as a fractional separator.
+// find trailing decimals without treating grouping commas as separators
 export const findFractionStartIndex = (units: readonly string[]) => {
   for (let index = units.length - 2; index >= 0; index -= 1) {
     const separator = units[index];

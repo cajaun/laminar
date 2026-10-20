@@ -34,7 +34,7 @@ function formatPrice(value: number, fractionDigits: number) {
   return `$${formatter.format(value)}`;
 }
 
-// reuse formatted ticker strings across scrub sessions
+// reuse formatted ticker strings while scrub data stays unchanged
 function formatPriceValues(
   values: readonly number[],
   fractionDigits: number,
@@ -54,8 +54,7 @@ function formatPriceValues(
   return next;
 }
 
-// Keep the inactive slots renderer at the last settled value while ticker
-// mode follows the cursor through its shared value on the UI thread.
+// keep slots at the last settled value while ticker mode follows the ui thread cursor
 function useSlotsPreloadValue(value: string, numberMode: MorphNumberMode) {
   const settledValueRef = React.useRef(value);
   if (numberMode !== "ticker") {

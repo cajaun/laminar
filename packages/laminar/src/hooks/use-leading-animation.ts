@@ -13,7 +13,7 @@ type UseLeadingAnimationParams = {
   readonly motionRecipe: MotionRecipe;
 };
 
-// keep leading presence and replacement motion consistent
+// coordinate leading presence and replacement motion
 export const useLeadingAnimation = ({
   leading,
   leadingKey,
@@ -31,7 +31,7 @@ export const useLeadingAnimation = ({
     (Boolean(leading) && leadingKey !== lastLeadingKeyRef.current);
   const leadingSwapProgress = useSharedValue(0);
 
-  // update the worklet flag after commit
+  // update the worklet flag after react commits
   useLayoutEffect(() => {
     leadingSwapProgress.value = isLeadingSwap ? 1 : 0;
   }, [isLeadingSwap, leadingSwapProgress]);

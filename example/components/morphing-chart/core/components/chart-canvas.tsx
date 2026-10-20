@@ -57,7 +57,7 @@ export type ChartCanvasProps = {
   showFill?: boolean;
 };
 
-// render chart paths and cursor markers on the skia canvas
+// draw chart paths and cursor markers on the skia canvas
 function ChartCanvasComponent({
   animatedGraphWidth,
   chartWidth,
@@ -87,7 +87,7 @@ function ChartCanvasComponent({
     interpolateColor(fadeProgress.value, [0, 1], [lineColor, futureLineColor]),
   );
   const animatedEndpointRadius = useDerivedValue(() => {
-    // collapse the terminal marker when the line reaches the chart edge
+    // hide the terminal marker when the line reaches the chart edge
     const distanceToEdge = chartWidth - animatedGraphWidth.value;
 
     const scale = Math.max(
@@ -98,7 +98,7 @@ function ChartCanvasComponent({
     return CROSSHAIR_RADIUS * scale;
   });
   const animatedEndpointCenter = useDerivedValue(() => {
-    // read the endpoint from the rendered path
+    // place the marker at the rendered path endpoint
     const endpoint = animatedLinePath.value.getLastPt();
 
     return {
@@ -155,7 +155,7 @@ function ChartCanvasComponent({
           strokeWidth={5}
         />
       </Group>
-      {/* keep marker layers aligned with line color transitions */}
+      {/* align marker layers with line color transitions */}
       <Group clip={futureClipPath} invertClip>
         <SkiaCircle
           c={animatedEndpointCenter}

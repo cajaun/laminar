@@ -1,4 +1,4 @@
-// keep chart data independent from renderer and screen ui
+// keep chart data separate from rendering and screen ui
 export {
   CHART_DATA_BY_SOURCE,
   CHART_DATA_SETS,

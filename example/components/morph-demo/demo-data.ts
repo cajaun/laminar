@@ -41,7 +41,7 @@ export const transactionStates = [
 export const confirmContinueWords = ["Continue", "Confirm"] as const;
 export const numberValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 
-export const numberFlowValues = [
+export const numberTickerValues = [
   "$10.06",
   "$20.12",
   "$40.24",
@@ -76,7 +76,7 @@ export const numberFlowValues = [
   "$97,288.96",
 ] as const;
 
-export const numberFlowSliderValues = [
+export const numberTickerSliderValues = [
   "$1.79",
   "$8.95",
   "$17.90",
@@ -165,8 +165,8 @@ export const examplePages = [
   { id: "confirmation", label: "Confirmation" },
   { id: "numbers", label: "Numbers" },
   { id: "slots", label: "Slots" },
-  { id: "numberFlow", label: "Number Flow" },
-  { id: "numberFlowSlider", label: "Number Flow Slider" },
+  { id: "numberTicker", label: "Number Ticker" },
+  { id: "numberTickerSlider", label: "Number Ticker Slider" },
 ] as const;
 
 export const componentPages = [
@@ -185,7 +185,7 @@ export const demoTabGroups = [
       "button",
       "transaction",
       "confirmation",
-      "numberFlow",
+      "numberTicker",
     ],
     componentIds: [],
   },
@@ -205,7 +205,7 @@ export const demoTabGroups = [
   {
     id: "components",
     label: "Components",
-    pageIds: ["numberFlowSlider"],
+    pageIds: ["numberTickerSlider"],
     componentIds: ["ethereum"],
   },
 ] as const;

@@ -16,7 +16,7 @@ export type CursorAnimated = {
 };
 
 export type AnimatedTextProps = {
-  // animate the numeric value when it changes
+  // animate the value when its numeric content changes
   value: number;
   fontSize?: number;
   fontWeight?: "normal" | "bold" | "600" | "700";

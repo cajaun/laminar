@@ -1,7 +1,7 @@
 import { CHART_HEIGHT } from "@/components/morphing-chart/core/model/geometry";
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-// build a reusable line path for native interpolation
+// build a line path that native animation can interpolate
 export function createLinePath(
   yValues: readonly number[],
   chartWidth: number,
@@ -11,7 +11,7 @@ export function createLinePath(
   return path;
 }
 
-// build the closed path used by the optional chart fill
+// close the line path to create the optional chart fill
 export function createFillPath(
   yValues: readonly number[],
   chartWidth: number,
@@ -21,7 +21,7 @@ export function createFillPath(
   return path;
 }
 
-// write the tangent continuous cubic path used by rendering and cursors
+// write a tangent continuous cubic path for rendering and cursor lookup
 export function writeLinePath(
   path: SkPath,
   yValues: readonly number[],
@@ -80,7 +80,7 @@ export function writeFutureClipPath(
   "worklet";
 
   path.reset();
-  // clamp the carried cursor to the new graph bounds
+  // keep the carried cursor inside the new graph bounds
   const startX = Math.max(0, Math.min(graphWidth, cursorX));
   const endX = Math.max(canvasWidth, startX + 0.001);
 

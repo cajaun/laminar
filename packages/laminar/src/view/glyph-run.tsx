@@ -25,7 +25,7 @@ const rowAlignStyles = {
   right: { alignSelf: "flex-end" },
 } as const;
 
-// render text and inline elements through one token row
+// render text and inline elements in one token row
 export const GlyphRun = React.memo(
   ({
     glyphs,
@@ -54,7 +54,7 @@ export const GlyphRun = React.memo(
     textStyle?: StyleProp<TextStyle>;
     className?: string;
   }>) => {
-    // keep leading content outside the text row so it moves as one unit
+    // keep leading content outside the text row so both parts move together
     const leadingGlyph = glyphs[0]?.kind === "element" ? glyphs[0] : undefined;
     const textGlyphs = leadingGlyph ? glyphs.slice(1) : glyphs;
     const shouldGroupText =
@@ -89,7 +89,7 @@ export const GlyphRun = React.memo(
         {leadingGlyph ? (
           <Animated.View
             key={leadingGlyph.id}
-            // let leading content own enter and exit geometry
+            // let leading content control its own enter and exit geometry
             layout={undefined}
             entering={elementEnterTransition ?? enterTransition}
             exiting={elementExitTransition ?? exitTransition}

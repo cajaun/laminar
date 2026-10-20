@@ -21,7 +21,7 @@ describe("public Laminar API", () => {
     expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(0);
   });
 
-  test("API-DT-011 keeps number flow inline instead of rendering slot reels", () => {
+  test("API-DT-011 keeps number ticker inline instead of rendering slot reels", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
       renderer = TestRenderer.create(

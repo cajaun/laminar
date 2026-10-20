@@ -11,7 +11,7 @@ export type CursorPriceSample = {
   value: number;
 };
 
-// store recorded cursor values outside the chart renderer
+// keep recorded cursor values outside the chart renderer
 export const CURSOR_PRICE_SAMPLES: Record<RangeType, readonly CursorPriceSample[]> = {
   "1H": [
     { progress: 0.114, value: 2_505.75 },
@@ -50,7 +50,7 @@ export const CURSOR_PRICE_SAMPLES: Record<RangeType, readonly CursorPriceSample[
     { progress: 0.858, value: 2_408.08 },
     { progress: 1, value: 2_502.30 },
   ],
-  // hold the one year value until recorded cursor samples exist
+  // use the one year value until recorded cursor samples exist
   "1Y": [],
 };
 
@@ -106,7 +106,7 @@ export function getCursorDisplayValue(
   );
 }
 
-// reuse immutable cursor values across scrub sessions
+// reuse cursor values while the chart data stays unchanged
 export function getCachedCursorDisplayValues(
   range: RangeType,
   totalValue: number,

@@ -107,9 +107,9 @@ The `shadow` prop requires the app to provide the
 `@react-native-masked-view/masked-view` and `expo-linear-gradient` peer
 dependencies.
 
-### Number flow
+### Number ticker
 
-Use `numberMode="ticker"` with `variant="number"` for clean live-number flow.
+Use `numberMode="ticker"` with `variant="number"` for clean live-number ticker.
 Changed digits refresh in place while unchanged digits remain perfectly still;
 this mode deliberately has no vertical reel or viewport mask:
 
@@ -275,7 +275,7 @@ type LaminarProps = {
 | `smooth`  | Spring with no bounce      | 400ms            |
 | `snappy`  | Spring with light bounce   | 350ms            |
 | `bouncy`  | Spring with more bounce    | 500ms            |
-| `ticker`  | In-place number-flow timing | 300ms            |
+| `ticker`  | In-place number ticker timing | 300ms            |
 
 ```tsx
 <Laminar text={word} animationPreset="smooth" />

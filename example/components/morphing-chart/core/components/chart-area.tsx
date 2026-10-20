@@ -47,7 +47,7 @@ type ChartAreaProps = Pick<
   selected: RangeType;
 };
 
-// compose the plot cursor label and range selector
+// place the plot cursor label and range selector together
 export const ChartArea = React.memo(function ChartArea({
   animatedGraphWidth,
   animatedFillPath,
@@ -235,7 +235,7 @@ type CursorLabelProps = {
 
 const AnimatedTextInput = createAnimatedComponent(TextInput);
 
-// keep changing cursor text local to the chart area
+// keep cursor text updates inside the chart area
 const CursorLabel = React.memo(function CursorLabel({
   animatedGraphWidth,
   cursorIndexShared,

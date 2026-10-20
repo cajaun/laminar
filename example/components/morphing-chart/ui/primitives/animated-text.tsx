@@ -2,7 +2,7 @@ import { Text } from "react-native";
 import type { TextStyle } from "react-native";
 import type { AnimatedTextProps } from "@/components/morphing-chart/core/types";
 
-// keep the compatibility primitive semantic while native renderers own motion
+// keep this compatibility api while native renderers handle motion
 export default function AnimatedText({
   value,
   fontSize = 52,

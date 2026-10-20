@@ -222,7 +222,7 @@ export function DemoDetailScreen({
       <View
         style={{
           flex: 1,
-          paddingTop: pageId === "numberFlowSlider" ? 0 : headerHeight,
+          paddingTop: pageId === "numberTickerSlider" ? 0 : headerHeight,
         }}
       >
         {content}

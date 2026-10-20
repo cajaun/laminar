@@ -6,16 +6,16 @@ import type { DemoPageProps } from "../types";
 import {
   DEFAULT_DEMO_FONT_SIZE,
   useCyclicValueStoreSnapshot,
-  useNumberFlowDemoStore,
+  useNumberTickerDemoStore,
 } from "../../use-demo-state";
 import { useDemoTheme } from "../../demo-theme";
 
-type NumberFlowStore = ReturnType<typeof useNumberFlowDemoStore>;
+type NumberTickerStore = ReturnType<typeof useNumberTickerDemoStore>;
 
-const NumberFlowPreview = React.memo(function NumberFlowPreview({
+const NumberTickerPreview = React.memo(function NumberTickerPreview({
   store,
 }: {
-  readonly store: NumberFlowStore;
+  readonly store: NumberTickerStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
   const theme = useDemoTheme();
@@ -46,8 +46,8 @@ const NumberFlowPreview = React.memo(function NumberFlowPreview({
   );
 });
 
-function NumberFlowPage({ height, width }: DemoPageProps) {
-  const store = useNumberFlowDemoStore();
+function NumberTickerPage({ height, width }: DemoPageProps) {
+  const store = useNumberTickerDemoStore();
 
   return (
     <DemoPageLayout
@@ -56,7 +56,7 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
       fontSize={DEFAULT_DEMO_FONT_SIZE}
       onReverse={store.previous}
       onMorph={store.next}
-      preview={<NumberFlowPreview store={store} />}
+      preview={<NumberTickerPreview store={store} />}
       settingsStore={store}
       renderSettings={(state, theme) => (
         <>
@@ -74,5 +74,5 @@ function NumberFlowPage({ height, width }: DemoPageProps) {
   );
 }
 
-export const NumberFlowDemoPage = React.memo(NumberFlowPage);
+export const NumberTickerDemoPage = React.memo(NumberTickerPage);
 

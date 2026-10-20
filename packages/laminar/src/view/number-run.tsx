@@ -1,5 +1,10 @@
 import React, { useMemo, useRef, type ReactNode } from "react";
-import { type StyleProp, type TextStyle, View } from "react-native";
+import {
+  StyleSheet,
+  type StyleProp,
+  type TextStyle,
+  View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
@@ -32,7 +37,7 @@ type NumberRunProps = {
   readonly ready?: boolean;
 };
 
-// arrange numeric lanes while the hook preserves their identities
+// arrange numeric lanes while the hook keeps their identities stable
 export const NumberRun = React.memo(
   ({
     value,
@@ -84,22 +89,24 @@ export const NumberRun = React.memo(
       leadingGap: visibleLeadingGap,
       motionRecipe,
     });
-    // keep lane identity in the hook and row placement in this component
+    // let the hook own lane identity and this component place each lane
     const { units, laneKeys, direction, leadLength } =
       useNumericLanes(visibleValue);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
 
-    // skip enter animations on first paint
+    // show the initial value without an enter animation
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
       lastValueRef.current = visibleValue;
     }
 
-    // scale travel from the font with a minimum movement
+    // scale digit travel with the font while preserving a minimum distance
+    const resolvedFontSize =
+      StyleSheet.flatten(textStyle)?.fontSize ?? fontSize;
     const travelDistance = useMemo(
-      () => Math.max(8, Math.round((fontSize ?? 16) * 0.4)),
-      [fontSize]
+      () => Math.max(8, Math.round((resolvedFontSize ?? 0) * 0.4)),
+      [resolvedFontSize]
     );
     const hasAnimated = hasAnimatedRef.current;
 

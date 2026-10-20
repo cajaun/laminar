@@ -27,7 +27,7 @@ type IdleRuntime = typeof globalThis & {
   cancelIdleCallback?: (handle: number) => void;
 };
 
-// schedule detail work after the navigation transition
+// defer detail work until the navigation transition ends
 function scheduleIdle(callback: () => void): () => void {
   const runtime = globalThis as IdleRuntime;
 
@@ -40,7 +40,7 @@ function scheduleIdle(callback: () => void): () => void {
   return () => runtime.cancelIdleCallback?.(handle);
 }
 
-// compose the chart page from the controller and detail sections
+// build the chart page from its controller and detail sections
 export function MorphingChart({
   asset = "ethereum",
   initialRange = "1H",
@@ -106,7 +106,7 @@ type MorphingChartInteractiveProps = {
   source: DataSourceOption;
 };
 
-// keep high frequency chart state below the page shell
+// keep frequent chart state below the page shell
 const MorphingChartInteractive = React.memo(function MorphingChartInteractive({
   asset,
   chartWidth,

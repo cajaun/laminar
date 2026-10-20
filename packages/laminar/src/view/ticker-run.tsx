@@ -61,7 +61,7 @@ type TickerRunProps = {
   readonly leadingKey?: string | number;
   readonly leadingGap?: number;
   readonly ready?: boolean;
-  // keep shadow for api compatibility
+  // retain the shadow option for api compatibility
   readonly shadow?: LaminarShadow;
 };
 
@@ -103,8 +103,11 @@ type MeasuredTickerGlyph = {
   readonly isFractional: boolean;
 };
 
-const getTickerGlyphMetricKey = (unit: string, isFractional: boolean) =>
-  `${isFractional ? "fraction" : "main"}:${unit}`;
+const getTickerGlyphMetricKey = (unit: string, isFractional: boolean) => {
+  "worklet";
+
+  return `${isFractional ? "fraction" : "main"}:${unit}`;
+};
 
 const getBodyLaneFractionRole = (
   frame: NativeTickerFrame,
@@ -118,7 +121,7 @@ const getBodyLaneFractionRole = (
   return unitIndex >= findFractionStartIndex(frame.units);
 };
 
-// Map each formatted value into stable prefix and trailing numeric lanes.
+// split each formatted value into stable prefix and numeric lanes
 const getTickerLaneUnit = (
   frame: NativeTickerFrame,
   laneIndex: number,
@@ -172,8 +175,7 @@ type GlyphMetricsState = {
   readonly widths: Readonly<Record<string, number>>;
 };
 
-// Keep the native text field as the row child so Yoga can align its real text
-// baseline with the other glyph lanes.
+// keep native text in the row so yoga aligns its baseline with other glyphs
 const NativeTickerLane = React.memo(function NativeTickerLane({
   animatedText,
   laneValues,
@@ -206,8 +208,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
     () => {
       "worklet";
 
-      // The shared index drives glyph and width together; a second timing
-      // animation would trail the chart during continuous scrubbing.
+      // use one shared index for glyph and width updates during scrubbing
       const frameIndex = Math.max(
         0,
         Math.min(laneValues.length - 1, Math.round(animatedText.index.value)),
@@ -266,7 +267,7 @@ const NativeTickerLane = React.memo(function NativeTickerLane({
   );
 });
 
-// Keep native ticker lanes aligned with slot lanes.
+// align native ticker lanes with slot lanes
 const NativeTickerRun = React.memo(function NativeTickerRun({
   fallbackValue,
   animatedText,
@@ -553,7 +554,7 @@ const areTickerLanePropsEqual = (
   previous.className === next.className &&
   areTextStylesEqual(previous.textStyle, next.textStyle);
 
-// Keep unchanged glyph lanes out of React reconciliation.
+// skip react reconciliation for unchanged glyph lanes
 const TickerLane = React.memo(function TickerLane({
   unit,
   isLast,
@@ -608,8 +609,7 @@ type FlowTickerRunProps = {
   readonly leadingGap: number;
 };
 
-// Keep ticker lanes horizontally reflowing. Fade only lanes added or removed
-// when the formatted value's structure changes, matching the slots renderer.
+// reflow ticker lanes and fade lanes when the formatted value changes structure
 const FlowTickerRun = React.memo(function FlowTickerRun({
   value,
   motionRecipe,
@@ -627,7 +627,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
     isLeadingChange,
     isLeadingSwap,
   } = useLeadingAnimation({ leading, leadingKey, leadingGap, motionRecipe });
-  // This path only needs formatted units; lane IDs and direction are unused.
+  // use formatted units without lane ids or direction
   const units = useMemo(() => splitDisplayUnits(value), [value]);
   const fractionStartIndex = findFractionStartIndex(units);
   const hasFraction = fractionStartIndex < units.length;
@@ -711,7 +711,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
 
           return (
             <TickerLane
-              // keep each lane mounted so width changes move following digits
+              // keep lanes mounted so width changes move the digits after them
               key={unitKey}
               unit={unit}
               isLast={index === units.length - 1}
@@ -731,7 +731,7 @@ const FlowTickerRun = React.memo(function FlowTickerRun({
   );
 });
 
-// update either a native animated text field or the regular React ticker
+// update either a native animated text field or the react ticker
 export const TickerRun = React.memo(function TickerRun({
   value,
   animatedText,

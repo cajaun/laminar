@@ -53,7 +53,7 @@ type MorphViewportProps = {
   readonly align: LaminarAlign;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
-  // support layout driven auto size for aligned content
+  // use content layout to size aligned values
   readonly autoSizeLayoutTransition?: BaseAnimationBuilder;
   readonly layoutTransitionKey?: string | number;
   readonly animateLayoutOnRendererChange?: boolean;
@@ -61,7 +61,7 @@ type MorphViewportProps = {
   readonly children: React.ReactNode;
 };
 
-// keep hidden measurement outside visible content
+// measure hidden content outside the visible viewport
 export const MorphViewport = React.memo(
   ({
     autoSize,
@@ -80,13 +80,13 @@ export const MorphViewport = React.memo(
     const rendererChanged =
       previousLayoutTransitionKeyRef.current !== layoutTransitionKey;
     previousLayoutTransitionKeyRef.current = layoutTransitionKey;
-    // Renderer handoffs change glyph metrics; don't animate the shell's layout for them.
+    // keep renderer handoffs from animating the shell when glyph metrics change
     const shouldAnimateAutoSizeLayout =
       autoSizeLayoutTransition !== undefined &&
       hasRenderedRef.current &&
       (!rendererChanged || animateLayoutOnRendererChange);
     hasRenderedRef.current = true;
-    // share alignment between the shell and viewport
+    // align the shell and viewport with the same setting
     const resolvedViewportStyle = useMemo(
       () => [
         viewportStyle,
@@ -96,9 +96,9 @@ export const MorphViewport = React.memo(
       [align, clipToBounds]
     );
 
-    // keep measurement outside the viewport
+    // measure content outside the visible viewport
     if (autoSizeLayoutTransition) {
-      // animate width and anchor position together
+      // animate width and anchor position on the same transition
       return (
         <Animated.View
           layout={

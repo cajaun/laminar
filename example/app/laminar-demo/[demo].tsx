@@ -5,7 +5,7 @@ import {
   type ExamplePageId,
 } from "@/components/morph-demo";
 import { examplePages } from "@/components/morph-demo/demo-data";
-import { NumberFlowSliderHeaderAction } from "@/components/morph-demo/demo-pages/components/number-flow-slider";
+import { NumberTickerSliderHeaderAction } from "@/components/number-ticker-slider";
 import { useDemoTheme } from "@/components/morph-demo/demo-theme";
 
 export default function LaminarDemoRoute() {
@@ -15,24 +15,24 @@ export default function LaminarDemoRoute() {
   const pageId = examplePages.some((page) => page.id === demo)
     ? (demo as ExamplePageId)
     : "textIdentity";
-  const isNumberFlowSlider = pageId === "numberFlowSlider";
+  const isNumberTickerSlider = pageId === "numberTickerSlider";
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: isNumberFlowSlider
+          title: isNumberTickerSlider
             ? ""
             : examplePages.find((page) => page.id === pageId)?.label,
           headerShown: true,
-          ...(isNumberFlowSlider
+          ...(isNumberTickerSlider
             ? {
                 headerTransparent: false,
                 headerBackVisible: false,
                 headerShadowVisible: false,
                 headerStyle: { backgroundColor: theme.background },
                 headerTintColor: theme.primary,
-                headerRight: () => <NumberFlowSliderHeaderAction />,
+                headerRight: () => <NumberTickerSliderHeaderAction />,
               }
             : undefined),
         }}

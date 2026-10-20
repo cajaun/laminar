@@ -1,4 +1,3 @@
-// expose chart engine modules through one public boundary
 export { ChartArea } from "./components/chart-area";
 export { ChartCanvas } from "./components/chart-canvas";
 export { Cursor } from "./components/cursor";

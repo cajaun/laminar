@@ -59,7 +59,7 @@ function impactHaptic() {
   }
 }
 
-// coordinate cursor interaction visibility and haptics
+// coordinate cursor visibility interaction and haptics
 export function useChartCursor({
   points,
   graphWidth,
@@ -68,11 +68,11 @@ export function useChartCursor({
   const [cursor, setCursor] = useState<CursorPoint | null>(null);
   const [releasedCursor, setReleasedCursor] = useState<CursorPoint | null>(null);
   const [cursorIndex, setCursorIndex] = useState<number | null>(null);
-  // keep held cursors separate from active scrubbing
+  // track a held cursor separately from active scrubbing
   const [isScrubbing, setIsScrubbing] = useState(false);
   const committedCursorIndex = useSharedValue(-1);
   const cursorIndexShared = useSharedValue(-1);
-  // keep the gesture stable while shared values receive new chart data
+  // preserve the gesture while shared values receive new chart data
   const pointsShared = useSharedValue(points);
   const graphWidthShared = useSharedValue(graphWidth);
   const scrubbingActive = useSharedValue(0);
@@ -102,11 +102,11 @@ export function useChartCursor({
       stopScrubbing = false,
       version = 0,
     ) => {
-      // ignore queued samples older than the latest release commit
+      // ignore samples queued before the latest release commit
       if (version < latestCommitVersionRef.current) return;
       latestCommitVersionRef.current = version;
 
-      // return the readout to slots while the cursor label finishes fading
+      // return the readout to slots while the cursor label fades out
       if (stopScrubbing) {
         setCursor(null);
         setReleasedCursor(cursorPoint);
@@ -130,12 +130,12 @@ export function useChartCursor({
     setIsScrubbing(false);
   }, []);
 
-  // bridge at most one cursor sample from each ui frame
+  // send at most one cursor sample from each ui frame to js
   useFrameCallback(() => {
     "worklet";
 
     if (!pendingReactCommit.value && !releaseRequested.value) return;
-    // keep active pan values on the ui thread and bridge discrete commits
+    // keep pan values on the ui thread and send discrete commits to js
     if (scrubbingActive.value === 1 && releaseRequested.value === 0) {
       pendingReactCommit.value = 0;
       return;
@@ -263,7 +263,7 @@ export function useChartCursor({
     setCursorIndex(null);
   }, []);
 
-  // settle numeric readouts immediately while the visual cursor fades away
+  // settle numeric readouts before the visual cursor finishes fading
   const clearCursorReadout = useCallback(() => {
     setCursor(null);
     setReleasedCursor(null);
@@ -338,7 +338,7 @@ export function useChartCursor({
         .onEnd((event) => {
           "worklet";
 
-          // commit the final point before returning to slots
+          // commit the final cursor point before returning to slots
           panEnded.value = 1;
           scrubbingActive.value = 0;
           updateCursor(event.x);
@@ -355,7 +355,7 @@ export function useChartCursor({
           releaseRequested.value = 0;
 
           if (finalPoint) {
-            // bridge release immediately as a discrete event
+            // send the release to js as a discrete event
             runOnJS(commitCursorState)(
               finalPoint,
               finalIndex,
@@ -380,7 +380,7 @@ export function useChartCursor({
         });
 
       const tap = Gesture.Tap()
-        // keep a stationary press alive until pan movement begins
+        // keep a stationary press active until pan movement begins
         .maxDuration(10_000)
         .onBegin((event) => {
           "worklet";

@@ -43,7 +43,7 @@ type NumericRunSwitchProps = {
   readonly shadow?: LaminarShadow;
 };
 
-// select one numeric renderer so inactive layout cannot affect the handoff
+// render one numeric mode so the inactive mode cannot affect the handoff
 export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   mode,
   value,

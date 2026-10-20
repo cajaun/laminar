@@ -12,7 +12,7 @@ import type {
   MorphAnimationPresetName,
 } from "../types";
 
-// keep layout and glyph motion on one curve family
+// use the same curve family for layout and glyph motion
 const DEFAULT_CURVE = [0.19, 1, 0.22, 1] as const;
 const TICKER_CURVE = [0.33, 1, 0.68, 1] as const;
 
@@ -45,13 +45,13 @@ export const MOTION_PRESETS: Record<
   },
 } as const;
 
-// convert public seconds to reanimated milliseconds
+// convert public durations from seconds to milliseconds
 const toMilliseconds = (seconds: number) => Math.round(seconds * 1000);
 
 const toDampingRatio = (bounce: number) =>
   Math.max(0.55, Math.min(1, 1 - bounce));
 
-// share one opacity contract across spring and timing presets
+// use the same opacity rules for spring and timing presets
 const createOpacityTransition = (
   fromOpacity: number,
   toOpacity: number,
@@ -75,7 +75,7 @@ const createOpacityTransition = (
   };
 };
 
-// convert a named preset into builders for every rendering variant
+// create motion builders for each rendering variant
 export const resolveMotionRecipe = (
   presetName: MorphAnimationPresetName = "default",
   durationOverride?: number,
@@ -91,7 +91,7 @@ export const resolveMotionRecipe = (
     return {
       durationMs,
       easing,
-      // use timing for predictable width and reflow
+      // use timing so width changes and reflow stay predictable
       layoutTransition: LinearTransition.duration(durationMs).easing(
         easing.factory()
       ),

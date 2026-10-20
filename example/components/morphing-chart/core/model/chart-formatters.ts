@@ -44,7 +44,7 @@ function getDateAtProgress(start: number, duration: number, progress: number) {
 function getTodayStart() {
   const today = new Date();
 
-  // use local calendar getters for relative labels
+  // use local calendar dates for relative labels
   return Date.UTC(
     today.getFullYear(),
     today.getMonth(),
@@ -100,7 +100,7 @@ export function getCursorLabel(
     const end = todayStart + (11 * MINUTES_PER_HOUR + 25) * 60 * 1000;
     const date = getDateAtProgress(start, end - start, progress);
 
-    // switch from the prior date to current day time labels after midnight
+    // use time labels after the local date changes at midnight
     return index === 0
       ? `${formatMonthDay(date)} ${formatTime(date)}`
       : formatTime(date);
@@ -112,7 +112,7 @@ export function getCursorLabel(
     const date = getDateAtProgress(start, end - start, progress);
     const today = new Date(todayStart);
 
-    // keep date and hour context until the current day begins
+    // include the date and hour until the current day begins
     return isSameUtcDay(date, today)
       ? String(date.getUTCHours()).padStart(2, "0")
       : formatMonthDayHour(date);
@@ -123,14 +123,14 @@ export function getCursorLabel(
     const end = todayStart + 20 * 60 * 60 * 1000;
     const date = getDateAtProgress(start, end - start, progress);
 
-    // include date and hour in month labels
+    // include the date and hour in month labels
     return formatMonthDayHour(date);
   }
 
   const start = todayStart - 365 * DAY_MS;
   const date = getDateAtProgress(start, 365 * DAY_MS, progress);
 
-  // use compact labels for the current year and full labels for older years
+  // shorten labels in the current year and include the year for older dates
   return date.getUTCFullYear() < new Date().getUTCFullYear()
     ? `${MONTH_NAMES_LONG[date.getUTCMonth()]} ${date.getUTCFullYear()}`
     : formatMonthDay(date);

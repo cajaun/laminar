@@ -9,8 +9,8 @@ import {
   fontWeights,
   multiIconValues,
   numberValues,
-  numberFlowValues,
-  numberFlowSliderValues,
+  numberTickerValues,
+  numberTickerSliderValues,
   slotMechanismValues,
   standaloneWords,
   singleIconValues,
@@ -198,12 +198,12 @@ export function useSlotMechanismDemoStore() {
   return useCyclicValueStore(slotMechanismValues);
 }
 
-export function useNumberFlowDemoStore() {
-  return useCyclicValueStore(numberFlowValues);
+export function useNumberTickerDemoStore() {
+  return useCyclicValueStore(numberTickerValues);
 }
 
-export function useNumberFlowSliderDemoStore(initialIndex = 0) {
-  return useCyclicValueStore(numberFlowSliderValues, initialIndex);
+export function useNumberTickerSliderDemoStore(initialIndex = 0) {
+  return useCyclicValueStore(numberTickerSliderValues, initialIndex);
 }
 
 export function useNumbersDemoStore() {

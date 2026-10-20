@@ -98,7 +98,7 @@ export function useMorphingChartController({
   selectedRef.current = selected;
   const numberMode: MorphNumberMode = isScrubbing ? "ticker" : "slots";
 
-  // Handle source updates and range changes not already started by the tap.
+  // handle source updates and range changes that did not start from a tap
   useLayoutEffect(() => {
     const previous = previousSelection.current;
     const rangeChanged = previous.selected !== selected;
@@ -139,7 +139,7 @@ export function useMorphingChartController({
 
       pendingRangeAnimationRef.current = range;
       selectedRef.current = range;
-      // Queue the chart and selector worklet before React reconciles the readouts.
+      // start chart and selector worklets before react reconciles the readouts
       animateTo(
         getCachedChartYValues(sourceData.chartDataSets[range]),
         chartWidth * REFERENCE_GRAPH_EXTENT[range],
@@ -170,10 +170,10 @@ export function useMorphingChartController({
   const slotStartValue = releasedCursor
     ? getCursorDisplayValue(selected, meta.totalValue, releasedCursor, graphWidth)
     : null;
-  // prepare ticker values only while scrubbing uses the shared index
+  // prepare ticker values while scrubbing reads the shared index
   const tickerValues = useMemo(
     () => {
-      // skip ticker formatting while slots show the settled state
+      // skip ticker formatting while slots show the settled value
       if (!isScrubbing) return EMPTY_TICKER_VALUES;
 
       return getCachedCursorDisplayValues(
@@ -187,7 +187,7 @@ export function useMorphingChartController({
   );
   const cursorLabels = useMemo(
     () => {
-      // skip cursor label formatting until the cursor becomes visible
+      // skip cursor label formatting while the cursor is hidden
       if (!isScrubbing && cursorIndex === null) return EMPTY_CURSOR_LABELS;
 
       return points.map((_point, index) =>

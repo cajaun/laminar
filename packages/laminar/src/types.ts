@@ -15,23 +15,23 @@ export type MorphAnimationPresetName =
   | "ticker";
 
 export type MorphContentVariant = "text" | "number" | "slots";
-// numeric renderers share the laminar shell while changing value motion
+// numeric renderers share the laminar shell and choose their own value motion
 export type MorphNumberMode = "morph" | "ticker" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
 
-// text keys let leading content follow the same state as the displayed value
+// text keys keep leading content paired with the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 export type LaminarShadowOptions = {
-  // surface color used by the alpha mask when a platform requires it
+  // provide the surface color when a platform needs an alpha mask
   readonly color?: string;
-  // fade depth in pixels defaults to roughly one third of the viewport
+  // set the fade depth in pixels with a default near one third of the viewport
   readonly size?: number;
 };
 
 export type LaminarShadow = boolean | LaminarShadowOptions;
 
-// provide preformatted values to the ui thread without per sample react work
+// send preformatted values to the ui thread without formatting on each sample
 export type LaminarAnimatedText = {
   readonly index: SharedValue<number>;
   readonly values: readonly string[];
@@ -60,7 +60,7 @@ export type GlyphToken = {
 export type NumericFlowDirection = -1 | 0 | 1;
 
 export type MotionRecipe = {
-  // every variant consumes the same timing and layout contract
+  // keep timing and layout options consistent across variants
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
   readonly layoutTransition: BaseAnimationBuilder;
@@ -72,26 +72,26 @@ export type MotionRecipe = {
 export type MorphingTextProps = {
   readonly text: string | number;
   readonly variant?: MorphContentVariant;
-  // number mode selects the numeric renderer
+  // select the numeric renderer
   readonly numberMode?: MorphNumberMode;
-  // scale the decimal separator and fractional digits in ticker mode (0.1–1; default 1)
+  // scale the decimal separator and fraction glyphs in ticker mode
   readonly fractionScale?: number;
   readonly animatedText?: LaminarAnimatedText;
-  // start a slot handoff from the last displayed numeric value
+  // start slot handoffs from the last value shown by the numeric renderer
   readonly fromValue?: string;
-  // keep the inactive slot renderer warm during ticker mode
+  // keep the slot renderer mounted while ticker mode is active
   readonly preloadValue?: string;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
-  // leading content appears before the value
+  // render leading content before the value
   readonly leading?: ReactNode | LaminarLeadingMap;
-  // leading key identifies a replacement
+  // use the leading key to identify replacement content
   readonly leadingKey?: string | number;
-  // leading gap separates content from the value
+  // set the gap between leading content and the value
   readonly leadingGap?: number;
-  // shadow adds fades to slot reels
+  // fade slot reels at the edges with a shadow
   readonly shadow?: LaminarShadow;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;

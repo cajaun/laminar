@@ -15,7 +15,7 @@ import { TextRun } from "./view/text-run";
 import { NumericRunSwitch } from "./view/numeric-run-switch";
 import { getFractionalTextStyle } from "./view/fractional-text-style";
 
-// connect the content variant to the shared viewport and measurement flow
+// connect each content variant to the shared viewport and measurement flow
 export const Laminar = React.memo(function Laminar({
     text,
     variant = "text",
@@ -41,7 +41,7 @@ export const Laminar = React.memo(function Laminar({
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
-    // resolve keyed leading content before measurement
+    // resolve keyed leading content before measuring the value
     const leadingMap = isLeadingMap(leading) ? leading : undefined;
     const resolvedLeading: React.ReactNode = leadingMap
       ? leadingMap[resolvedValue]
@@ -50,7 +50,7 @@ export const Laminar = React.memo(function Laminar({
     const flattenedContainerStyle = StyleSheet.flatten(containerStyle);
     const isCenteredStandaloneShell =
       flattenedContainerStyle?.alignSelf === "center";
-    // route slots and number slots through the same numeric renderer
+    // render slot mode and number mode through the numeric renderer
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
@@ -62,9 +62,7 @@ export const Laminar = React.memo(function Laminar({
       isSlotsVariant || isTickerVariant
         ? `${variant}:${isTickerVariant ? "ticker" : "slots"}`
         : undefined;
-    // On scrub release, animate a width change from the sampled value together
-    // with its slot reels so right-aligned readouts with a leading icon don't
-    // jump ahead of digits.
+    // animate sampled width and slot reels together so leading icons stay aligned
     const animateLayoutOnRendererChange =
       isSlotsVariant &&
       Boolean(resolvedLeading) &&
@@ -92,7 +90,7 @@ export const Laminar = React.memo(function Laminar({
       style,
     });
 
-    // invalidate measurement when text style or leading content changes
+    // remeasure when text style or leading content changes
     const measurementKey = React.useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
 
@@ -131,7 +129,7 @@ export const Laminar = React.memo(function Laminar({
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
       });
-    // measure the same normalized units used by the visible row
+    // measure the normalized units rendered in the visible row
     const measuredValue = React.useMemo(() => {
       if (!autoSize) {
         return "";
@@ -272,7 +270,7 @@ export const Laminar = React.memo(function Laminar({
 function isLeadingMap(
   value: MorphingTextProps["leading"]
 ): value is LaminarLeadingMap {
-  // exclude react elements before treating objects as leading maps
+  // exclude react elements before reading an object as a leading map
   return (
     typeof value === "object" &&
     value !== null &&

@@ -29,7 +29,7 @@ type LeadingEnterTransitionParams = {
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
 };
 
-// use scale for leading replacements and fade for first appearance
+// scale replacement content and fade content on first appearance
 export const createLeadingEnterTransition = ({
   durationMs,
   easing,
@@ -50,7 +50,7 @@ export const createLeadingEnterTransition = ({
   };
 };
 
-// combine opacity and scale on one timing path
+// animate opacity and scale with one timing function
 export const createShiftTransition = ({
   durationMs,
   easing,
@@ -64,7 +64,7 @@ export const createShiftTransition = ({
   return () => {
     "worklet";
 
-    // drive opacity and transforms from one timing path
+    // animate opacity and transforms with one timing function
     const animate = (toValue: number) =>
       withTiming(toValue, {
         duration: durationMs,
@@ -98,7 +98,7 @@ export const createShiftTransition = ({
   };
 };
 
-// let exiting worklets read the current transition type
+// expose the current transition type to exiting worklets
 export const createLeadingExitTransition = ({
   durationMs,
   easing,

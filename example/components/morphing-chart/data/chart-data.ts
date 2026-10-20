@@ -12,7 +12,7 @@ export type ChartDataBySource = {
   rangeMetadata: Record<RangeType, RangeMeta>;
 };
 
-// store dense reference samples for stable range morphs
+// store dense reference samples so range morphs use stable geometry
 const REFERENCE_SERIES: Record<RangeType, number[]> = {
   "1H": [
     63.8, 64.4, 66.2, 69.2, 73.2, 77.6, 81.3, 83.9, 85.4, 85.8, 84.8, 82.8,

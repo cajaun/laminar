@@ -8,11 +8,21 @@ export const getFractionalTextStyle = (
   if (fractionScale >= 1) return textStyle;
 
   const flattenedStyle = StyleSheet.flatten(textStyle);
-  const baseFontSize = flattenedStyle?.fontSize ?? fontSize ?? 14;
+  const baseFontSize =
+    typeof flattenedStyle?.fontSize === "number"
+      ? flattenedStyle.fontSize
+      : fontSize;
+  if (
+    baseFontSize === undefined ||
+    !Number.isFinite(baseFontSize) ||
+    baseFontSize <= 0
+  ) {
+    return textStyle;
+  }
+
   const fractionalFontSize = baseFontSize * fractionScale;
 
-  // Ticker rows baseline-align their native text children; avoid a synthetic
-  // translateY here because font metrics differ across fonts and platforms.
+  // let ticker rows align native text baselines across fonts and platforms
   return [
     textStyle,
     {

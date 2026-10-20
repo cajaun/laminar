@@ -10,7 +10,7 @@ type Params = {
 
 const WIDTH_CACHE_LIMIT = 64;
 
-// update shared width from content layout
+// update the shared width when content lays out
 export const useInlineAutoWidth = ({
   enabled,
   driveToWidth,
@@ -48,7 +48,7 @@ export const useInlineAutoWidth = ({
         return;
       }
 
-      // replace the animation from its current value
+      // restart the animation from its current width
       widthValue.value = driveToWidth(nextWidth);
     },
     [driveToWidth, hasBootstrappedWidth, widthValue]
@@ -56,7 +56,7 @@ export const useInlineAutoWidth = ({
 
   const captureLayout = useCallback(
     (event: LayoutChangeEvent) => {
-      // accept layout events from the current probe
+      // accept measurements only from the active probe
       if (
         !enabledRef.current ||
         measurementGeneration !== measurementGenerationRef.current
@@ -67,7 +67,7 @@ export const useInlineAutoWidth = ({
       const nextWidth = Math.max(0, Math.ceil(event.nativeEvent.layout.width));
       const cache = widthCacheRef.current;
 
-      // replace repeated keys with the newest measurement
+      // keep the newest measurement for each key
       cache.delete(measurementKey);
       if (cache.size >= WIDTH_CACHE_LIMIT) {
         const oldestKey = cache.keys().next().value;
@@ -77,7 +77,7 @@ export const useInlineAutoWidth = ({
       }
       cache.set(measurementKey, nextWidth);
 
-      // drive the shell from the probe without another react render
+      // update the shell from the probe without another react render
       applyWidth(nextWidth);
     },
     [applyWidth, measurementGeneration, measurementKey]
@@ -109,7 +109,7 @@ export const useInlineAutoWidth = ({
   return {
     captureLayout,
     animatedWidthStyle,
-    // render content without a timer readiness gate
+    // render content without waiting for a timer
     isReady: true,
     shouldMeasure: enabled && cachedWidth === undefined,
   };

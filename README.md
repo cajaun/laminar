@@ -103,7 +103,7 @@ magnitude sets the animation direction.
 Formatting characters remain visible. Laminar accepts strings such as
 `$1,240.00`, `-18%`, and `USD 42`.
 
-For the clean live-number flow used by market-style value updates, opt into
+For the clean live-number ticker used by market-style value updates, opt into
 the transition-local number mode:
 
 ```tsx
@@ -115,7 +115,7 @@ the transition-local number mode:
 />
 ```
 
-The flow keeps prefixes, punctuation, and unchanged digits crisp while
+The ticker keeps prefixes, punctuation, and unchanged digits crisp while
 replacing changed digits in place. It does not render a vertical reel or a
 top/bottom shadow; use `variant="slots"` with `shadow` when that effect is
 wanted.
@@ -229,7 +229,7 @@ The final `style` value wins when layers define the same property.
 | `smooth` | Spring with no bounce | 400 ms |
 | `snappy` | Spring with light bounce | 350 ms |
 | `bouncy` | Spring with more bounce | 500 ms |
-| `ticker` | In-place number-flow timing | 300 ms |
+| `ticker` | In-place number ticker timing | 300 ms |
 
 Text uses `default` unless you choose a preset. Number and slot variants use
 `snappy`; ticker number mode uses `ticker`.

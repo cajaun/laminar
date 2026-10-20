@@ -24,7 +24,7 @@ type UseChartMorphOptions = {
   showFill?: boolean;
 };
 
-// own ui thread state for chart range morphs
+// keep chart range morph state on the ui thread
 export function useChartMorph({
   initialYValues,
   initialGraphWidth,
@@ -32,7 +32,7 @@ export function useChartMorph({
   layoutWidth,
   showFill = false,
 }: UseChartMorphOptions) {
-  // keep initial geometry in refs so range presses avoid js path rebuilds
+  // store initial geometry in refs so range presses avoid js path rebuilds
   const initialPathsRef = useRef<{
     layoutWidth: number;
     line: SkPath;
@@ -87,7 +87,7 @@ export function useChartMorph({
     );
   });
 
-  // drive line geometry and horizontal reveal from one clock
+  // animate line geometry and horizontal reveal from one clock
   const animatedGraphWidth = useDerivedValue(() => {
     return (
       graphWidthFrom.value +

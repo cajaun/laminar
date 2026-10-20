@@ -12,14 +12,14 @@ type MorphTextStyle = {
   readonly textStyle: StyleProp<TextStyle>;
 };
 
-// compose public style layers for every glyph
+// combine public style layers for each glyph
 export const useMorphTextStyle = ({
   fontSize,
   color,
   fontStyle,
   style,
 }: Params): MorphTextStyle => {
-  // keep the base layer small for predictable overrides
+  // keep the base layer minimal so overrides stay predictable
   const baseTextStyle = useMemo(() => {
     const nextStyle: TextStyle = {
       includeFontPadding: false,
@@ -36,7 +36,7 @@ export const useMorphTextStyle = ({
     return nextStyle;
   }, [color, fontSize]);
 
-  // preserve the public style merge order
+  // apply public styles in their documented order
   const textStyle = useMemo(
     () => [baseTextStyle, fontStyle, style],
     [baseTextStyle, fontStyle, style]

@@ -1,4 +1,3 @@
-// expose chart modules through one public entry point
 export { MorphingChart } from "./morphing-chart";
 export type { MorphingChartProps } from "./morphing-chart";
 export { MorphingChartScreen } from "./morphing-chart-screen";

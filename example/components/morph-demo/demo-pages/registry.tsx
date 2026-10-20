@@ -13,13 +13,13 @@ import {
   ButtonDemoPage,
   ConfirmationDemoPage,
   EditorDemoPage,
-  NumberFlowDemoPage,
+  NumberTickerDemoPage,
   NumbersDemoPage,
   SlotsExampleDemoPage,
   TransactionDemoPage,
   WordsDemoPage,
 } from "./examples";
-import { NumberFlowSliderDemoPage } from "./components/number-flow-slider";
+import { NumberTickerSliderDemoPage } from "@/components/number-ticker-slider";
 
 export const demoPageComponents: Record<
   ExamplePageId,
@@ -38,6 +38,6 @@ export const demoPageComponents: Record<
   confirmation: ConfirmationDemoPage,
   numbers: NumbersDemoPage,
   slots: SlotsExampleDemoPage,
-  numberFlow: NumberFlowDemoPage,
-  numberFlowSlider: NumberFlowSliderDemoPage,
+  numberTicker: NumberTickerDemoPage,
+  numberTickerSlider: NumberTickerSliderDemoPage,
 };
