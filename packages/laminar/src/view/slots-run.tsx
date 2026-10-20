@@ -388,6 +388,47 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
     current.value = motionRecipe.driveNumber(1);
   }, [animateIn, current, motionRecipe, slotHeight, symbol]);
 
+  const strip = useMemo(() => {
+    if (slotHeight === undefined) {
+      return null;
+    }
+
+    return (
+      <Animated.View
+        pointerEvents="none"
+        exiting={exitTransition}
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0 },
+          animatedStyle,
+        ]}
+      >
+        <SlotRollCell
+          slotHeight={slotHeight}
+          top={0}
+          textStyle={textStyle}
+          className={className}
+        >
+          {"\u00a0"}
+        </SlotRollCell>
+        <SlotRollCell
+          slotHeight={slotHeight}
+          top={slotHeight}
+          textStyle={textStyle}
+          className={className}
+        >
+          {symbol}
+        </SlotRollCell>
+      </Animated.View>
+    );
+  }, [
+    animatedStyle,
+    className,
+    exitTransition,
+    slotHeight,
+    symbol,
+    textStyle,
+  ]);
+
   return (
     <Animated.View
       layout={structureChanged ? motionRecipe.layoutTransition : undefined}
@@ -416,31 +457,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
           >
             {symbol}
           </Text>
-          <Animated.View
-            pointerEvents="none"
-            exiting={exitTransition}
-            style={[
-              { position: "absolute", top: 0, left: 0, right: 0 },
-              animatedStyle,
-            ]}
-          >
-            <SlotRollCell
-              slotHeight={slotHeight}
-              top={0}
-              textStyle={textStyle}
-              className={className}
-            >
-              {"\u00a0"}
-            </SlotRollCell>
-            <SlotRollCell
-              slotHeight={slotHeight}
-              top={slotHeight}
-              textStyle={textStyle}
-              className={className}
-            >
-              {symbol}
-            </SlotRollCell>
-          </Animated.View>
+          {strip}
         </View>
       )}
     </Animated.View>
@@ -732,10 +749,14 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
     initialDigit !== undefined
       ? initialDigit !== digit
       : animateIn;
-  const [fromDigit, setFromDigit] = useState<number | undefined>(
+  const previousDigitRef = useRef(initialDigit ?? digit);
+  const fromDigitRef = useRef<number | undefined>(
     initialDigit ?? (animateIn ? undefined : digit),
   );
-  const previousDigitRef = useRef(initialDigit ?? digit);
+  const digitChanged = previousDigitRef.current !== digit;
+  const fromDigit = digitChanged
+    ? previousDigitRef.current
+    : fromDigitRef.current;
   const hasInitializedRef = useRef(false);
   const current = useSharedValue(shouldAnimateIn ? 0 : 1);
   const exitTransition = useMemo(
@@ -764,7 +785,7 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
 
     if (previousDigit !== digit) {
       previousDigitRef.current = digit;
-      setFromDigit(previousDigit);
+      fromDigitRef.current = previousDigit;
       current.value = 0;
       current.value = motionRecipe.driveNumber(1);
     }
@@ -777,8 +798,12 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
         ? {}
         : undefined;
   const digitStyle = reelTextStyle ?? textStyle;
-  const strip =
-    slotHeight === undefined ? null : (
+  const strip = useMemo(() => {
+    if (slotHeight === undefined) {
+      return null;
+    }
+
+    return (
       <Animated.View
         pointerEvents="none"
         exiting={exitTransition}
@@ -805,6 +830,15 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
         </SlotRollCell>
       </Animated.View>
     );
+  }, [
+    animatedStyle,
+    className,
+    digit,
+    digitStyle,
+    exitTransition,
+    fromDigit,
+    slotHeight,
+  ]);
   const risingStrip =
     slotHeight !== undefined && shadowOptions ? (
       <SlotShadow

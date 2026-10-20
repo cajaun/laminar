@@ -1,4 +1,5 @@
 import React from "react";
+import type { TextStyle } from "react-native";
 import { Laminar } from "react-native-laminar";
 import { useDemoTheme } from "../../demo-theme";
 import {
@@ -10,6 +11,11 @@ import type { DemoPageProps } from "../types";
 
 type MagnitudeSlotsStore = ReturnType<typeof useMagnitudeSlotsDemoStore>;
 
+const previewContainerStyle = {
+  width: "100%",
+  alignSelf: "center",
+} as const;
+
 const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
   store,
 }: {
@@ -17,6 +23,16 @@ const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
 }) {
   const state = useCyclicValueStoreSnapshot(store);
   const theme = useDemoTheme();
+  const textStyle = React.useMemo<TextStyle>(
+    () => ({
+      color: theme.primary,
+      fontFamily: "Sf-semibold",
+      fontSize: 72,
+      fontVariant: ["tabular-nums"],
+      textAlign: "center" as const,
+    }),
+    [theme.primary],
+  );
 
   return (
     <Laminar
@@ -28,14 +44,8 @@ const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
       fontSize={72}
       align="center"
       clipToBounds={false}
-      containerStyle={{ width: "100%", alignSelf: "center" }}
-      style={{
-        color: theme.primary,
-        fontFamily: "Sf-semibold",
-        fontSize: 72,
-        fontVariant: ["tabular-nums"],
-        textAlign: "center",
-      }}
+      containerStyle={previewContainerStyle}
+      style={textStyle}
     />
   );
 });
