@@ -1,7 +1,7 @@
 import React from "react";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import { Laminar } from "../../src";
 
@@ -21,7 +21,7 @@ describe("public Laminar API", () => {
     expect(renderer.root.findAllByType(Text).length).toBeGreaterThan(0);
   });
 
-  test("API-DT-011 keeps number flow inline instead of rendering slot reels", () => {
+  test("API-DT-011 keeps number ticker inline instead of rendering slot reels", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
       renderer = TestRenderer.create(
@@ -162,31 +162,65 @@ describe("public Laminar API", () => {
     }
   );
 
-  test.each(["number", "slots"] as const)(
-    "API-DT-009 %s includes leading content in auto-size measurement",
-    (variant) => {
-      let renderer!: TestRenderer.ReactTestRenderer;
+  test("API-DT-009 number includes leading content in auto-size measurement", () => {
+    const variant = "number" as const;
+    let renderer!: TestRenderer.ReactTestRenderer;
 
-      act(() => {
-        renderer = TestRenderer.create(
-          <Laminar
-            text="42"
-            variant={variant}
-            leading={<Text>coin</Text>}
-            leadingGap={4}
-          />
-        );
-      });
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar
+          text="42"
+          variant={variant}
+          leading={<Text>coin</Text>}
+          leadingGap={4}
+        />
+      );
+    });
 
-      const measurement = renderer.root
+    const measurement = renderer.root
+      .findAllByType(View)
+      .find((node) => typeof node.props.onLayout === "function");
+
+    expect(
+      measurement?.findAllByType(Text).some((node) => node.props.children === "coin")
+    ).toBe(true);
+  });
+
+  test("API-DT-012 slots auto-size through the visible layout tree", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <Laminar text="$1,234" variant="slots" shadow />
+      );
+    });
+
+    expect(
+      renderer.root
         .findAllByType(View)
-        .find((node) => typeof node.props.onLayout === "function");
+        .some((node) => typeof node.props.onLayout === "function")
+    ).toBe(false);
 
-      expect(
-        measurement?.findAllByType(Text).some((node) => node.props.children === "coin")
-      ).toBe(true);
-    }
-  );
+    const shell = renderer.root.findAllByType(View).find((node) => {
+      const style = Array.isArray(node.props.style)
+        ? node.props.style
+        : [node.props.style];
+
+      return (
+        StyleSheet.flatten(style[0])?.position === "relative" &&
+        StyleSheet.flatten(style[1])?.alignSelf === "flex-start"
+      );
+    });
+
+    expect(shell).toBeDefined();
+    expect(shell?.props.layout).toBeUndefined();
+
+    act(() => {
+      renderer.update(<Laminar text="$12,345" variant="slots" shadow />);
+    });
+
+    expect(shell?.props.layout).toBeDefined();
+  });
 
   test("API-DT-010 renders top and bottom fades for shadow-enabled slot reels", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
@@ -197,6 +231,7 @@ describe("public Laminar API", () => {
           text="42"
           variant="slots"
           shadow
+          fontSize={16}
           autoSize={false}
         />
       );

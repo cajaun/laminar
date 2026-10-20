@@ -4,14 +4,14 @@ import {
   splitDisplayUnits,
 } from "../model/display-units";
 
-// normalize the same units used by rendering before measurement reads them
+// normalize display units before measuring them
 export const useDisplayUnits = (
   value: string,
   enabled = true
 ): readonly string[] =>
   useMemo(
     () =>
-      // skip unit work when auto size is off
+      // skip unit normalization when auto sizing is disabled
       enabled
         ? splitDisplayUnits(value).map(normalizeDisplayUnit)
         : [],

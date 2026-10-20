@@ -29,7 +29,6 @@ const PressableScale = React.memo(function PressableScale({
   const active = useSharedValue(false);
 
   const gesture = Gesture.Tap()
-    .maxDuration(4000)
     .onBegin(() => {
       active.value = true;
     })

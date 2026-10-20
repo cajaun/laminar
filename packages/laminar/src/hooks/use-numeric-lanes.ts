@@ -20,7 +20,7 @@ type NumericLaneSnapshot = {
   readonly leadLength: number;
 };
 
-// retain numeric lane identity across value changes without storing it in state
+// retain numeric lane identities as the value changes
 export const useNumericLanes = (value: string): NumericLaneSnapshot => {
   const units = useMemo(() => splitDisplayUnits(value), [value]);
   const ledgerRef = useRef<NumericLedger>({
@@ -30,7 +30,7 @@ export const useNumericLanes = (value: string): NumericLaneSnapshot => {
     direction: 0,
   });
 
-  // keep lane ids in a ref so the number can reflow without remounting everything
+  // store lane ids in a ref so values reflow without remounting
   if (value !== ledgerRef.current.previousValue) {
     const nextLedger = reconcileNumericLanes(
       ledgerRef.current.previousValue,

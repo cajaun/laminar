@@ -4,55 +4,84 @@ import { useInlineAutoWidth } from "./hooks/use-inline-auto-width";
 import { useMorphMotion } from "./hooks/use-morph-motion";
 import { useMorphTextStyle } from "./hooks/use-morph-text-style";
 import {
+  findFractionStartIndex,
   normalizeDisplayUnit,
   splitDisplayUnits,
 } from "./model/display-units";
 import type { LaminarLeadingMap, MorphingTextProps } from "./types";
 import { MorphViewport } from "./view/morph-viewport";
 import { NumberRun } from "./view/number-run";
-import { SlotsRun } from "./view/slots-run";
-import { TickerRun } from "./view/ticker-run";
 import { TextRun } from "./view/text-run";
+import { NumericRunSwitch } from "./view/numeric-run-switch";
+import { getFractionalTextStyle } from "./view/fractional-text-style";
 
-// choose the content variant and connect it to the shared viewport and measurement flow
+// connect each content variant to the shared viewport and measurement flow
 export const Laminar = React.memo(function Laminar({
     text,
     variant = "text",
     fontSize,
     color,
+    fractionScale: fractionScaleProp = 1,
     align = "left",
     className,
     leading,
     leadingKey,
     leadingGap = 0,
     numberMode = "morph",
+    animatedText,
+    fromValue,
+    preloadValue,
     shadow = false,
     style,
     containerStyle,
     fontStyle,
     animationDuration,
     animationPreset,
-    stagger,
     autoSize = true,
     clipToBounds = false,
   }: Readonly<MorphingTextProps>) {
     const resolvedValue = String(text ?? "");
-    // resolve state keyed leading content before measurement and token reconciliation
+    // resolve keyed leading content before measuring the value
     const leadingMap = isLeadingMap(leading) ? leading : undefined;
     const resolvedLeading: React.ReactNode = leadingMap
       ? leadingMap[resolvedValue]
       : (leading as React.ReactNode);
     const resolvedLeadingKey = leadingMap ? resolvedValue : leadingKey;
-    const resolvedStagger =
-      stagger ?? (variant === "number" && numberMode === "ticker" ? 0 : 0.02);
+    const flattenedContainerStyle = StyleSheet.flatten(containerStyle);
+    const isCenteredStandaloneShell =
+      flattenedContainerStyle?.alignSelf === "center";
+    // render slot mode and number mode through the numeric renderer
+    const isSlotsVariant =
+      variant === "slots" || (variant === "number" && numberMode === "slots");
+    const isTickerVariant = variant === "number" && numberMode === "ticker";
+    const fractionScale = Number.isFinite(fractionScaleProp)
+      ? Math.max(0.1, Math.min(1, fractionScaleProp))
+      : 1;
+    const tickerFractionScale = isTickerVariant ? fractionScale : 1;
+    const layoutTransitionKey =
+      isSlotsVariant || isTickerVariant
+        ? `${variant}:${isTickerVariant ? "ticker" : "slots"}`
+        : undefined;
+    // animate sampled width and slot reels together so leading icons stay aligned
+    const animateLayoutOnRendererChange =
+      isSlotsVariant &&
+      Boolean(resolvedLeading) &&
+      fromValue !== undefined &&
+      fromValue !== resolvedValue;
     const useLayoutAutoSize =
-      autoSize && variant === "number" && numberMode === "ticker";
-    const { motionRecipe, staggerMs } = useMorphMotion({
+      autoSize &&
+      ((variant === "text" && !leading && isCenteredStandaloneShell) ||
+        isSlotsVariant ||
+        isTickerVariant);
+    const {
+      motionRecipe,
+      slotsMotionRecipe,
+      tickerMotionRecipe,
+    } = useMorphMotion({
       variant,
       numberMode,
       animationPreset,
       animationDuration,
-      stagger: resolvedStagger,
     });
     const { textStyle } = useMorphTextStyle({
       fontSize,
@@ -61,7 +90,7 @@ export const Laminar = React.memo(function Laminar({
       style,
     });
 
-    // invalidate the probe when text style, leading content, or leading spacing changes
+    // remeasure when text style or leading content changes
     const measurementKey = React.useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
 
@@ -75,6 +104,7 @@ export const Laminar = React.memo(function Laminar({
         flattenedStyle?.letterSpacing,
         flattenedStyle?.lineHeight,
         flattenedStyle?.textTransform,
+        tickerFractionScale,
         Boolean(resolvedLeading),
         resolvedLeadingKey,
         leadingGap,
@@ -85,21 +115,21 @@ export const Laminar = React.memo(function Laminar({
       resolvedLeadingKey,
       resolvedValue,
       textStyle,
+      tickerFractionScale,
       variant,
     ]);
     const {
       captureLayout,
-      captureVisibleLayout,
       animatedWidthStyle,
       isReady: isAutoSizeReady,
       shouldMeasure,
     } =
       useInlineAutoWidth({
-        enabled: autoSize,
+        enabled: autoSize && !useLayoutAutoSize,
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
       });
-    // measurement uses the same normalized units as the visible text row
+    // measure the normalized units rendered in the visible row
     const measuredValue = React.useMemo(() => {
       if (!autoSize) {
         return "";
@@ -109,6 +139,13 @@ export const Laminar = React.memo(function Laminar({
         .map(normalizeDisplayUnit)
         .join("");
     }, [autoSize, resolvedValue]);
+    const measuredUnits = React.useMemo(
+      () => splitDisplayUnits(measuredValue),
+      [measuredValue],
+    );
+    const measuredFractionStartIndex = isTickerVariant
+      ? findFractionStartIndex(measuredUnits)
+      : measuredUnits.length;
 
     return (
       <MorphViewport
@@ -120,7 +157,8 @@ export const Laminar = React.memo(function Laminar({
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
-        onVisibleLayout={autoSize ? captureVisibleLayout : undefined}
+        layoutTransitionKey={layoutTransitionKey}
+        animateLayoutOnRendererChange={animateLayoutOnRendererChange}
         measurement={
           shouldMeasure ? (
             <View
@@ -139,8 +177,19 @@ export const Laminar = React.memo(function Laminar({
                   {resolvedLeading}
                 </View>
               ) : null}
-              {splitDisplayUnits(measuredValue).map((unit, index) => (
-                <Text key={`${unit}-${index}`} style={textStyle}>
+              {measuredUnits.map((unit, index) => (
+                <Text
+                  key={`${unit}-${index}`}
+                  style={
+                    index >= measuredFractionStartIndex
+                      ? getFractionalTextStyle(
+                          textStyle,
+                          fontSize,
+                          tickerFractionScale,
+                        )
+                      : textStyle
+                  }
+                >
                   {normalizeDisplayUnit(unit)}
                 </Text>
               ))}
@@ -148,14 +197,18 @@ export const Laminar = React.memo(function Laminar({
           ) : undefined
         }
       >
-        {variant === "slots" ? (
-          <SlotsRun
+        {isSlotsVariant ? (
+          <NumericRunSwitch
+            mode="slots"
             value={resolvedValue}
-            motionRecipe={motionRecipe}
+            fromValue={fromValue}
+            preloadValue={preloadValue}
+            animatedText={animatedText}
+            slotsMotionRecipe={slotsMotionRecipe}
+            tickerMotionRecipe={tickerMotionRecipe}
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
@@ -163,14 +216,19 @@ export const Laminar = React.memo(function Laminar({
             ready={!autoSize || isAutoSizeReady}
             shadow={shadow}
           />
-        ) : variant === "number" && numberMode === "ticker" ? (
-          <TickerRun
+        ) : isTickerVariant ? (
+          <NumericRunSwitch
+            mode="ticker"
             value={resolvedValue}
-            motionRecipe={motionRecipe}
+            fromValue={fromValue}
+            animatedText={animatedText}
+            preloadValue={preloadValue}
+            slotsMotionRecipe={slotsMotionRecipe}
+            tickerMotionRecipe={tickerMotionRecipe}
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
+            fractionScale={tickerFractionScale}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
@@ -185,7 +243,6 @@ export const Laminar = React.memo(function Laminar({
             align={align}
             fontSize={fontSize}
             textStyle={textStyle}
-            staggerMs={staggerMs}
             className={className}
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
@@ -213,7 +270,7 @@ export const Laminar = React.memo(function Laminar({
 function isLeadingMap(
   value: MorphingTextProps["leading"]
 ): value is LaminarLeadingMap {
-  // react elements are objects too, so exclude them before treating a value as a map
+  // exclude react elements before reading an object as a leading map
   return (
     typeof value === "object" &&
     value !== null &&
@@ -224,6 +281,7 @@ function isLeadingMap(
 
 export type {
   LaminarAlign,
+  LaminarAnimatedText,
   LaminarLeadingMap,
   LaminarShadow,
   LaminarShadowOptions,

@@ -25,7 +25,6 @@ type NumberLaneProps = {
   readonly tokenKey: number;
   readonly isLead: boolean;
   readonly hasAnimated: boolean;
-  readonly delayMs: number;
   readonly direction: NumericFlowDirection;
   readonly travelDistance: number;
   readonly motionRecipe: MotionRecipe;
@@ -33,21 +32,20 @@ type NumberLaneProps = {
   readonly className?: string;
 };
 
-// render one place-value lane with a hidden layout probe and an animated token
+// measure each place value while its token animates
 export const NumberLane = React.memo(
   ({
     unit,
     tokenKey,
     isLead,
     hasAnimated,
-    delayMs,
     direction,
     travelDistance,
     motionRecipe,
     textStyle,
     className,
   }: NumberLaneProps) => {
-    // punctuation stays in place while digits travel by the shared numeric direction
+    // keep punctuation fixed while digits follow numeric direction
     const usesDigitTravel = isAsciiDigit(unit);
     const verticalOffset =
       direction > 0
@@ -59,7 +57,6 @@ export const NumberLane = React.memo(
     const enterTransition = useMemo(
       () =>
         createShiftTransition({
-          delayMs,
           durationMs: motionRecipe.durationMs,
           easing: motionRecipe.easing,
           fromOpacity: 0,
@@ -70,7 +67,6 @@ export const NumberLane = React.memo(
           toScale: 1,
         }),
       [
-        delayMs,
         motionRecipe.durationMs,
         motionRecipe.easing,
         usesDigitTravel,
@@ -81,7 +77,6 @@ export const NumberLane = React.memo(
     const exitTransition = useMemo(
       () =>
         createShiftTransition({
-          delayMs,
           durationMs: motionRecipe.durationMs,
           easing: motionRecipe.easing,
           fromOpacity: 1,
@@ -92,7 +87,6 @@ export const NumberLane = React.memo(
           toScale: 0.6,
         }),
       [
-        delayMs,
         motionRecipe.durationMs,
         motionRecipe.easing,
         usesDigitTravel,
@@ -100,7 +94,7 @@ export const NumberLane = React.memo(
       ]
     );
 
-    // prefix units do not need an absolute lane or a duplicate probe
+    // keep prefix symbols beside the animated value
     if (isLead) {
       return <Text style={textStyle} className={className}>{unit}</Text>;
     }
@@ -114,7 +108,7 @@ export const NumberLane = React.memo(
         exiting={motionRecipe.exitTransition}
         style={laneStyle}
       >
-        {/* this hidden copy owns layout while the animated token swaps on top */}
+        {/* measure a hidden copy to preserve the lane width */}
         <Text style={[textStyle, laneProbeStyle]}>
           {unit}
         </Text>

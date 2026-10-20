@@ -92,7 +92,6 @@ strings.
   text="$12,480.50"
   variant="number"
   align="right"
-  stagger={0.015}
 />
 ```
 
@@ -104,7 +103,7 @@ magnitude sets the animation direction.
 Formatting characters remain visible. Laminar accepts strings such as
 `$1,240.00`, `-18%`, and `USD 42`.
 
-For the clean live-number flow used by market-style value updates, opt into
+For the clean live-number ticker used by market-style value updates, opt into
 the transition-local number mode:
 
 ```tsx
@@ -112,11 +111,11 @@ the transition-local number mode:
   text="$2,459.70"
   variant="number"
   numberMode="ticker"
-  stagger={0}
+  fractionScale={0.66}
 />
 ```
 
-The flow keeps prefixes, punctuation, and unchanged digits crisp while
+The ticker keeps prefixes, punctuation, and unchanged digits crisp while
 replacing changed digits in place. It does not render a vertical reel or a
 top/bottom shadow; use `variant="slots"` with `shadow` when that effect is
 wanted.
@@ -197,6 +196,7 @@ icon replacement transition:
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
 | `numberMode` | `"morph" \| "ticker"` | `"morph"` | Number-only renderer mode; `ticker` uses crisp in-place digit flow |
+| `fractionScale` | `number` | `1` | In ticker mode, scales the decimal separator and fractional digits relative to the main digits |
 | `fontSize` | `number` | inherited | Font size and numeric travel input |
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
@@ -210,7 +210,6 @@ icon replacement transition:
 | `containerStyle` | `StyleProp<ViewStyle>` | `undefined` | Outer shell style |
 | `animationDuration` | `number` | preset duration | Duration override in milliseconds |
 | `animationPreset` | `"default" \| "smooth" \| "snappy" \| "bouncy" \| "ticker"` | variant default | Motion recipe |
-| `stagger` | `number` | `0.02` (`0` for ticker mode) | Delay between numeric lane replacements in seconds |
 | `autoSize` | `boolean` | `true` | Measure and animate the inline width |
 | `clipToBounds` | `boolean` | `false` | Hide content outside the viewport |
 
@@ -230,7 +229,7 @@ The final `style` value wins when layers define the same property.
 | `smooth` | Spring with no bounce | 400 ms |
 | `snappy` | Spring with light bounce | 350 ms |
 | `bouncy` | Spring with more bounce | 500 ms |
-| `ticker` | In-place number-flow timing | 300 ms |
+| `ticker` | In-place number ticker timing | 300 ms |
 
 Text uses `default` unless you choose a preset. Number and slot variants use
 `snappy`; ticker number mode uses `ticker`.

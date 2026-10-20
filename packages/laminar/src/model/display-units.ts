@@ -4,7 +4,7 @@ const graphemeSegmenter =
     ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
     : null;
 
-// segment graphemes when the runtime supports them so emoji and combining marks stay whole
+// segment graphemes so combining marks stay with their base character
 export const splitDisplayUnits = (input: string): string[] => {
   if (graphemeSegmenter) {
     return Array.from(
@@ -16,16 +16,35 @@ export const splitDisplayUnits = (input: string): string[] => {
   return Array.from(input);
 };
 
-// replace plain spaces because native text measurement can collapse them
+// replace spaces so native text measurement keeps their width
 export const normalizeDisplayUnit = (unit: string) =>
   unit === " " ? NBSP : unit;
 
-// numeric lanes only treat ascii digits as place-value columns
+// treat digits as place value columns
 export const isAsciiDigit = (unit: string) => unit >= "0" && unit <= "9";
 
-// leading symbols and punctuation stay attached to the left side of a number
+// group leading symbols and punctuation with the number prefix
 export const findNumericLeadLength = (units: readonly string[]) => {
   const firstDigitIndex = units.findIndex(isAsciiDigit);
 
   return firstDigitIndex === -1 ? units.length : firstDigitIndex;
+};
+
+// find trailing decimals without treating grouping commas as separators
+export const findFractionStartIndex = (units: readonly string[]) => {
+  for (let index = units.length - 2; index >= 0; index -= 1) {
+    const separator = units[index];
+    if (separator !== "." && separator !== ",") continue;
+
+    const fraction = units.slice(index + 1);
+    if (
+      fraction.length > 0 &&
+      (separator === "." || fraction.length <= 2) &&
+      fraction.every(isAsciiDigit)
+    ) {
+      return index;
+    }
+  }
+
+  return units.length;
 };

@@ -1,322 +1,215 @@
-import { useCallback, useMemo, useState } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import {
   animationLayerValues,
   autoSizeValues,
   buttonWords,
+  confirmContinueWords,
   editorWords,
-  examplePages,
   fontSizes,
   fontWeights,
-  numericValues,
-  numberLaneValues,
-  numberFlowValues,
+  multiIconValues,
+  numberValues,
+  numberTickerValues,
+  numberTickerSliderValues,
+  slotMechanismValues,
   standaloneWords,
+  singleIconValues,
   stepBackward,
   stepForward,
   textIdentityWords,
   transactionStates,
 } from "./demo-data";
 
-export function useDemoState(activePageIndex: number) {
-  const [editorWordIndex, setEditorWordIndex] = useState(0);
-  const [fontSizeIndex, setFontSizeIndex] = useState(1);
-  const [fontWeightIndex, setFontWeightIndex] = useState(1);
-  const [standaloneWordIndex, setStandaloneWordIndex] = useState(0);
-  const [buttonWordIndex, setButtonWordIndex] = useState(0);
-  const [transactionStateIndex, setTransactionStateIndex] = useState(0);
-  const [numberIndex, setNumberIndex] = useState(0);
-  const [numberFlowIndex, setNumberFlowIndex] = useState(0);
-  const [textIdentityIndex, setTextIdentityIndex] = useState(0);
-  const [numberLaneIndex, setNumberLaneIndex] = useState(0);
-  const [animationLayerIndex, setAnimationLayerIndex] = useState(0);
-  const [autoSizeIndex, setAutoSizeIndex] = useState(0);
+export const DEFAULT_DEMO_FONT_SIZE = fontSizes[1];
 
-  const activePageId = examplePages[activePageIndex]?.id ?? "numbers";
-  const fontSize = fontSizes[fontSizeIndex];
-  const fontWeight = fontWeights[fontWeightIndex];
-  const editorWord = editorWords[editorWordIndex];
-  const standaloneWord = standaloneWords[standaloneWordIndex];
-  const buttonWord = buttonWords[buttonWordIndex];
-  const transactionState = transactionStates[transactionStateIndex];
-  const numberValue = numericValues[numberIndex];
-  const numberFlowValue = numberFlowValues[numberFlowIndex];
-  const textIdentityWord = textIdentityWords[textIdentityIndex];
-  const previousTextIdentityWord =
-    textIdentityWords[stepBackward(textIdentityIndex, textIdentityWords.length)];
-  const nextTextIdentityWord =
-    textIdentityWords[stepForward(textIdentityIndex, textIdentityWords.length)];
-  const numberLaneValue = numberLaneValues[numberLaneIndex];
-  const animationLayerValue = animationLayerValues[animationLayerIndex];
-  const previousAnimationLayerValue =
-    animationLayerValues[stepBackward(animationLayerIndex, animationLayerValues.length)];
-  const nextAnimationLayerValue =
-    animationLayerValues[stepForward(animationLayerIndex, animationLayerValues.length)];
-  const autoSizeValue = autoSizeValues[autoSizeIndex];
-  const previousAutoSizeValue =
-    autoSizeValues[stepBackward(autoSizeIndex, autoSizeValues.length)];
-  const nextAutoSizeValue =
-    autoSizeValues[stepForward(autoSizeIndex, autoSizeValues.length)];
-  const previousNumberValue =
-    numericValues[stepBackward(numberIndex, numericValues.length)];
-  const nextNumberValue =
-    numericValues[stepForward(numberIndex, numericValues.length)];
-  const previousNumberFlowValue =
-    numberFlowValues[
-      stepBackward(numberFlowIndex, numberFlowValues.length)
-    ];
-  const nextNumberFlowValue =
-    numberFlowValues[stepForward(numberFlowIndex, numberFlowValues.length)];
-  const previousNumberLaneValue =
-    numberLaneValues[stepBackward(numberLaneIndex, numberLaneValues.length)];
-  const nextNumberLaneValue =
-    numberLaneValues[stepForward(numberLaneIndex, numberLaneValues.length)];
+export type CyclicValueSnapshot<T> = Readonly<{
+  value: T;
+  previousValue: T;
+  nextValue: T;
+}>;
 
-  const cycleFontSize = useCallback(() => {
-    setFontSizeIndex((index) => stepForward(index, fontSizes.length));
-  }, []);
+export type DemoSnapshotStore<T> = Readonly<{
+  getSnapshot: () => CyclicValueSnapshot<T>;
+  subscribe: (listener: () => void) => () => void;
+}>;
 
-  const cycleFontWeight = useCallback(() => {
-    setFontWeightIndex((index) => stepForward(index, fontWeights.length));
-  }, []);
+export type CyclicValueStore<T> = DemoSnapshotStore<T> & Readonly<{
+  next: () => void;
+  previous: () => void;
+  setIndex: (index: number) => void;
+}>;
 
-  const cycleEditorWord = useCallback(() => {
-    setEditorWordIndex((index) => stepForward(index, editorWords.length));
-  }, []);
+function createCyclicValueStore<T>(
+  values: readonly T[],
+  initialIndex = 0,
+): CyclicValueStore<T> {
+  let index = initialIndex;
+  let snapshot = createSnapshot();
+  const listeners = new Set<() => void>();
 
-  const cycleStandaloneWord = useCallback(() => {
-    setStandaloneWordIndex((index) =>
-      stepForward(index, standaloneWords.length)
-    );
-  }, []);
+  function createSnapshot(): CyclicValueSnapshot<T> {
+    return {
+      value: values[index] ?? values[0]!,
+      previousValue:
+        values[stepBackward(index, values.length)] ?? values[0]!,
+      nextValue: values[stepForward(index, values.length)] ?? values[0]!,
+    };
+  }
 
-  const cycleButtonWord = useCallback(() => {
-    setButtonWordIndex((index) => stepForward(index, buttonWords.length));
-  }, []);
-
-  const cycleTransaction = useCallback(() => {
-    setTransactionStateIndex((index) =>
-      stepForward(index, transactionStates.length)
-    );
-  }, []);
-
-  const cycleNumber = useCallback(() => {
-    setNumberIndex((index) => stepForward(index, numericValues.length));
-  }, []);
-
-  const cycleNumberFlow = useCallback(() => {
-    setNumberFlowIndex((index) =>
-      stepForward(index, numberFlowValues.length)
-    );
-  }, []);
-
-  const morph = useCallback(() => {
-    if (activePageId === "textIdentity") {
-      setTextIdentityIndex((index) =>
-        stepForward(index, textIdentityWords.length)
-      );
+  function setIndex(nextIndex: number) {
+    if (nextIndex === index) {
       return;
     }
 
-    if (activePageId === "numberIdentity") {
-      setNumberLaneIndex((index) =>
-        stepForward(index, numberLaneValues.length)
-      );
-      return;
-    }
+    index = nextIndex;
+    snapshot = createSnapshot();
+    listeners.forEach((listener) => listener());
+  }
 
-    if (activePageId === "animationLayer") {
-      setAnimationLayerIndex((index) =>
-        stepForward(index, animationLayerValues.length)
-      );
-      return;
-    }
+  return {
+    getSnapshot: () => snapshot,
+    subscribe: (listener) => {
+      listeners.add(listener);
 
-    if (activePageId === "autoSize") {
-      setAutoSizeIndex((index) => stepForward(index, autoSizeValues.length));
-      return;
-    }
+      return () => listeners.delete(listener);
+    },
+    next: () => setIndex(stepForward(index, values.length)),
+    previous: () => setIndex(stepBackward(index, values.length)),
+    setIndex: (nextIndex) =>
+      setIndex(Math.max(0, Math.min(values.length - 1, Math.round(nextIndex)))),
+  };
+}
 
-    if (activePageId === "editor") {
-      setEditorWordIndex((index) => stepForward(index, editorWords.length));
-      return;
-    }
+export function useCyclicValueStore<T>(
+  values: readonly T[],
+  initialIndex = 0,
+): CyclicValueStore<T> {
+  const storeRef = useRef<CyclicValueStore<T> | null>(null);
 
-    if (activePageId === "words") {
-      setStandaloneWordIndex((index) =>
-        stepForward(index, standaloneWords.length)
-      );
-      return;
-    }
+  if (storeRef.current === null) {
+    storeRef.current = createCyclicValueStore(values, initialIndex);
+  }
 
-    if (activePageId === "button") {
-      setButtonWordIndex((index) => stepForward(index, buttonWords.length));
-      return;
-    }
+  return storeRef.current;
+}
 
-    if (activePageId === "transaction") {
-      setTransactionStateIndex((index) =>
-        stepForward(index, transactionStates.length)
-      );
-      return;
-    }
-
-    if (activePageId === "slots") {
-      setNumberIndex((index) => stepForward(index, numericValues.length));
-      return;
-    }
-
-    if (activePageId === "numberFlow") {
-      setNumberFlowIndex((index) =>
-        stepForward(index, numberFlowValues.length)
-      );
-      return;
-    }
-
-    setNumberIndex((index) => stepForward(index, numericValues.length));
-  }, [activePageId]);
-
-  const reverse = useCallback(() => {
-    if (activePageId === "textIdentity") {
-      setTextIdentityIndex((index) =>
-        stepBackward(index, textIdentityWords.length)
-      );
-      return;
-    }
-
-    if (activePageId === "numberIdentity") {
-      setNumberLaneIndex((index) =>
-        stepBackward(index, numberLaneValues.length)
-      );
-      return;
-    }
-
-    if (activePageId === "animationLayer") {
-      setAnimationLayerIndex((index) =>
-        stepBackward(index, animationLayerValues.length)
-      );
-      return;
-    }
-
-    if (activePageId === "autoSize") {
-      setAutoSizeIndex((index) => stepBackward(index, autoSizeValues.length));
-      return;
-    }
-
-    if (activePageId === "editor") {
-      setEditorWordIndex((index) => stepBackward(index, editorWords.length));
-      return;
-    }
-
-    if (activePageId === "words") {
-      setStandaloneWordIndex((index) =>
-        stepBackward(index, standaloneWords.length)
-      );
-      return;
-    }
-
-    if (activePageId === "button") {
-      setButtonWordIndex((index) => stepBackward(index, buttonWords.length));
-      return;
-    }
-
-    if (activePageId === "transaction") {
-      setTransactionStateIndex((index) =>
-        stepBackward(index, transactionStates.length)
-      );
-      return;
-    }
-
-    if (activePageId === "slots") {
-      setNumberIndex((index) => stepBackward(index, numericValues.length));
-      return;
-    }
-
-    if (activePageId === "numberFlow") {
-      setNumberFlowIndex((index) =>
-        stepBackward(index, numberFlowValues.length)
-      );
-      return;
-    }
-
-    setNumberIndex((index) => stepBackward(index, numericValues.length));
-  }, [activePageId]);
-
-  return useMemo(
-    () => ({
-      activePageId,
-      fontSize,
-      fontWeight,
-      editorWord,
-      standaloneWord,
-      buttonWord,
-      transactionState,
-      textIdentityWord,
-      previousTextIdentityWord,
-      nextTextIdentityWord,
-      numberLaneValue,
-      previousNumberLaneValue,
-      nextNumberLaneValue,
-      animationLayerValue,
-      previousAnimationLayerValue,
-      nextAnimationLayerValue,
-      autoSizeValue,
-      previousAutoSizeValue,
-      nextAutoSizeValue,
-      numberValue,
-      previousNumberValue,
-      nextNumberValue,
-      numberFlowValue,
-      previousNumberFlowValue,
-      nextNumberFlowValue,
-      cycleFontSize,
-      cycleFontWeight,
-      cycleEditorWord,
-      cycleStandaloneWord,
-      cycleButtonWord,
-      cycleTransaction,
-      cycleNumber,
-      cycleNumberFlow,
-      morph,
-      reverse,
-    }),
-    [
-      activePageId,
-      animationLayerValue,
-      previousAnimationLayerValue,
-      nextAnimationLayerValue,
-      autoSizeValue,
-      previousAutoSizeValue,
-      nextAutoSizeValue,
-      buttonWord,
-      transactionState,
-      cycleButtonWord,
-      cycleTransaction,
-      cycleEditorWord,
-      cycleFontSize,
-      cycleFontWeight,
-      cycleNumber,
-      cycleNumberFlow,
-      cycleStandaloneWord,
-      editorWord,
-      fontSize,
-      fontWeight,
-      morph,
-      nextTextIdentityWord,
-      previousTextIdentityWord,
-      nextNumberValue,
-      nextNumberLaneValue,
-      numberLaneValue,
-      numberValue,
-      numberFlowValue,
-      nextNumberFlowValue,
-      previousNumberLaneValue,
-      previousNumberValue,
-      previousNumberFlowValue,
-      reverse,
-      standaloneWord,
-      textIdentityWord,
-    ]
+export function useCyclicValueStoreSnapshot<T>(
+  store: DemoSnapshotStore<T>,
+): CyclicValueSnapshot<T> {
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot,
   );
 }
 
-export type DemoState = ReturnType<typeof useDemoState>;
+export function useTextIdentityDemoStore() {
+  return useCyclicValueStore(textIdentityWords);
+}
+
+export function useAnimationLayerDemoStore() {
+  return useCyclicValueStore(animationLayerValues);
+}
+
+export function useAutoSizeDemoStore() {
+  return useCyclicValueStore(autoSizeValues);
+}
+
+export function useEditorDemoStore() {
+  const word = useCyclicValueStore(editorWords);
+  const fontSize = useCyclicValueStore(fontSizes, 1);
+  const fontWeight = useCyclicValueStore(fontWeights, 1);
+  const settingsStoreRef = useRef<DemoSnapshotStore<EditorSettingsValue> | null>(null);
+
+  if (settingsStoreRef.current === null) {
+    const stores = [word, fontSize, fontWeight];
+    let snapshot = createEditorSettingsSnapshot(word, fontSize, fontWeight);
+    const listeners = new Set<() => void>();
+
+    stores.forEach((store) => {
+      store.subscribe(() => {
+        snapshot = createEditorSettingsSnapshot(word, fontSize, fontWeight);
+        listeners.forEach((listener) => listener());
+      });
+    });
+
+    settingsStoreRef.current = {
+      getSnapshot: () => snapshot,
+      subscribe: (listener) => {
+        listeners.add(listener);
+
+        return () => listeners.delete(listener);
+      },
+    };
+  }
+
+  return { word, fontSize, fontWeight, settings: settingsStoreRef.current };
+}
+
+type EditorSettingsValue = Readonly<{
+  word: CyclicValueSnapshot<(typeof editorWords)[number]>;
+  fontSize: CyclicValueSnapshot<(typeof fontSizes)[number]>;
+  fontWeight: CyclicValueSnapshot<(typeof fontWeights)[number]>;
+}>;
+
+function createEditorSettingsSnapshot(
+  word: CyclicValueStore<(typeof editorWords)[number]>,
+  fontSize: CyclicValueStore<(typeof fontSizes)[number]>,
+  fontWeight: CyclicValueStore<(typeof fontWeights)[number]>,
+): CyclicValueSnapshot<EditorSettingsValue> {
+  const value = {
+    word: word.getSnapshot(),
+    fontSize: fontSize.getSnapshot(),
+    fontWeight: fontWeight.getSnapshot(),
+  };
+
+  return {
+    value,
+    previousValue: value,
+    nextValue: value,
+  };
+}
+
+export function useWordsDemoStore() {
+  return useCyclicValueStore(standaloneWords);
+}
+
+export function useButtonDemoStore() {
+  return useCyclicValueStore(buttonWords);
+}
+
+export function useSingleIconDemoStore() {
+  return useCyclicValueStore(singleIconValues);
+}
+
+export function useMultiIconDemoStore() {
+  return useCyclicValueStore(multiIconValues);
+}
+
+export function useTransactionDemoStore() {
+  return useCyclicValueStore(transactionStates);
+}
+
+export function useConfirmationDemoStore() {
+  return useCyclicValueStore(confirmContinueWords);
+}
+
+export function useSlotMechanismDemoStore() {
+  return useCyclicValueStore(slotMechanismValues);
+}
+
+export function useNumberTickerDemoStore() {
+  return useCyclicValueStore(numberTickerValues);
+}
+
+export function useNumberTickerSliderDemoStore(initialIndex = 0) {
+  return useCyclicValueStore(numberTickerSliderValues, initialIndex);
+}
+
+export function useNumbersDemoStore() {
+  return useCyclicValueStore(numberValues);
+}
+
+export function useSlotsDemoStore() {
+  return useCyclicValueStore(numberValues);
+}

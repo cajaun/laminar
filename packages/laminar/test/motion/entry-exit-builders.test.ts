@@ -25,12 +25,8 @@ describe("shift transition builder", () => {
     });
   });
 
-  test.each([
-    ["ET-DT-001 immediate", 0],
-    ["ET-DT-002 delayed", 25],
-  ])("%s maps all initial and target values", (_id, delayMs) => {
+  test("ET-DT-001 maps all initial and target values", () => {
     const transition = createShiftTransition({
-      delayMs,
       durationMs: 180,
       easing,
       fromOpacity: 0.2,
@@ -56,7 +52,7 @@ describe("shift transition builder", () => {
     });
   });
 
-  test("ET-BVA-001 omitted delay follows the immediate branch", () => {
+  test("ET-BVA-001 uses the coordinated timing branch", () => {
     const transition = createShiftTransition({
       durationMs: 0,
       easing,

@@ -4,11 +4,11 @@ import {
   splitDisplayUnits,
 } from "./display-units";
 
-// strip formatting before comparing values so direction follows the displayed number
+// remove formatting before comparing numeric values
 const readNumericMagnitude = (input: string) =>
   parseFloat(input.replace(/[^0-9.-]/g, "")) || 0;
 
-// the sign controls which side of each digit lane enters and exits
+// use the value sign to choose each digit lane direction
 const deriveFlowDirection = (
   previousValue: string,
   nextValue: string
@@ -21,7 +21,7 @@ type ReconciledLaneState = {
   readonly direction: NumericFlowDirection;
 };
 
-// preserve right-aligned place values while allowing prefixes to grow or shrink
+// keep place values right aligned as prefixes change width
 export const reconcileNumericLanes = (
   previousValue: string,
   nextValue: string,
@@ -62,7 +62,7 @@ export const reconcileNumericLanes = (
     ...previousTailKeys,
   ];
 
-  // pad from the left so the rightmost digits keep their place value lanes
+  // add lanes on the left to preserve rightmost place values
   const nextTailOffset = laneCount - nextTailUnits.length;
 
   for (let index = 0; index < nextTailUnits.length; index += 1) {

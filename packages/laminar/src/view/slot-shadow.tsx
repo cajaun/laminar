@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet } from "react-native";
 
 const DEFAULT_SHADOW_COLOR = "#ffffff";
-// The reference digit viewport fades across roughly one third of its visible row.
+// fade the digit viewport along the visible row edges
 const DEFAULT_SHADOW_SIZE_RATIO = 0.28;
 
 const transparentColor = (color: string) => {
@@ -44,7 +44,7 @@ const transparentColor = (color: string) => {
     }
   }
 
-  // Keep the fallback light so an unknown color never introduces a dark edge.
+  // use transparent edges when the mask color is unknown
   return "rgba(255, 255, 255, 0)";
 };
 
@@ -56,8 +56,7 @@ type SlotShadowProps = {
   readonly children: React.ReactElement;
 };
 
-// Keep the mask mounted for the lifetime of the viewport. The gradient controls
-// content alpha at the clipping edges instead of painting over the glyphs.
+// keep the mask mounted while its gradient fades the edges
 export const SlotShadow = React.memo(function SlotShadow({
   slotHeight,
   viewportHeight,
@@ -94,6 +93,6 @@ export const SlotShadow = React.memo(function SlotShadow({
 SlotShadow.displayName = "SlotShadow";
 
 const styles = StyleSheet.create({
-  container: StyleSheet.absoluteFillObject,
-  mask: StyleSheet.absoluteFillObject,
+  container: StyleSheet.absoluteFill,
+  mask: StyleSheet.absoluteFill,
 });

@@ -10,7 +10,6 @@ type Props = {
   numberMode?: "morph" | "ticker";
   animationPreset?: MorphAnimationPresetName;
   animationDuration?: number;
-  stagger: number;
 };
 
 describe("useMorphMotion", () => {
@@ -24,7 +23,7 @@ describe("useMorphMotion", () => {
     (_id, variant, animationPreset, expectedDuration) => {
       const hook = renderHook(
         (props: Props) => useMorphMotion(props),
-        { variant, animationPreset, stagger: 0.02 }
+        { variant, animationPreset }
       );
 
       expect(hook.result.motionRecipe.durationMs).toBe(expectedDuration);
@@ -34,36 +33,22 @@ describe("useMorphMotion", () => {
   test("HMM-DT-005 ticker mode selects the reference timing", () => {
     const hook = renderHook(
       (props: Props) => useMorphMotion({ ...props, numberMode: "ticker" }),
-      { variant: "number", stagger: 0 }
+      { variant: "number" }
     );
 
     expect(hook.result.motionRecipe.durationMs).toBe(300);
   });
 
-  test.each([
-    ["HMM-BVA-001 negative stagger", -0.001, -1],
-    ["HMM-BVA-002 zero stagger", 0, 0],
-    ["HMM-BVA-003 fractional rounding", 0.0015, 2],
-  ])("%s converts seconds to rounded milliseconds", (_id, stagger, expected) => {
-    const hook = renderHook(
-      (props: Props) => useMorphMotion(props),
-      { variant: "text", stagger }
-    );
-
-    expect(hook.result.staggerMs).toBe(expected);
-  });
-
   test("HMM-ST-001 updates duration when override changes", () => {
     const hook = renderHook(
       (props: Props) => useMorphMotion(props),
-      { variant: "text", animationDuration: 100, stagger: 0 }
+      { variant: "text", animationDuration: 100 }
     );
     const firstRecipe = hook.result.motionRecipe;
 
     hook.rerender({
       variant: "text",
       animationDuration: 200,
-      stagger: 0,
     });
 
     expect(hook.result.motionRecipe.durationMs).toBe(200);

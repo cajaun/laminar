@@ -3,7 +3,6 @@ import {
   LinearTransition,
   type EntryExitAnimationFunction,
   type WithTimingConfig,
-  withDelay,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -13,7 +12,7 @@ import type {
   MorphAnimationPresetName,
 } from "../types";
 
-// keep all presets on one curve family so layout and glyph motion agree
+// use the same curve family for layout and glyph motion
 const DEFAULT_CURVE = [0.19, 1, 0.22, 1] as const;
 const TICKER_CURVE = [0.33, 1, 0.68, 1] as const;
 
@@ -46,13 +45,13 @@ export const MOTION_PRESETS: Record<
   },
 } as const;
 
-// the public preset table uses seconds while reanimated timing uses milliseconds
+// convert public durations from seconds to milliseconds
 const toMilliseconds = (seconds: number) => Math.round(seconds * 1000);
 
 const toDampingRatio = (bounce: number) =>
   Math.max(0.55, Math.min(1, 1 - bounce));
 
-// spring and timing presets share the same opacity contract
+// use the same opacity rules for spring and timing presets
 const createOpacityTransition = (
   fromOpacity: number,
   toOpacity: number,
@@ -76,10 +75,11 @@ const createOpacityTransition = (
   };
 };
 
-// convert a named preset into the builders consumed by every rendering variant
+// create motion builders for each rendering variant
 export const resolveMotionRecipe = (
   presetName: MorphAnimationPresetName = "default",
-  durationOverride?: number
+  durationOverride?: number,
+  clampSpring = false
 ): MotionRecipe => {
   const preset = MOTION_PRESETS[presetName];
   const durationMs = durationOverride ?? toMilliseconds(preset.duration);
@@ -91,20 +91,18 @@ export const resolveMotionRecipe = (
     return {
       durationMs,
       easing,
-      // keep layout on timing so width and reflow stay predictable
+      // use timing so width changes and reflow stay predictable
       layoutTransition: LinearTransition.duration(durationMs).easing(
         easing.factory()
       ),
       enterTransition: createOpacityTransition(0, 1, durationMs, easing),
       exitTransition: createOpacityTransition(1, 0, durationMs, easing),
-      driveNumber: (toValue, delayMs = 0) => {
-        const animation = withSpring(toValue, {
+      driveNumber: (toValue) => {
+        return withSpring(toValue, {
           duration: durationMs,
-          dampingRatio,
-          overshootClamping: preset.bounce === 0,
+          dampingRatio: clampSpring ? 1 : dampingRatio,
+          overshootClamping: clampSpring || preset.bounce === 0,
         });
-
-        return delayMs > 0 ? withDelay(delayMs, animation) : animation;
       },
     };
   }
@@ -124,13 +122,11 @@ export const resolveMotionRecipe = (
     ),
     enterTransition: createOpacityTransition(0, 1, durationMs, easing),
     exitTransition: createOpacityTransition(1, 0, durationMs, easing),
-    driveNumber: (toValue, delayMs = 0) => {
-      const animation = withTiming(toValue, {
+    driveNumber: (toValue) => {
+      return withTiming(toValue, {
         duration: durationMs,
         easing,
       });
-
-      return delayMs > 0 ? withDelay(delayMs, animation) : animation;
     },
   };
 };

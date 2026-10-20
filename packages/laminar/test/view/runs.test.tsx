@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import TestRenderer, { act } from "react-test-renderer";
 import type { MotionRecipe } from "../../src/types";
 import { NumberRun } from "../../src/view/number-run";
@@ -197,7 +197,7 @@ describe("rendered run contracts", () => {
     expect(nestedTextRows).toHaveLength(0);
   });
 
-  test("RUN-ST-002 NumberRun preserves lead text and staggers lane updates", () => {
+  test("RUN-ST-002 NumberRun preserves lead text and updates lanes", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
       renderer = TestRenderer.create(
@@ -205,7 +205,6 @@ describe("rendered run contracts", () => {
           value="$12"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={15}
         />
       );
     });
@@ -217,7 +216,6 @@ describe("rendered run contracts", () => {
           value="$13"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={15}
         />
       );
     });
@@ -232,7 +230,7 @@ describe("rendered run contracts", () => {
           value="$1.2"
           motionRecipe={motionRecipe}
           align="center"
-          staggerMs={10}
+          fontSize={16}
         />
       );
     });
@@ -258,7 +256,6 @@ describe("rendered run contracts", () => {
           align="left"
           fontSize={1}
           textStyle={{ lineHeight: 8 }}
-          staggerMs={0}
         />
       );
     });
@@ -272,6 +269,61 @@ describe("rendered run contracts", () => {
     );
   });
 
+  test("RUN-ST-009 SlotsRun measures a missing font size before rendering reels", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun value="42" motionRecipe={motionRecipe} align="left" />
+      );
+    });
+
+    const probe = renderer.root
+      .findAllByType(Text)
+      .find((node) => typeof node.props.onLayout === "function");
+    expect(probe).toBeDefined();
+
+    const onLayout = probe!.props.onLayout as (event: unknown) => void;
+    const event = { nativeEvent: { layout: { height: 18.2 } } };
+    act(() => {
+      onLayout(event);
+      onLayout(event);
+    });
+
+    expect(
+      renderer.root
+        .findAllByType(Text)
+        .some((node) => StyleSheet.flatten(node.props.style)?.lineHeight === 19),
+    ).toBe(true);
+  });
+
+  test("RUN-BVA-002 SlotsRun aligns prefixes and punctuation to the reel frame", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="$1,234"
+          motionRecipe={motionRecipe}
+          align="left"
+          fontSize={40}
+        />
+      );
+    });
+
+    for (const value of ["$", ","] as const) {
+      const glyph = renderer.root
+        .findAllByType(Text)
+        .find((node) => node.props.children === value);
+
+      expect(glyph).toBeDefined();
+      expect(StyleSheet.flatten(glyph!.parent?.props.style)).toMatchObject({
+        height: 48,
+      });
+      expect(StyleSheet.flatten(glyph!.props.style)).toMatchObject({
+        lineHeight: 48,
+      });
+    }
+  });
+
   test("RUN-ST-003 SlotsRun drives changed digits and cleanup through recipe", () => {
     driveNumber.mockClear();
     let renderer!: TestRenderer.ReactTestRenderer;
@@ -281,7 +333,6 @@ describe("rendered run contracts", () => {
           value="8"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -291,11 +342,10 @@ describe("rendered run contracts", () => {
           value="9"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
-    expect(driveNumber).toHaveBeenCalledWith(expect.any(Number), 0);
+    expect(driveNumber).toHaveBeenCalledWith(expect.any(Number));
 
     act(() => renderer.unmount());
     expect(driveNumber.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -310,7 +360,6 @@ describe("rendered run contracts", () => {
           value="12"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -321,7 +370,6 @@ describe("rendered run contracts", () => {
           value="13"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
@@ -333,11 +381,37 @@ describe("rendered run contracts", () => {
           value="12"
           motionRecipe={motionRecipe}
           align="left"
-          staggerMs={0}
         />
       );
     });
     expect(driveNumber).toHaveBeenCalledTimes(2);
+  });
+
+  test("RUN-ST-009 SlotsRun installs changed reel targets before paint", () => {
+    driveNumber.mockClear();
+    let renderer!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun
+          value="$1,234"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    act(() => {
+      renderer.update(
+        <SlotsRun
+          value="$12,345"
+          motionRecipe={motionRecipe}
+          align="left"
+        />
+      );
+    });
+
+    expect(driveNumber).toHaveBeenCalled();
   });
 
   test("RUN-ST-008 TickerRun keeps pending values and moves stable lanes", () => {
@@ -350,7 +424,6 @@ describe("rendered run contracts", () => {
           value="$12.30"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={leading}
           leadingKey="up"
         />
@@ -363,7 +436,6 @@ describe("rendered run contracts", () => {
           value="$12.40"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={leading}
           leadingKey="up"
           ready={false}
@@ -384,7 +456,6 @@ describe("rendered run contracts", () => {
           value="$12.40"
           motionRecipe={motionRecipe}
           align="right"
-          staggerMs={0}
           leading={<Text>down</Text>}
           leadingKey="down"
           leadingGap={4}
@@ -411,7 +482,6 @@ describe("rendered run contracts", () => {
           fontSize,
           fontVariant: ["tabular-nums"],
         }}
-        staggerMs={0}
       />
     );
 

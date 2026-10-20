@@ -2,13 +2,11 @@ import {
   type EntryExitAnimationFunction,
   type ExitAnimationsValues,
   type WithTimingConfig,
-  withDelay,
   withTiming,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
 type TransitionParams = {
-  readonly delayMs?: number;
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
   readonly fromOpacity: number;
@@ -31,7 +29,7 @@ type LeadingEnterTransitionParams = {
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
 };
 
-// leading replacements use scale while first appearance uses the regular fade path
+// scale replacement content and fade content on first appearance
 export const createLeadingEnterTransition = ({
   durationMs,
   easing,
@@ -52,9 +50,8 @@ export const createLeadingEnterTransition = ({
   };
 };
 
-// one builder covers glyph opacity, travel, scale, and optional stagger timing
+// animate opacity and scale with one timing function
 export const createShiftTransition = ({
-  delayMs = 0,
   durationMs,
   easing,
   fromOpacity,
@@ -67,20 +64,12 @@ export const createShiftTransition = ({
   return () => {
     "worklet";
 
-    // drive opacity and transforms from one timing path
+    // animate opacity and transforms with one timing function
     const animate = (toValue: number) =>
-      delayMs > 0
-        ? withDelay(
-            delayMs,
-            withTiming(toValue, {
-              duration: durationMs,
-              easing,
-            })
-          )
-        : withTiming(toValue, {
-            duration: durationMs,
-            easing,
-          });
+      withTiming(toValue, {
+        duration: durationMs,
+        easing,
+      });
 
     const initialValues: Record<string, unknown> = {
       opacity: fromOpacity,
@@ -109,7 +98,7 @@ export const createShiftTransition = ({
   };
 };
 
-// the shared swap flag lets an exiting worklet read the current transition type
+// expose the current transition type to exiting worklets
 export const createLeadingExitTransition = ({
   durationMs,
   easing,

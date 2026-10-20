@@ -4,6 +4,7 @@ import {
   StyleSheet,
   Text as RNText,
   TextInput,
+  useColorScheme,
   View,
 } from "react-native";
 import type { StyleProp, TextStyle, ViewProps, ViewStyle } from "react-native";
@@ -54,6 +55,7 @@ export function Section({
 }: SectionProps) {
   const listStyle = React.useContext(ListStyleContext) ?? "auto";
   const { sheet } = React.useContext(CardStyleContext);
+  const borderColor = useColorScheme() === "dark" ? "#3A3D44" : "#D1D1D6";
   const allChildren = getFlatChildren(children);
   const isGrouped = listStyle === "grouped";
 
@@ -84,7 +86,9 @@ export function Section({
               ? formColors.sheetCard
               : formColors.groupedCard,
           },
-          isGrouped ? styles.groupedContents : styles.cardContents,
+          isGrouped
+            ? [styles.groupedContents, { borderColor }]
+            : styles.cardContents,
           style,
         ]}
       >
@@ -293,7 +297,17 @@ function renderLinkElement(
       }
 
       if (typeof linkChild === "string") {
-        return <RNText style={styles.text}>{linkChild}</RNText>;
+        return (
+          <RNText
+            style={[
+              styles.text,
+              resolvedProps.bold && styles.boldText,
+              resolvedProps.style,
+            ]}
+          >
+            {linkChild}
+          </RNText>
+        );
       }
 
       return linkChild;

@@ -1,8 +1,8 @@
 import React, { useMemo, useRef } from "react";
-import type { LayoutChangeEvent, StyleProp, ViewStyle } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
-import type { ComplexAnimationBuilder } from "react-native-reanimated";
+import type { BaseAnimationBuilder } from "react-native-reanimated";
 import type { LaminarAlign } from "../types";
 
 const shellStyle = {
@@ -53,14 +53,15 @@ type MorphViewportProps = {
   readonly align: LaminarAlign;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly animatedWidthStyle?: React.ComponentProps<typeof Animated.View>["style"];
-  /** optional layout-driven auto-size path for content that needs an aligned anchor */
-  readonly autoSizeLayoutTransition?: ComplexAnimationBuilder;
-  readonly onVisibleLayout?: (event: LayoutChangeEvent) => void;
+  // use content layout to size aligned values
+  readonly autoSizeLayoutTransition?: BaseAnimationBuilder;
+  readonly layoutTransitionKey?: string | number;
+  readonly animateLayoutOnRendererChange?: boolean;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
 
-// separate hidden measurement from visible content while sharing the shell alignment
+// measure hidden content outside the visible viewport
 export const MorphViewport = React.memo(
   ({
     autoSize,
@@ -69,16 +70,23 @@ export const MorphViewport = React.memo(
     containerStyle,
     animatedWidthStyle,
     autoSizeLayoutTransition,
-    onVisibleLayout,
+    layoutTransitionKey,
+    animateLayoutOnRendererChange = false,
     measurement,
     children,
   }: MorphViewportProps) => {
     const hasRenderedRef = useRef(false);
+    const previousLayoutTransitionKeyRef = useRef(layoutTransitionKey);
+    const rendererChanged =
+      previousLayoutTransitionKeyRef.current !== layoutTransitionKey;
+    previousLayoutTransitionKeyRef.current = layoutTransitionKey;
+    // keep renderer handoffs from animating the shell when glyph metrics change
     const shouldAnimateAutoSizeLayout =
-      autoSizeLayoutTransition !== undefined && hasRenderedRef.current;
+      autoSizeLayoutTransition !== undefined &&
+      hasRenderedRef.current &&
+      (!rendererChanged || animateLayoutOnRendererChange);
     hasRenderedRef.current = true;
-
-    // compute alignment once so the animated shell and its child share one layout contract
+    // align the shell and viewport with the same setting
     const resolvedViewportStyle = useMemo(
       () => [
         viewportStyle,
@@ -88,11 +96,9 @@ export const MorphViewport = React.memo(
       [align, clipToBounds]
     );
 
-    // keep measurement outside the visible viewport so it cannot affect accessibility or layout
+    // measure content outside the visible viewport
     if (autoSizeLayoutTransition) {
-      // Layout animation owns both width and the shell's aligned x-position.
-      // This is important for center/right auto-size: animating only a child
-      // width leaves the parent anchor at its old position.
+      // animate width and anchor position on the same transition
       return (
         <Animated.View
           layout={
@@ -111,7 +117,7 @@ export const MorphViewport = React.memo(
           >
             {measurement}
           </View>
-          <Animated.View onLayout={onVisibleLayout} style={resolvedViewportStyle}>
+          <Animated.View style={resolvedViewportStyle}>
             {children}
           </Animated.View>
         </Animated.View>
@@ -132,7 +138,6 @@ export const MorphViewport = React.memo(
               {measurement}
             </View>
             <Animated.View
-              onLayout={onVisibleLayout}
               style={[resolvedViewportStyle, animatedWidthStyle]}
             >
               {children}

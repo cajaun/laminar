@@ -12,39 +12,39 @@ type Params = {
   readonly numberMode?: MorphNumberMode;
   readonly animationPreset?: MorphAnimationPresetName;
   readonly animationDuration?: number;
-  readonly stagger: number;
 };
 
 type MorphMotion = {
   readonly motionRecipe: MotionRecipe;
-  readonly staggerMs: number;
+  // choose separate motion recipes for slots and ticker modes
+  readonly slotsMotionRecipe: MotionRecipe;
+  readonly tickerMotionRecipe: MotionRecipe;
 };
 
-// resolve one motion recipe and one shared stagger unit for a render tree
+// resolve motion recipes so tokens share timing
 export const useMorphMotion = ({
   variant,
   numberMode,
   animationPreset,
   animationDuration,
-  stagger,
 }: Params): MorphMotion => {
   const isTicker = variant === "number" && numberMode === "ticker";
-  // numeric variants need a quicker default because their lanes update often
-  const resolvedPreset =
-    animationPreset ??
-    (isTicker
-      ? "ticker"
-      : variant === "text"
-        ? "default"
-        : "snappy");
-
-  const motionRecipe = useMemo(
-    () => resolveMotionRecipe(resolvedPreset, animationDuration),
-    [animationDuration, resolvedPreset]
+  // use a shorter default duration for numeric lane updates
+  const slotsPreset = animationPreset ?? (variant === "text" ? "default" : "snappy");
+  const tickerPreset = animationPreset ?? "ticker";
+  const slotsMotionRecipe = useMemo(
+    // keep hidden slot props stable while ticker mode is active
+    () => resolveMotionRecipe(slotsPreset, animationDuration, true),
+    [animationDuration, slotsPreset]
+  );
+  const tickerMotionRecipe = useMemo(
+    () => resolveMotionRecipe(tickerPreset, animationDuration),
+    [animationDuration, tickerPreset]
   );
 
   return {
-    motionRecipe,
-    staggerMs: Math.round(stagger * 1000),
+    motionRecipe: isTicker ? tickerMotionRecipe : slotsMotionRecipe,
+    slotsMotionRecipe,
+    tickerMotionRecipe,
   };
 };

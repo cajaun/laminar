@@ -1,5 +1,10 @@
 import React, { useMemo, useRef, type ReactNode } from "react";
-import { type StyleProp, type TextStyle, View } from "react-native";
+import {
+  StyleSheet,
+  type StyleProp,
+  type TextStyle,
+  View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
@@ -25,7 +30,6 @@ type NumberRunProps = {
   readonly align: LaminarAlign;
   readonly fontSize?: number;
   readonly textStyle?: StyleProp<TextStyle>;
-  readonly staggerMs: number;
   readonly className?: string;
   readonly leading?: ReactNode;
   readonly leadingKey?: string | number;
@@ -33,7 +37,7 @@ type NumberRunProps = {
   readonly ready?: boolean;
 };
 
-// arrange numeric lanes from left to right while the hook preserves their identities
+// arrange numeric lanes while the hook keeps their identities stable
 export const NumberRun = React.memo(
   ({
     value,
@@ -41,7 +45,6 @@ export const NumberRun = React.memo(
     align,
     fontSize,
     textStyle,
-    staggerMs,
     className,
     leading,
     leadingKey,
@@ -86,22 +89,24 @@ export const NumberRun = React.memo(
       leadingGap: visibleLeadingGap,
       motionRecipe,
     });
-    // the hook owns lane identity while this component owns row placement and timing
+    // let the hook own lane identity and this component place each lane
     const { units, laneKeys, direction, leadLength } =
       useNumericLanes(visibleValue);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
 
-    // skip enter animations on first paint so the number feels settled
+    // show the initial value without an enter animation
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
       lastValueRef.current = visibleValue;
     }
 
-    // scale travel from the font while keeping a minimum visible movement
+    // scale digit travel with the font while preserving a minimum distance
+    const resolvedFontSize =
+      StyleSheet.flatten(textStyle)?.fontSize ?? fontSize;
     const travelDistance = useMemo(
-      () => Math.max(8, Math.round((fontSize ?? 16) * 0.4)),
-      [fontSize]
+      () => Math.max(8, Math.round((resolvedFontSize ?? 0) * 0.4)),
+      [resolvedFontSize]
     );
     const hasAnimated = hasAnimatedRef.current;
 
@@ -137,7 +142,6 @@ export const NumberRun = React.memo(
                 tokenKey={laneKeys[index]}
                 isLead={inLead}
                 hasAnimated={hasAnimated}
-                delayMs={index * staggerMs}
                 direction={direction}
                 travelDistance={travelDistance}
                 motionRecipe={motionRecipe}

@@ -19,7 +19,7 @@ type TextRunProps = {
   readonly className?: string;
 };
 
-// connect text identity, leading transitions, and glyph layout into one run
+// keep text identity leading transitions and glyph layout in sync
 export const TextRun = React.memo(
   ({
     value,
@@ -33,7 +33,7 @@ export const TextRun = React.memo(
     textStyle,
     className,
   }: TextRunProps) => {
-    // namespace ids per instance so repeated strings do not collide
+    // namespace ids to keep repeated strings distinct
     const scopeId = useId();
     const hasDisplayedRef = useRef(false);
     const displayedValueRef = useRef(value);
@@ -82,7 +82,7 @@ export const TextRun = React.memo(
       visibleLeadingKey
     );
 
-    // mark the first value as settled and later changes as eligible for motion
+    // settle the first value before enabling later motion
     if (visibleValue !== lastValueRef.current || isLeadingChange) {
       hasAnimatedRef.current = true;
       lastValueRef.current = visibleValue;

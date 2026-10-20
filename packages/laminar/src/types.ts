@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import type { StyleProp, TextStyle, ViewStyle } from "react-native";
 import type {
-  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
   EntryExitAnimationFunction,
+  SharedValue,
   WithTimingConfig,
 } from "react-native-reanimated";
 
@@ -14,19 +15,27 @@ export type MorphAnimationPresetName =
   | "ticker";
 
 export type MorphContentVariant = "text" | "number" | "slots";
-export type MorphNumberMode = "morph" | "ticker";
+// numeric renderers share the laminar shell and choose their own value motion
+export type MorphNumberMode = "morph" | "ticker" | "slots";
 export type LaminarAlign = "left" | "center" | "right";
-// text keys let leading content follow the same state as the displayed value
+
+// text keys keep leading content paired with the displayed value
 export type LaminarLeadingMap = Readonly<Record<string, ReactNode>>;
 
 export type LaminarShadowOptions = {
-  /** surface color used by the alpha mask when a platform requires it */
+  // provide the surface color when a platform needs an alpha mask
   readonly color?: string;
-  /** fade depth in pixels; defaults to roughly one third of the viewport */
+  // set the fade depth in pixels with a default near one third of the viewport
   readonly size?: number;
 };
 
 export type LaminarShadow = boolean | LaminarShadowOptions;
+
+// send preformatted values to the ui thread without formatting on each sample
+export type LaminarAnimatedText = {
+  readonly index: SharedValue<number>;
+  readonly values: readonly string[];
+};
 
 type CubicBezierTuple = readonly [number, number, number, number];
 
@@ -51,38 +60,44 @@ export type GlyphToken = {
 export type NumericFlowDirection = -1 | 0 | 1;
 
 export type MotionRecipe = {
-  // every variant consumes the same timing and layout contract
+  // keep timing and layout options consistent across variants
   readonly durationMs: number;
   readonly easing: NonNullable<WithTimingConfig["easing"]>;
-  readonly layoutTransition: ComplexAnimationBuilder;
+  readonly layoutTransition: BaseAnimationBuilder;
   readonly enterTransition: EntryExitAnimationFunction;
   readonly exitTransition: EntryExitAnimationFunction;
-  readonly driveNumber: (toValue: number, delayMs?: number) => number;
+  readonly driveNumber: (toValue: number) => number;
 };
 
 export type MorphingTextProps = {
   readonly text: string | number;
   readonly variant?: MorphContentVariant;
-  /** number-only renderer mode; ticker uses crisp in-place digit flow */
+  // select the numeric renderer
   readonly numberMode?: MorphNumberMode;
+  // scale the decimal separator and fraction glyphs in ticker mode
+  readonly fractionScale?: number;
+  readonly animatedText?: LaminarAnimatedText;
+  // start slot handoffs from the last value shown by the numeric renderer
+  readonly fromValue?: string;
+  // keep the slot renderer mounted while ticker mode is active
+  readonly preloadValue?: string;
   readonly fontSize?: number;
   readonly color?: string;
   readonly align?: LaminarAlign;
   readonly className?: string;
-  /** optional inline element reconciled and animated before the rendered value */
+  // render leading content before the value
   readonly leading?: ReactNode | LaminarLeadingMap;
-  /** identity for swapping one leading element for another */
+  // use the leading key to identify replacement content
   readonly leadingKey?: string | number;
-  /** spacing between the leading element and the first text glyph */
+  // set the gap between leading content and the value
   readonly leadingGap?: number;
-  /** opt-in top and bottom fades for slot reels */
+  // fade slot reels at the edges with a shadow
   readonly shadow?: LaminarShadow;
   readonly style?: StyleProp<TextStyle>;
   readonly containerStyle?: StyleProp<ViewStyle>;
   readonly fontStyle?: StyleProp<TextStyle>;
   readonly animationDuration?: number;
   readonly animationPreset?: MorphAnimationPresetName;
-  readonly stagger?: number;
   readonly autoSize?: boolean;
   readonly clipToBounds?: boolean;
 };

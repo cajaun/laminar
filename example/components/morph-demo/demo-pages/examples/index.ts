@@ -1,0 +1,8 @@
+export { ButtonDemoPage } from "./button";
+export { ConfirmationDemoPage } from "./confirmation";
+export { EditorDemoPage } from "./editor";
+export { NumberTickerDemoPage } from "./number-ticker";
+export { NumbersDemoPage } from "./numbers";
+export { SlotsExampleDemoPage } from "./slots";
+export { TransactionDemoPage } from "./transaction";
+export { WordsDemoPage } from "./words";

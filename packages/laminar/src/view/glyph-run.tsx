@@ -2,7 +2,7 @@ import React from "react";
 import { type StyleProp, type TextStyle, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type {
-  ComplexAnimationBuilder,
+  BaseAnimationBuilder,
   EntryExitAnimationFunction,
 } from "react-native-reanimated";
 import type { GlyphToken, LaminarAlign } from "../types";
@@ -25,7 +25,7 @@ const rowAlignStyles = {
   right: { alignSelf: "flex-end" },
 } as const;
 
-// render text and inline elements through one animated token row
+// render text and inline elements in one token row
 export const GlyphRun = React.memo(
   ({
     glyphs,
@@ -42,8 +42,8 @@ export const GlyphRun = React.memo(
     className,
   }: Readonly<{
     glyphs: readonly GlyphToken[];
-    layoutTransition?: ComplexAnimationBuilder;
-    leadingLayoutTransition?: ComplexAnimationBuilder;
+    layoutTransition?: BaseAnimationBuilder;
+    leadingLayoutTransition?: BaseAnimationBuilder;
     leadingLayoutGroup?: boolean;
     enterTransition?: EntryExitAnimationFunction;
     elementEnterTransition?: EntryExitAnimationFunction;
@@ -54,8 +54,7 @@ export const GlyphRun = React.memo(
     textStyle?: StyleProp<TextStyle>;
     className?: string;
   }>) => {
-    // The leading token is always first. Keep it outside the text row so its
-    // appearance moves the text as one unit instead of reflowing every glyph.
+    // keep leading content outside the text row so both parts move together
     const leadingGlyph = glyphs[0]?.kind === "element" ? glyphs[0] : undefined;
     const textGlyphs = leadingGlyph ? glyphs.slice(1) : glyphs;
     const shouldGroupText =
@@ -90,8 +89,7 @@ export const GlyphRun = React.memo(
         {leadingGlyph ? (
           <Animated.View
             key={leadingGlyph.id}
-            // leading elements own their enter/exit geometry; generic layout
-            // motion here would compete with those transitions
+            // let leading content control its own enter and exit geometry
             layout={undefined}
             entering={elementEnterTransition ?? enterTransition}
             exiting={elementExitTransition ?? exitTransition}

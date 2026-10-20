@@ -107,9 +107,9 @@ The `shadow` prop requires the app to provide the
 `@react-native-masked-view/masked-view` and `expo-linear-gradient` peer
 dependencies.
 
-### Number flow
+### Number ticker
 
-Use `numberMode="ticker"` with `variant="number"` for clean live-number flow.
+Use `numberMode="ticker"` with `variant="number"` for clean live-number ticker.
 Changed digits refresh in place while unchanged digits remain perfectly still;
 this mode deliberately has no vertical reel or viewport mask:
 
@@ -118,7 +118,7 @@ this mode deliberately has no vertical reel or viewport mask:
   text="$2,459.70"
   variant="number"
   numberMode="ticker"
-  stagger={0}
+  fractionScale={0.66}
   style={{ color: "#000000" }}
 />
 ```
@@ -226,6 +226,7 @@ type LaminarProps = {
   text: string | number;
   variant?: "text" | "number" | "slots";
   numberMode?: "morph" | "ticker";
+  fractionScale?: number;
   fontSize?: number;
   color?: string;
   align?: "left" | "center" | "right";
@@ -238,7 +239,6 @@ type LaminarProps = {
   fontStyle?: StyleProp<TextStyle>;
   animationDuration?: number;
   animationPreset?: "default" | "smooth" | "snappy" | "bouncy" | "ticker";
-  stagger?: number;
   autoSize?: boolean;
   clipToBounds?: boolean;
 };
@@ -255,13 +255,13 @@ type LaminarProps = {
 | `leadingKey`        | Undefined                                   | Advanced identity override for a direct leading element.                          |
 | `leadingGap`        | `0`                                         | Spacing between the leading element and the first text glyph.                      |
 | `numberMode`        | `"morph"`                                   | With `variant="number"`, `"ticker"` uses crisp in-place digit flow instead of glyph morphs. |
+| `fractionScale`     | `1`                                          | In ticker mode, scales the decimal separator and trailing fractional digits relative to the main digits. |
 | `shadow`            | `false`                                     | Adds persistent top and bottom alpha fades to slot digit viewports. Accepts `true` or `{ color, size }`. |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
 | `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
 | `fontStyle`         | Undefined                                   | Additional text style merged before `style`.                                       |
 | `animationDuration` | Preset default                              | Duration override in milliseconds.                                                 |
 | `animationPreset`   | `"default"` for text, `"snappy"` for number | Named motion recipe; ticker mode defaults to the `ticker` preset.                |
-| `stagger`           | `0.02` (`0` for ticker mode)               | Delay in seconds between numeric lane replacements.                                  |
 | `autoSize`          | `true`                                      | Animate the outer width to the measured final text width.                          |
 | `clipToBounds`      | `false`                                     | Clip animated overflow to the viewport bounds.                                     |
 
@@ -275,7 +275,7 @@ type LaminarProps = {
 | `smooth`  | Spring with no bounce      | 400ms            |
 | `snappy`  | Spring with light bounce   | 350ms            |
 | `bouncy`  | Spring with more bounce    | 500ms            |
-| `ticker`  | In-place number-flow timing | 300ms            |
+| `ticker`  | In-place number ticker timing | 300ms            |
 
 ```tsx
 <Laminar text={word} animationPreset="smooth" />
