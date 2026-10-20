@@ -574,7 +574,7 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
         collapsable={false}
         style={[
           reelStepViewportStyle,
-          { flexDirection: "row", overflow: "hidden" },
+          { flexDirection: "row" },
           reelStepJustifyStyles[align],
         ]}
       >
