@@ -103,7 +103,7 @@ magnitude sets the animation direction.
 Formatting characters remain visible. Laminar accepts strings such as
 `$1,240.00`, `-18%`, and `USD 42`.
 
-For the clean live-number ticker used by market-style value updates, opt into
+For a clean live-number ticker used by market-style value updates, opt into
 the transition-local number mode:
 
 ```tsx
@@ -117,8 +117,50 @@ the transition-local number mode:
 
 The ticker keeps prefixes, punctuation, and unchanged digits crisp while
 replacing changed digits in place. It does not render a vertical reel or a
-top/bottom shadow; use `variant="slots"` with `shadow` when that effect is
+top/bottom shadow; use slot rendering with `shadow` when that effect is
 wanted.
+
+Use `numberMode="slots"` to render the slot reels through the number variant.
+This keeps number styling and the slot renderer available under one variant.
+`slotMode` also applies to this combination:
+
+```tsx
+<Laminar
+  text="$2,459.70"
+  variant="number"
+  numberMode="slots"
+  slotMode="reelStep"
+/>
+```
+
+Laminar animates the formatted string you pass. Keep decimal zeros in a string
+when they matter, such as `"12.34000000"`.
+
+For UI-driven ticker updates, pass preformatted frames and a Reanimated shared
+index. The index selects a zero-based frame and can be fractional; Laminar
+rounds the index to the nearest frame and clamps it to the available range:
+
+```tsx
+import { useSharedValue } from "react-native-reanimated";
+import { Laminar } from "react-native-laminar";
+
+function AnimatedTicker() {
+  const frames = ["$1.00", "$12.00", "$120.00"];
+  const index = useSharedValue(0);
+
+  return (
+    <Laminar
+      text={frames[0]}
+      variant="number"
+      numberMode="ticker"
+      animatedText={{ index, values: frames }}
+    />
+  );
+}
+```
+
+Update `index` from a gesture or animation to select a frame. Keep formatting
+in `values`; Laminar displays each string as provided, including decimal zeros.
 
 ### Slots
 
@@ -181,12 +223,20 @@ import {
   type MorphContentVariant,
   type MorphNumberMode,
   type SlotMode,
+  type LaminarAnimatedText,
+  type LaminarLeadingMap,
   type LaminarShadow,
   type LaminarShadowOptions,
+  type MorphingTextProps,
 } from "react-native-laminar";
 ```
 
 `Laminar` is the package's only component export.
+
+`LaminarAnimatedText` describes the shared index and preformatted ticker
+frames. `fromValue` seeds a slot renderer with the value shown before a mode
+change. `preloadValue` mounts a hidden slot renderer during ticker mode and
+sets the value it prepares for a later handoff.
 
 All variants can reconcile leading content for each value state. Matching
 entries are selected automatically, and changing between two entries uses the
@@ -212,9 +262,12 @@ icon replacement transition:
 | --- | --- | --- | --- |
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
-| `slotMode` | `"standard" \| "reelStep"` | `"standard"` | Slot layout; `reelStep` uses a full reel for the leading digit and one-slot motion for following digits and separators |
-| `numberMode` | `"morph" \| "ticker"` | `"morph"` | Number-only renderer mode; `ticker` uses crisp in-place digit flow |
+| `slotMode` | `"standard" \| "reelStep"` | `"standard"` | Slot layout for `variant="slots"` or `numberMode="slots"`; `reelStep` uses a full reel for the leading digit and one-slot motion for following digits and separators |
+| `numberMode` | `"morph" \| "ticker" \| "slots"` | `"morph"` | Renderer used by `variant="number"`; `ticker` uses crisp in-place digit flow, and `slots` uses slot reels |
 | `fractionScale` | `number` | `1` | In ticker mode, scales the decimal separator and fractional digits relative to the main digits |
+| `animatedText` | `LaminarAnimatedText` | `undefined` | In ticker mode, selects among preformatted `values` with a shared, zero-based `index` |
+| `fromValue` | `string` | `undefined` | Seeds slot reels with the previously displayed formatted value during a renderer handoff |
+| `preloadValue` | `string` | `undefined` | In ticker mode, mounts a hidden slot renderer at this value for a later handoff |
 | `fontSize` | `number` | inherited | Font size and numeric travel input |
 | `color` | `string` | inherited | Text color |
 | `align` | `"left" \| "center" \| "right"` | `"left"` | Shell and row alignment |
@@ -396,7 +449,7 @@ npm run typecheck
 npm run quality
 ```
 
-`npm run quality` runs package type checks, 92 automated cases, coverage
+`npm run quality` runs package type checks, the test suite and coverage
 ratchets, the library build, and an npm package dry run.
 
 The current gates require:

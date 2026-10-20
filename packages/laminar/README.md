@@ -125,7 +125,7 @@ dependencies.
 
 ### Number ticker
 
-Use `numberMode="ticker"` with `variant="number"` for clean live-number ticker.
+Use `numberMode="ticker"` with `variant="number"` for a clean live-number ticker.
 Changed digits refresh in place while unchanged digits remain perfectly still;
 this mode deliberately has no vertical reel or viewport mask:
 
@@ -140,7 +140,52 @@ this mode deliberately has no vertical reel or viewport mask:
 ```
 
 Prefixes, grouping separators, decimals, and unchanged digits stay crisp. The
-`shadow` prop is intentionally reserved for `variant="slots"`.
+`shadow` prop applies to slot rendering, including `variant="slots"` and
+`numberMode="slots"`.
+
+Pass formatted strings to preserve display details such as trailing zeros:
+
+```tsx
+<Laminar text="12.34000000" variant="number" numberMode="ticker" />
+```
+
+Use `numberMode="slots"` to render the `number` variant with slot reels. The
+`slotMode` prop applies to both `variant="slots"` and `numberMode="slots"`:
+
+```tsx
+<Laminar
+  text="$2,459.70"
+  variant="number"
+  numberMode="slots"
+  slotMode="reelStep"
+/>
+```
+
+For UI-driven ticker updates, provide preformatted frames and a Reanimated
+shared index. Laminar rounds the index to the nearest zero-based frame and
+clamps it to the available range:
+
+```tsx
+import { useSharedValue } from "react-native-reanimated";
+import { Laminar } from "react-native-laminar";
+
+function AnimatedTicker() {
+  const values = ["$1.00", "$12.00", "$120.00"];
+  const index = useSharedValue(0);
+
+  return (
+    <Laminar
+      text={values[0]}
+      variant="number"
+      numberMode="ticker"
+      animatedText={{ index, values }}
+    />
+  );
+}
+```
+
+Update `index` from a gesture or animation to select a frame. Keep formatting
+in `values`; Laminar displays each string as provided, including decimal zeros.
 
 ### Inside a button with auto-sizing
 
@@ -237,43 +282,45 @@ Use `autoSize={false}` when the parent already defines the space and you only wa
 
 ## Props
 
+The package exports `LaminarProps` and the supporting public types:
+
+```tsx
+import type {
+  LaminarAlign,
+  LaminarAnimatedText,
+  LaminarLeadingMap,
+  LaminarProps,
+  LaminarShadow,
+  LaminarShadowOptions,
+  MorphAnimationPresetName,
+  MorphContentVariant,
+  MorphNumberMode,
+  MorphingTextProps,
+  SlotMode,
+} from "react-native-laminar";
+```
+
 ```ts
-type LaminarProps = {
-  text: string | number;
-  variant?: "text" | "number" | "slots";
-  slotMode?: "standard" | "reelStep";
-  numberMode?: "morph" | "ticker";
-  fractionScale?: number;
-  fontSize?: number;
-  color?: string;
-  align?: "left" | "center" | "right";
-  leading?: ReactNode | Readonly<Record<string, ReactNode>>;
-  leadingKey?: string | number;
-  leadingGap?: number;
-  shadow?: boolean | { color?: string; size?: number };
-  style?: StyleProp<TextStyle>;
-  containerStyle?: StyleProp<ViewStyle>;
-  fontStyle?: StyleProp<TextStyle>;
-  animationDuration?: number;
-  animationPreset?: "default" | "smooth" | "snappy" | "bouncy" | "ticker";
-  autoSize?: boolean;
-  clipToBounds?: boolean;
-};
+type LaminarProps = MorphingTextProps;
 ```
 
 | Prop                | Default                                     | Description                                                                        |
 | ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `text`              | Required                                    | The value to display. Numbers are converted to strings internally.                 |
 | `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. `"slots"` rolls digits through slot columns using the same lanes. |
-| `slotMode`          | `"standard"`                                | With `variant="slots"`, `"reelStep"` uses a full reel for the leading digit and one-slot motion for following digits and separators. |
+| `slotMode`          | `"standard"`                                | With `variant="slots"` or `numberMode="slots"`, `"reelStep"` uses a full reel for the leading digit and one-slot motion for following digits and separators. |
+| `numberMode`        | `"morph"`                                   | With `variant="number"`, selects digit morphing, the in-place `"ticker"`, or slot reels with `"slots"`. |
+| `fractionScale`     | `1`                                          | In ticker mode, scales the decimal separator and fractional digits relative to the main digits. |
+| `animatedText`      | Undefined                                   | In ticker mode, selects preformatted values with a shared, zero-based index. |
+| `fromValue`         | Undefined                                   | Seeds slot reels with the previously displayed formatted value during a renderer handoff. |
+| `preloadValue`      | Undefined                                   | In ticker mode, mounts a hidden slot renderer at this value for a later handoff. |
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |
+| `className`          | Undefined                                   | Utility classes passed to visible text.                                             |
 | `leading`           | Undefined                                   | Optional inline element, or value-keyed leading content, rendered by every variant. |
 | `leadingKey`        | Undefined                                   | Advanced identity override for a direct leading element.                          |
 | `leadingGap`        | `0`                                         | Spacing between the leading element and the first text glyph.                      |
-| `numberMode`        | `"morph"`                                   | With `variant="number"`, `"ticker"` uses crisp in-place digit flow instead of glyph morphs. |
-| `fractionScale`     | `1`                                          | In ticker mode, scales the decimal separator and trailing fractional digits relative to the main digits. |
 | `shadow`            | `false`                                     | Adds persistent top and bottom alpha fades to slot digit viewports. Accepts `true` or `{ color, size }`. |
 | `style`             | Undefined                                   | Text style applied after `fontSize` and `color`.                                   |
 | `containerStyle`    | Undefined                                   | Advanced style override for the outer viewport shell.                              |
@@ -299,7 +346,7 @@ type LaminarProps = {
 <Laminar text={word} animationPreset="smooth" />
 <Laminar text={count} variant="number" animationPreset="snappy" />
 <Laminar text={count} variant="slots" animationPreset="snappy" />
-<Laminar text={count} variant="number" numberMode="ticker" shadow />
+<Laminar text={count} variant="number" numberMode="slots" shadow />
 
 // Override duration
 <Laminar text={word} animationPreset="default" animationDuration={520} />
