@@ -16,7 +16,9 @@ import {
   View,
 } from "react-native";
 import Animated, {
+  type EntryExitAnimationFunction,
   type SharedValue,
+  withTiming,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -28,6 +30,7 @@ import type {
   LaminarShadow,
   MotionRecipe,
   NumericFlowDirection,
+  SlotMode,
 } from "../types";
 import { LeadingElement } from "./leading-element";
 import { SlotShadow } from "./slot-shadow";
@@ -58,6 +61,54 @@ const slotDigitStyle = {
   textAlign: "center",
 } as const;
 
+type SlotRollCellProps = {
+  readonly children: ReactNode;
+  readonly slotHeight: number;
+  readonly top: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+const SlotRollCell = React.memo(function SlotRollCell({
+  children,
+  slotHeight,
+  top,
+  textStyle,
+  className,
+}: SlotRollCellProps) {
+  return (
+    <View
+      style={{
+        position: "absolute",
+        top,
+        left: 0,
+        right: 0,
+        height: slotHeight,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        numberOfLines={1}
+        style={[textStyle, slotDigitStyle]}
+        className={className}
+      >
+        {children}
+      </Text>
+    </View>
+  );
+});
+
+const magnitudeViewportStyle = {
+  width: "100%",
+} as const;
+
+const magnitudeAlignStyles = {
+  left: { alignItems: "flex-start" },
+  center: { alignItems: "center" },
+  right: { alignItems: "flex-end" },
+} as const;
+
 const REEL_MIN = -12;
 const REEL_MAX = 22;
 const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
@@ -65,6 +116,30 @@ const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
 // wrap reel positions within the digit wheel
 const mod = (value: number, divisor: number) =>
   ((value % divisor) + divisor) % divisor;
+
+const createSlotRollExitTransition = (
+  current: SharedValue<number>,
+  slotHeight: number | undefined,
+  motionRecipe: MotionRecipe,
+): EntryExitAnimationFunction => {
+  const distance = slotHeight ?? 0;
+  const { durationMs, easing } = motionRecipe;
+
+  return () => {
+    "worklet";
+
+    return {
+      initialValues: {
+        transform: [{ translateY: -current.value * distance }],
+      },
+      animations: {
+        transform: [
+          { translateY: withTiming(0, { duration: durationMs, easing }) },
+        ],
+      },
+    };
+  };
+};
 
 type SlotReelProps = {
   readonly current: SharedValue<number>;
@@ -269,6 +344,192 @@ const SlotTextLane = React.memo(function SlotTextLane({
   );
 });
 
+type SlotSymbolLaneProps = {
+  readonly symbol: string;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly structureChanged: boolean;
+  readonly animateIn: boolean;
+  readonly motionRecipe: MotionRecipe;
+  readonly slotHeight?: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+};
+
+const SlotSymbolLane = React.memo(function SlotSymbolLane({
+  symbol,
+  isLast,
+  laneSpacing,
+  structureChanged,
+  animateIn,
+  motionRecipe,
+  slotHeight,
+  textStyle,
+  className,
+}: SlotSymbolLaneProps) {
+  const current = useSharedValue(animateIn ? 0 : 1);
+  const exitTransition = useMemo(
+    () => createSlotRollExitTransition(current, slotHeight, motionRecipe),
+    [current, motionRecipe.durationMs, motionRecipe.easing, slotHeight],
+  );
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      transform: [{ translateY: -current.value * (slotHeight ?? 0) }],
+    }),
+    [slotHeight],
+  );
+
+  useEffect(() => {
+    if (slotHeight === undefined || !animateIn) {
+      current.value = 1;
+      return;
+    }
+
+    current.value = motionRecipe.driveNumber(1);
+  }, [animateIn, current, motionRecipe, slotHeight, symbol]);
+
+  return (
+    <Animated.View
+      layout={structureChanged ? motionRecipe.layoutTransition : undefined}
+      exiting={motionRecipe.exitTransition}
+      style={{
+        ...(slotHeight !== undefined ? { height: slotHeight } : undefined),
+        alignItems: "center",
+        justifyContent: "center",
+        ...(!isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined),
+      }}
+    >
+      {slotHeight === undefined ? (
+        <Animated.Text style={textStyle} className={className}>
+          {symbol}
+        </Animated.Text>
+      ) : (
+        <View
+          collapsable={false}
+          style={[slotFrameStyle, { height: slotHeight }]}
+        >
+          <Text
+            style={[textStyle, slotProbeStyle, { lineHeight: slotHeight }]}
+            className={className}
+          >
+            {symbol}
+          </Text>
+          <Animated.View
+            pointerEvents="none"
+            exiting={exitTransition}
+            style={[
+              { position: "absolute", top: 0, left: 0, right: 0 },
+              animatedStyle,
+            ]}
+          >
+            <SlotRollCell
+              slotHeight={slotHeight}
+              top={0}
+              textStyle={textStyle}
+              className={className}
+            >
+              {"\u00a0"}
+            </SlotRollCell>
+            <SlotRollCell
+              slotHeight={slotHeight}
+              top={slotHeight}
+              textStyle={textStyle}
+              className={className}
+            >
+              {symbol}
+            </SlotRollCell>
+          </Animated.View>
+        </View>
+      )}
+    </Animated.View>
+  );
+});
+
+type MagnitudeSlotsViewportProps = {
+  readonly align: LaminarAlign;
+  readonly fitContentWidth?: number;
+  readonly motionRecipe: MotionRecipe;
+  readonly layoutTransition?: MotionRecipe["layoutTransition"];
+  readonly measurement?: React.ReactNode;
+  readonly children: React.ReactNode;
+};
+
+const MagnitudeSlotsViewport = React.memo(function MagnitudeSlotsViewport({
+  align,
+  fitContentWidth,
+  motionRecipe,
+  layoutTransition,
+  measurement,
+  children,
+}: MagnitudeSlotsViewportProps) {
+  const fitScale = useSharedValue(1);
+  const hasInitializedFitScaleRef = useRef(false);
+  const [fitInitialized, setFitInitialized] = useState(false);
+  const [availableWidth, setAvailableWidth] = useState<number>();
+  const captureAvailableWidth = useCallback(
+    (event: LayoutChangeEvent) => {
+      const nextWidth = Math.max(
+        0,
+        Math.floor(event.nativeEvent.layout.width),
+      );
+
+      setAvailableWidth((currentWidth) =>
+        currentWidth !== undefined && Math.abs(currentWidth - nextWidth) < 1
+          ? currentWidth
+          : nextWidth,
+      );
+    },
+    [],
+  );
+  const fitScaleTarget =
+    fitContentWidth !== undefined &&
+    availableWidth !== undefined &&
+    availableWidth > 0
+      ? Math.min(1, availableWidth / Math.max(fitContentWidth, 1))
+      : undefined;
+
+  useLayoutEffect(() => {
+    if (fitScaleTarget === undefined) {
+      return;
+    }
+
+    if (!hasInitializedFitScaleRef.current) {
+      hasInitializedFitScaleRef.current = true;
+      fitScale.value = fitScaleTarget;
+      setFitInitialized(true);
+      return;
+    }
+
+    fitScale.value = motionRecipe.driveNumber(fitScaleTarget);
+  }, [fitScale, fitScaleTarget, motionRecipe]);
+
+  const fitStyle = useAnimatedStyle(
+    () => ({ transform: [{ scale: fitScale.value }] }),
+    [fitScale],
+  );
+
+  return (
+    <View
+      onLayout={captureAvailableWidth}
+      style={[
+        magnitudeViewportStyle,
+        magnitudeAlignStyles[align],
+        { opacity: fitInitialized ? 1 : 0 },
+      ]}
+    >
+      <Animated.View
+        layout={layoutTransition}
+        style={[rowStyle, rowAlignStyles[align], fitStyle]}
+      >
+        {children}
+      </Animated.View>
+      {measurement}
+    </View>
+  );
+});
+
 type SlotDigitLaneProps = {
   readonly digit: number;
   readonly initialDigit?: number;
@@ -438,6 +699,161 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
   );
 });
 
+type SlotRisingDigitLaneProps = {
+  readonly digit: number;
+  readonly initialDigit?: number;
+  readonly animateIn: boolean;
+  readonly isLast: boolean;
+  readonly laneSpacing: number;
+  readonly structureChanged: boolean;
+  readonly motionRecipe: MotionRecipe;
+  readonly slotHeight?: number;
+  readonly textStyle?: StyleProp<TextStyle>;
+  readonly reelTextStyle?: StyleProp<TextStyle>;
+  readonly className?: string;
+  readonly shadow?: LaminarShadow;
+};
+
+const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
+  digit,
+  initialDigit,
+  animateIn,
+  isLast,
+  laneSpacing,
+  structureChanged,
+  motionRecipe,
+  slotHeight,
+  textStyle,
+  reelTextStyle,
+  className,
+  shadow = false,
+}: SlotRisingDigitLaneProps) {
+  const shouldAnimateIn =
+    initialDigit !== undefined
+      ? initialDigit !== digit
+      : animateIn;
+  const [fromDigit, setFromDigit] = useState<number | undefined>(
+    initialDigit ?? (animateIn ? undefined : digit),
+  );
+  const previousDigitRef = useRef(initialDigit ?? digit);
+  const hasInitializedRef = useRef(false);
+  const current = useSharedValue(shouldAnimateIn ? 0 : 1);
+  const exitTransition = useMemo(
+    () => createSlotRollExitTransition(current, slotHeight, motionRecipe),
+    [current, motionRecipe.durationMs, motionRecipe.easing, slotHeight],
+  );
+  const animatedStyle = useAnimatedStyle(
+    () => ({ transform: [{ translateY: -current.value * (slotHeight ?? 0) }] }),
+    [slotHeight],
+  );
+
+  useLayoutEffect(() => {
+    if (slotHeight === undefined) {
+      return;
+    }
+
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      previousDigitRef.current = digit;
+      current.value =
+        shouldAnimateIn ? motionRecipe.driveNumber(1) : 1;
+      return;
+    }
+
+    const previousDigit = previousDigitRef.current;
+
+    if (previousDigit !== digit) {
+      previousDigitRef.current = digit;
+      setFromDigit(previousDigit);
+      current.value = 0;
+      current.value = motionRecipe.driveNumber(1);
+    }
+  }, [current, digit, motionRecipe, shouldAnimateIn, slotHeight]);
+
+  const shadowOptions =
+    shadow !== null && typeof shadow === "object"
+      ? shadow
+      : shadow
+        ? {}
+        : undefined;
+  const digitStyle = reelTextStyle ?? textStyle;
+  const strip =
+    slotHeight === undefined ? null : (
+      <Animated.View
+        pointerEvents="none"
+        exiting={exitTransition}
+        style={[
+          { position: "absolute", top: 0, left: 0, right: 0 },
+          animatedStyle,
+        ]}
+      >
+        <SlotRollCell
+          slotHeight={slotHeight}
+          top={0}
+          textStyle={digitStyle}
+          className={className}
+        >
+          {fromDigit === undefined ? "\u00a0" : fromDigit}
+        </SlotRollCell>
+        <SlotRollCell
+          slotHeight={slotHeight}
+          top={slotHeight}
+          textStyle={digitStyle}
+          className={className}
+        >
+          {digit}
+        </SlotRollCell>
+      </Animated.View>
+    );
+  const risingStrip =
+    slotHeight !== undefined && shadowOptions ? (
+      <SlotShadow
+        slotHeight={slotHeight}
+        viewportHeight={slotHeight}
+        color={shadowOptions.color}
+        size={shadowOptions.size}
+      >
+        {strip!}
+      </SlotShadow>
+    ) : (
+      strip
+    );
+
+  return (
+    <Animated.View
+      layout={structureChanged ? motionRecipe.layoutTransition : undefined}
+      entering={
+        structureChanged ? motionRecipe.enterTransition : undefined
+      }
+      exiting={motionRecipe.exitTransition}
+      style={
+        !isLast && laneSpacing !== 0
+          ? { marginRight: laneSpacing }
+          : undefined
+      }
+    >
+      {slotHeight === undefined ? (
+        <Text style={textStyle} className={className}>
+          {digit}
+        </Text>
+      ) : (
+        <View
+          collapsable={false}
+          style={[slotFrameStyle, { height: slotHeight }]}
+        >
+          <Text
+            style={[textStyle, slotProbeStyle, { lineHeight: slotHeight }]}
+            className={className}
+          >
+            {digit}
+          </Text>
+          {risingStrip}
+        </View>
+      )}
+    </Animated.View>
+  );
+});
+
 type SlotsRunProps = {
   readonly value: string;
   readonly fromValue?: string;
@@ -451,6 +867,8 @@ type SlotsRunProps = {
   readonly leadingGap?: number;
   readonly ready?: boolean;
   readonly shadow?: LaminarShadow;
+  readonly slotMode?: SlotMode;
+  readonly fitContentWidth?: number;
 };
 
 // place prefix symbols beside reusable digit reels
@@ -468,6 +886,8 @@ export const SlotsRun = React.memo(
     leadingGap = 0,
     ready = true,
     shadow = false,
+    slotMode = "standard",
+    fitContentWidth,
   }: Readonly<SlotsRunProps>) => {
     const hasDisplayedRef = useRef(false);
     const displayedValueRef = useRef(value);
@@ -508,6 +928,7 @@ export const SlotsRun = React.memo(
     });
     // preserve digit columns with stable numeric lane identities
     const { units, direction, leadLength } = useNumericLanes(visibleValue);
+    const isMagnitudeMode = slotMode === "magnitude";
     const initialDigits = useMemo(() => {
       if (!fromValue || fromValue === visibleValue) return undefined;
 
@@ -517,7 +938,9 @@ export const SlotsRun = React.memo(
         fromLeadLength === -1 ? fromUnits.length : fromLeadLength;
       const targetTailLength = units.length - leadLength;
       const fromTail = fromUnits.slice(resolvedFromLeadLength);
+      const fromDigits = fromTail.filter(isAsciiDigit);
       const initialValues: Array<number | undefined> = [];
+      let magnitudeDigitIndex = 0;
 
       for (let index = 0; index < units.length; index += 1) {
         if (!isAsciiDigit(units[index])) {
@@ -526,13 +949,18 @@ export const SlotsRun = React.memo(
         }
 
         const targetTailIndex = index - leadLength;
-        const fromIndex = fromTail.length - targetTailLength + targetTailIndex;
-        const fromUnit = fromTail[fromIndex];
-        initialValues.push(isAsciiDigit(fromUnit) ? Number(fromUnit) : undefined);
+        const fromIndex =
+          fromTail.length - targetTailLength + targetTailIndex;
+        const fromUnit = isMagnitudeMode
+          ? fromDigits[magnitudeDigitIndex++]
+          : fromTail[fromIndex];
+        initialValues.push(
+          isAsciiDigit(fromUnit) ? Number(fromUnit) : undefined,
+        );
       }
 
       return initialValues;
-    }, [fromValue, leadLength, units, visibleValue]);
+    }, [fromValue, isMagnitudeMode, leadLength, units, visibleValue]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     // animate digit changes and reflow when the number of lanes changes
@@ -643,88 +1071,170 @@ export const SlotsRun = React.memo(
       previousStructureSignatureRef.current !== structureSignature;
     previousStructureSignatureRef.current = structureSignature;
 
+    let magnitudeDigitIndex = 0;
+    const renderedUnits = units.map((unit, index) => {
+      const inLead = index < leadLength;
+      const magnitudeDigitOrdinal =
+        isMagnitudeMode && !inLead && isAsciiDigit(unit)
+          ? magnitudeDigitIndex++
+          : -1;
+      const laneKey = inLead
+        ? `lead:${index}`
+        : magnitudeDigitOrdinal >= 0
+          ? `slot:magnitude:${magnitudeDigitOrdinal}`
+          : `slot:${units.length - 1 - index}`;
+
+      if (isMagnitudeMode && !inLead && unit === ",") {
+        const decimalIndex = units.indexOf(".", index + 1);
+        const digitsToRight = units
+          .slice(
+            index + 1,
+            decimalIndex === -1 ? units.length : decimalIndex,
+          )
+          .filter(isAsciiDigit).length;
+
+        return (
+          <SlotSymbolLane
+            key={`slot:comma:${Math.floor(digitsToRight / 3)}`}
+            symbol={unit}
+            isLast={index === units.length - 1}
+            laneSpacing={laneSpacing}
+            structureChanged={structureChanged}
+            animateIn={hasAnimated}
+            motionRecipe={motionRecipe}
+            slotHeight={slotHeight}
+            textStyle={slotTextStyle}
+            className={className}
+          />
+        );
+      }
+
+      if (inLead || !isAsciiDigit(unit)) {
+        return (
+          <SlotTextLane
+            key={laneKey}
+            unit={unit}
+            isLead={inLead}
+            isLast={index === units.length - 1}
+            laneSpacing={laneSpacing}
+            structureChanged={structureChanged}
+            motionRecipe={motionRecipe}
+            slotHeight={slotHeight}
+            reelTextStyle={reelTextStyle}
+            className={className}
+          />
+        );
+      }
+
+      if (isMagnitudeMode && magnitudeDigitOrdinal > 0) {
+        return (
+          <SlotRisingDigitLane
+            key={laneKey}
+            digit={Number(unit)}
+            initialDigit={initialDigits?.[index]}
+            animateIn={hasAnimated}
+            isLast={index === units.length - 1}
+            laneSpacing={laneSpacing}
+            structureChanged={structureChanged}
+            motionRecipe={motionRecipe}
+            slotHeight={slotHeight}
+            textStyle={slotTextStyle}
+            reelTextStyle={reelTextStyle}
+            className={className}
+            shadow={shadow}
+          />
+        );
+      }
+
+      return (
+        <SlotDigitLane
+          key={laneKey}
+          digit={Number(unit)}
+          initialDigit={initialDigits?.[index]}
+          direction={direction}
+          animateIn={hasAnimated}
+          isLast={index === units.length - 1}
+          laneSpacing={laneSpacing}
+          structureChanged={structureChanged}
+          motionRecipe={motionRecipe}
+          slotHeight={slotHeight}
+          textStyle={slotTextStyle}
+          reelTextStyle={reelTextStyle}
+          className={className}
+          shadow={shadow}
+        />
+      );
+    });
+    const renderLeading = (
+      <LeadingElement
+        leading={visibleLeading}
+        leadingKey={visibleLeadingKey}
+        leadingGap={visibleLeadingGap}
+        enterTransition={
+          hasAnimated ? motionRecipe.enterTransition : undefined
+        }
+        elementEnterTransition={
+          isLeadingSwap ? elementEnterTransition : undefined
+        }
+      />
+    );
+    const slotHeightProbe = slotHeight === undefined ? (
+      <Text
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        onLayout={captureSlotHeight}
+        style={[
+          textStyle,
+          {
+            position: "absolute",
+            left: 0,
+            top: 0,
+            opacity: 0,
+            includeFontPadding: false,
+            letterSpacing: 0,
+          },
+        ]}
+        className={className}
+      >
+        0
+      </Text>
+    ) : null;
+
+    if (isMagnitudeMode) {
+      return (
+        <MagnitudeSlotsViewport
+          align={align}
+          fitContentWidth={fitContentWidth}
+          motionRecipe={motionRecipe}
+          layoutTransition={
+            hasAnimated && (structureChanged || isLeadingChange)
+              ? motionRecipe.layoutTransition
+              : undefined
+          }
+          measurement={slotHeightProbe}
+        >
+          {renderLeading}
+          <Animated.View
+            layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
+            style={rowStyle}
+          >
+            {renderedUnits}
+          </Animated.View>
+        </MagnitudeSlotsViewport>
+      );
+    }
+
     return (
       <View style={[rowStyle, rowAlignStyles[align]]}>
-        <LeadingElement
-          leading={visibleLeading}
-          leadingKey={visibleLeadingKey}
-          leadingGap={visibleLeadingGap}
-          enterTransition={
-            hasAnimated ? motionRecipe.enterTransition : undefined
-          }
-          elementEnterTransition={
-            isLeadingSwap ? elementEnterTransition : undefined
-          }
-        />
+        {renderLeading}
         <Animated.View
           layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
           style={rowStyle}
         >
-          {units.map((unit, index) => {
-            const inLead = index < leadLength;
-            const laneKey = inLead
-              ? `lead:${index}`
-              : `slot:${units.length - 1 - index}`;
-
-            if (inLead || !isAsciiDigit(unit)) {
-              return (
-                <SlotTextLane
-                  key={laneKey}
-                  unit={unit}
-                  isLead={inLead}
-                  isLast={index === units.length - 1}
-                  laneSpacing={laneSpacing}
-                  structureChanged={structureChanged}
-                  motionRecipe={motionRecipe}
-                  slotHeight={slotHeight}
-                  reelTextStyle={reelTextStyle}
-                  className={className}
-                />
-              );
-            }
-
-            return (
-              <SlotDigitLane
-                key={laneKey}
-                digit={Number(unit)}
-                initialDigit={initialDigits?.[index]}
-                direction={direction}
-                animateIn={hasAnimated}
-                isLast={index === units.length - 1}
-                laneSpacing={laneSpacing}
-                structureChanged={structureChanged}
-                motionRecipe={motionRecipe}
-                slotHeight={slotHeight}
-                textStyle={slotTextStyle}
-                reelTextStyle={reelTextStyle}
-                className={className}
-                shadow={shadow}
-              />
-            );
-          })}
+          {renderedUnits}
         </Animated.View>
-        {slotHeight === undefined ? (
-          <Text
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            pointerEvents="none"
-            onLayout={captureSlotHeight}
-            style={[
-              textStyle,
-              {
-                position: "absolute",
-                left: 0,
-                top: 0,
-                opacity: 0,
-                includeFontPadding: false,
-                letterSpacing: 0,
-              },
-            ]}
-            className={className}
-          >
-            0
-          </Text>
-        ) : null}
+        {slotHeightProbe}
       </View>
     );
   }

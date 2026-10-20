@@ -138,6 +138,22 @@ ASCII digits receive slot reels. Prefixes and punctuation render as text.
 Laminar derives reel height from `lineHeight`, then `fontSize`, with a
 12-point floor.
 
+Keep the standard slot behavior by default. Set `slotMode="magnitude"` for
+formatted values that grow from the right: existing digits roll, new places
+enter, separators roll into place, the row shifts left, and the whole value
+scales down to fit its container.
+
+```tsx
+<Laminar
+  text={value}
+  variant="slots"
+  slotMode="magnitude"
+  align="center"
+  containerStyle={{ width: "100%" }}
+  fontSize={72}
+/>
+```
+
 Set `shadow` to soften the top and bottom clipping edges of each digit viewport:
 
 ```tsx
@@ -164,6 +180,7 @@ import {
   type MorphAnimationPresetName,
   type MorphContentVariant,
   type MorphNumberMode,
+  type SlotMode,
   type LaminarShadow,
   type LaminarShadowOptions,
 } from "react-native-laminar";
@@ -195,6 +212,7 @@ icon replacement transition:
 | --- | --- | --- | --- |
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
+| `slotMode` | `"standard" \| "magnitude"` | `"standard"` | Slot layout; `magnitude` shifts and scales growing formatted values |
 | `numberMode` | `"morph" \| "ticker"` | `"morph"` | Number-only renderer mode; `ticker` uses crisp in-place digit flow |
 | `fractionScale` | `number` | `1` | In ticker mode, scales the decimal separator and fractional digits relative to the main digits |
 | `fontSize` | `number` | inherited | Font size and numeric travel input |

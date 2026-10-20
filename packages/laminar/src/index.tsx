@@ -23,6 +23,7 @@ export const Laminar = React.memo(function Laminar({
     color,
     fractionScale: fractionScaleProp = 1,
     align = "left",
+    slotMode = "standard",
     className,
     leading,
     leadingKey,
@@ -54,6 +55,8 @@ export const Laminar = React.memo(function Laminar({
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
+    const isMagnitudeSlots = isSlotsVariant && slotMode === "magnitude";
+    const useAutoSizeViewport = autoSize && !isMagnitudeSlots;
     const fractionScale = Number.isFinite(fractionScaleProp)
       ? Math.max(0.1, Math.min(1, fractionScaleProp))
       : 1;
@@ -69,7 +72,7 @@ export const Laminar = React.memo(function Laminar({
       fromValue !== undefined &&
       fromValue !== resolvedValue;
     const useLayoutAutoSize =
-      autoSize &&
+      useAutoSizeViewport &&
       ((variant === "text" && !leading && isCenteredStandaloneShell) ||
         isSlotsVariant ||
         isTickerVariant);
@@ -121,24 +124,28 @@ export const Laminar = React.memo(function Laminar({
     const {
       captureLayout,
       animatedWidthStyle,
+      measuredWidth,
       isReady: isAutoSizeReady,
       shouldMeasure,
     } =
       useInlineAutoWidth({
-        enabled: autoSize && !useLayoutAutoSize,
+        enabled:
+          isMagnitudeSlots ||
+          (useAutoSizeViewport && !useLayoutAutoSize),
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
+        trackMeasuredWidth: isMagnitudeSlots,
       });
     // measure the normalized units rendered in the visible row
     const measuredValue = React.useMemo(() => {
-      if (!autoSize) {
+      if (!autoSize && !isMagnitudeSlots) {
         return "";
       }
 
       return splitDisplayUnits(resolvedValue)
         .map(normalizeDisplayUnit)
         .join("");
-    }, [autoSize, resolvedValue]);
+    }, [autoSize, isMagnitudeSlots, resolvedValue]);
     const measuredUnits = React.useMemo(
       () => splitDisplayUnits(measuredValue),
       [measuredValue],
@@ -149,11 +156,12 @@ export const Laminar = React.memo(function Laminar({
 
     return (
       <MorphViewport
-        autoSize={autoSize}
+        autoSize={useAutoSizeViewport}
         clipToBounds={clipToBounds}
         align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
+        fillWidth={isMagnitudeSlots}
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
@@ -213,8 +221,12 @@ export const Laminar = React.memo(function Laminar({
             leading={resolvedLeading}
             leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
-            ready={!autoSize || isAutoSizeReady}
+            ready={
+              isMagnitudeSlots ? isAutoSizeReady : !autoSize || isAutoSizeReady
+            }
             shadow={shadow}
+            slotMode={slotMode}
+            fitContentWidth={isMagnitudeSlots ? measuredWidth : undefined}
           />
         ) : isTickerVariant ? (
           <NumericRunSwitch
@@ -289,5 +301,6 @@ export type {
   MorphAnimationPresetName,
   MorphContentVariant,
   MorphNumberMode,
+  SlotMode,
   MorphingTextProps,
 } from "./types";

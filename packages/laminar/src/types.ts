@@ -17,6 +17,7 @@ export type MorphAnimationPresetName =
 export type MorphContentVariant = "text" | "number" | "slots";
 // numeric renderers share the laminar shell and choose their own value motion
 export type MorphNumberMode = "morph" | "ticker" | "slots";
+export type SlotMode = "standard" | "magnitude";
 export type LaminarAlign = "left" | "center" | "right";
 
 // text keys keep leading content paired with the displayed value
@@ -72,6 +73,8 @@ export type MotionRecipe = {
 export type MorphingTextProps = {
   readonly text: string | number;
   readonly variant?: MorphContentVariant;
+  // scale growing formatted values within the available slot viewport
+  readonly slotMode?: SlotMode;
   // select the numeric renderer
   readonly numberMode?: MorphNumberMode;
   // scale the decimal separator and fraction glyphs in ticker mode

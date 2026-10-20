@@ -57,6 +57,7 @@ type MorphViewportProps = {
   readonly autoSizeLayoutTransition?: BaseAnimationBuilder;
   readonly layoutTransitionKey?: string | number;
   readonly animateLayoutOnRendererChange?: boolean;
+  readonly fillWidth?: boolean;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -72,6 +73,7 @@ export const MorphViewport = React.memo(
     autoSizeLayoutTransition,
     layoutTransitionKey,
     animateLayoutOnRendererChange = false,
+    fillWidth = false,
     measurement,
     children,
   }: MorphViewportProps) => {
@@ -95,6 +97,17 @@ export const MorphViewport = React.memo(
       ],
       [align, clipToBounds]
     );
+    const measurementView = measurement ? (
+      <View
+        accessibilityElementsHidden
+        collapsable={false}
+        importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={measuredContentStyle}
+      >
+        {measurement}
+      </View>
+    ) : null;
 
     // measure content outside the visible viewport
     if (autoSizeLayoutTransition) {
@@ -106,17 +119,14 @@ export const MorphViewport = React.memo(
               ? autoSizeLayoutTransition
               : undefined
           }
-          style={[shellStyle, shellAlignStyles[align], containerStyle]}
+          style={[
+            shellStyle,
+            fillWidth ? fullWidthViewportStyle : undefined,
+            shellAlignStyles[align],
+            containerStyle,
+          ]}
         >
-          <View
-            accessibilityElementsHidden
-            collapsable={false}
-            importantForAccessibility="no-hide-descendants"
-            pointerEvents="none"
-            style={measuredContentStyle}
-          >
-            {measurement}
-          </View>
+          {measurementView}
           <Animated.View style={resolvedViewportStyle}>
             {children}
           </Animated.View>
@@ -125,18 +135,17 @@ export const MorphViewport = React.memo(
     }
 
     return (
-      <View style={[shellStyle, shellAlignStyles[align], containerStyle]}>
+      <View
+        style={[
+          shellStyle,
+          fillWidth ? fullWidthViewportStyle : undefined,
+          shellAlignStyles[align],
+          containerStyle,
+        ]}
+      >
         {autoSize ? (
           <>
-            <View
-              accessibilityElementsHidden
-              collapsable={false}
-              importantForAccessibility="no-hide-descendants"
-              pointerEvents="none"
-              style={measuredContentStyle}
-            >
-              {measurement}
-            </View>
+            {measurementView}
             <Animated.View
               style={[resolvedViewportStyle, animatedWidthStyle]}
             >
@@ -144,9 +153,12 @@ export const MorphViewport = React.memo(
             </Animated.View>
           </>
         ) : (
-          <View style={[resolvedViewportStyle, fullWidthViewportStyle]}>
-            {children}
-          </View>
+          <>
+            {measurementView}
+            <View style={[resolvedViewportStyle, fullWidthViewportStyle]}>
+              {children}
+            </View>
+          </>
         )}
       </View>
     );

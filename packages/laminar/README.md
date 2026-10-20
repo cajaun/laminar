@@ -78,6 +78,11 @@ export default function Counter() {
 Use `variant="slots"` when each digit should roll through a vertical reel.
 Prefixes and separators remain ordinary text content.
 
+The default `slotMode="standard"` keeps the current right-aligned place-value
+behavior. Set `slotMode="magnitude"` when a value grows on the right: existing
+digits roll, new digits enter, separators roll into place, the row shifts left,
+and the formatted value scales down to fit its container.
+
 ```tsx
 import React, { useState } from "react";
 import { Button, View } from "react-native";
@@ -101,6 +106,17 @@ export default function SlotCounter() {
     </View>
   );
 }
+```
+
+```tsx
+<Laminar
+  text="$288,888"
+  variant="slots"
+  slotMode="magnitude"
+  align="center"
+  containerStyle={{ width: "100%" }}
+  fontSize={72}
+/>
 ```
 
 The `shadow` prop requires the app to provide the
@@ -225,6 +241,7 @@ Use `autoSize={false}` when the parent already defines the space and you only wa
 type LaminarProps = {
   text: string | number;
   variant?: "text" | "number" | "slots";
+  slotMode?: "standard" | "magnitude";
   numberMode?: "morph" | "ticker";
   fractionScale?: number;
   fontSize?: number;
@@ -248,6 +265,7 @@ type LaminarProps = {
 | ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `text`              | Required                                    | The value to display. Numbers are converted to strings internally.                 |
 | `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. `"slots"` rolls digits through slot columns using the same lanes. |
+| `slotMode`          | `"standard"`                                | With `variant="slots"`, `"magnitude"` shifts growing values left and scales them to fit. |
 | `fontSize`          | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `color`             | Undefined                                   | Convenience prop merged into the text style.                                       |
 | `align`             | `"left"`                                    | Visual alignment for Laminar's viewport and animated glyph row.                    |

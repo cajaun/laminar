@@ -5,6 +5,7 @@ import type {
   LaminarAnimatedText,
   LaminarShadow,
   MotionRecipe,
+  SlotMode,
 } from "../types";
 import { SlotsRun } from "./slots-run";
 import { TickerRun } from "./ticker-run";
@@ -14,6 +15,10 @@ type NumericRunMode = "slots" | "ticker";
 const switchStyle = {
   position: "relative",
   alignSelf: "flex-start",
+} as const;
+
+const magnitudeSwitchStyle = {
+  width: "100%",
 } as const;
 
 const hiddenLayerStyle = {
@@ -41,6 +46,8 @@ type NumericRunSwitchProps = {
   readonly leadingGap?: number;
   readonly ready?: boolean;
   readonly shadow?: LaminarShadow;
+  readonly slotMode?: SlotMode;
+  readonly fitContentWidth?: number;
 };
 
 // render one numeric mode so the inactive mode cannot affect the handoff
@@ -62,6 +69,8 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   leadingGap = 0,
   ready = true,
   shadow = false,
+  slotMode = "standard",
+  fitContentWidth,
 }: Readonly<NumericRunSwitchProps>) {
   const lastSlotsFromValue = React.useRef(fromValue);
   React.useLayoutEffect(() => {
@@ -73,11 +82,25 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   const slotsFromValue =
     mode === "slots" ? fromValue : lastSlotsFromValue.current;
   const shouldRenderSlots = mode === "slots" || preloadValue !== undefined;
+  const isMagnitudeSlots = mode === "slots" && slotMode === "magnitude";
 
   return (
-    <View style={switchStyle}>
+    <View
+      style={[
+        switchStyle,
+        isMagnitudeSlots ? magnitudeSwitchStyle : undefined,
+      ]}
+    >
       {shouldRenderSlots ? (
-        <View style={mode === "slots" ? undefined : hiddenLayerStyle}>
+        <View
+          style={
+            mode === "slots"
+              ? isMagnitudeSlots
+                ? magnitudeSwitchStyle
+                : undefined
+              : hiddenLayerStyle
+          }
+        >
           <SlotsRun
             value={mode === "ticker" ? preloadValue ?? value : value}
             fromValue={slotsFromValue}
@@ -91,6 +114,8 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
             leadingGap={leadingGap}
             ready={ready}
             shadow={shadow}
+            slotMode={slotMode}
+            fitContentWidth={fitContentWidth}
           />
         </View>
       ) : null}
