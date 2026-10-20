@@ -109,6 +109,12 @@ const reelStepAlignStyles = {
   right: { alignItems: "flex-end" },
 } as const;
 
+const reelStepJustifyStyles = {
+  left: { justifyContent: "flex-start" },
+  center: { justifyContent: "center" },
+  right: { justifyContent: "flex-end" },
+} as const;
+
 const REEL_MIN = -12;
 const REEL_MAX = 22;
 const REEL_POSITIONS = Array.from({ length: 30 }, (_, index) => index - 10);
@@ -489,7 +495,6 @@ type ReelStepSlotsViewportProps = {
   readonly align: LaminarAlign;
   readonly fitContentWidth?: number;
   readonly motionRecipe: MotionRecipe;
-  readonly layoutTransition?: MotionRecipe["layoutTransition"];
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -498,7 +503,6 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
   align,
   fitContentWidth,
   motionRecipe,
-  layoutTransition,
   measurement,
   children,
 }: ReelStepSlotsViewportProps) {
@@ -540,7 +544,10 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
       return;
     }
 
-    fitScale.value = motionRecipe.driveNumber(fitScaleTarget);
+    fitScale.value = withTiming(fitScaleTarget, {
+      duration: motionRecipe.durationMs,
+      easing: motionRecipe.easing,
+    });
   }, [fitScale, fitScaleTarget, motionRecipe]);
 
   const fitStyle = useAnimatedStyle(
@@ -557,12 +564,22 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
         { opacity: fitInitialized ? 1 : 0 },
       ]}
     >
-      <Animated.View
-        layout={layoutTransition}
-        style={[rowStyle, rowAlignStyles[align]]}
+      <View
+        style={[
+          reelStepViewportStyle,
+          { flexDirection: "row" },
+          reelStepJustifyStyles[align],
+        ]}
       >
-        <Animated.View style={[rowStyle, fitStyle]}>{children}</Animated.View>
-      </Animated.View>
+        <Animated.View
+          layout={
+            fitInitialized ? motionRecipe.layoutTransition : undefined
+          }
+          style={[rowStyle, fitStyle]}
+        >
+          {children}
+        </Animated.View>
+      </View>
       {measurement}
     </View>
   );
@@ -1263,11 +1280,6 @@ export const SlotsRun = React.memo(
           align={align}
           fitContentWidth={fitContentWidth}
           motionRecipe={motionRecipe}
-          layoutTransition={
-            hasAnimated
-              ? motionRecipe.layoutTransition
-              : undefined
-          }
           measurement={slotHeightProbe}
         >
           {renderLeading}
