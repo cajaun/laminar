@@ -4,22 +4,22 @@ import { Laminar } from "react-native-laminar";
 import { useDemoTheme } from "../../demo-theme";
 import {
   useCyclicValueStoreSnapshot,
-  useMagnitudeSlotsDemoStore,
+  useReelStepDemoStore,
 } from "../../use-demo-state";
 import { DemoPageLayout, settingsRow } from "../shared";
 import type { DemoPageProps } from "../types";
 
-type MagnitudeSlotsStore = ReturnType<typeof useMagnitudeSlotsDemoStore>;
+type ReelStepStore = ReturnType<typeof useReelStepDemoStore>;
 
 const previewContainerStyle = {
   width: "100%",
   alignSelf: "center",
 } as const;
 
-const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
+const ReelStepPreview = React.memo(function ReelStepPreview({
   store,
 }: {
-  readonly store: MagnitudeSlotsStore;
+  readonly store: ReelStepStore;
 }) {
   const state = useCyclicValueStoreSnapshot(store);
   const theme = useDemoTheme();
@@ -38,7 +38,7 @@ const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
     <Laminar
       text={state.value}
       variant="slots"
-      slotMode="magnitude"
+      slotMode="reelStep"
       animationPreset="smooth"
       shadow
       fontSize={72}
@@ -50,8 +50,8 @@ const MagnitudeSlotsPreview = React.memo(function MagnitudeSlotsPreview({
   );
 });
 
-function MagnitudeSlotsPage({ height, width }: DemoPageProps) {
-  const store = useMagnitudeSlotsDemoStore();
+function ReelStepPage({ height, width }: DemoPageProps) {
+  const store = useReelStepDemoStore();
 
   return (
     <DemoPageLayout
@@ -60,12 +60,12 @@ function MagnitudeSlotsPage({ height, width }: DemoPageProps) {
       fontSize={72}
       onReverse={store.previous}
       onMorph={store.next}
-      preview={<MagnitudeSlotsPreview store={store} />}
+      preview={<ReelStepPreview store={store} />}
       settingsStore={store}
       renderSettings={(state, theme) => (
         <>
           {settingsRow({
-            label: "Magnitude Slots",
+            label: "Reel Step",
             value: state.value,
             onPress: store.next,
             theme,
@@ -78,4 +78,4 @@ function MagnitudeSlotsPage({ height, width }: DemoPageProps) {
   );
 }
 
-export const MagnitudeSlotsDemoPage = React.memo(MagnitudeSlotsPage);
+export const ReelStepDemoPage = React.memo(ReelStepPage);

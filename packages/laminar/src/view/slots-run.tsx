@@ -99,11 +99,11 @@ const SlotRollCell = React.memo(function SlotRollCell({
   );
 });
 
-const magnitudeViewportStyle = {
+const reelStepViewportStyle = {
   width: "100%",
 } as const;
 
-const magnitudeAlignStyles = {
+const reelStepAlignStyles = {
   left: { alignItems: "flex-start" },
   center: { alignItems: "center" },
   right: { alignItems: "flex-end" },
@@ -485,7 +485,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
   );
 });
 
-type MagnitudeSlotsViewportProps = {
+type ReelStepSlotsViewportProps = {
   readonly align: LaminarAlign;
   readonly fitContentWidth?: number;
   readonly motionRecipe: MotionRecipe;
@@ -494,14 +494,14 @@ type MagnitudeSlotsViewportProps = {
   readonly children: React.ReactNode;
 };
 
-const MagnitudeSlotsViewport = React.memo(function MagnitudeSlotsViewport({
+const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
   align,
   fitContentWidth,
   motionRecipe,
   layoutTransition,
   measurement,
   children,
-}: MagnitudeSlotsViewportProps) {
+}: ReelStepSlotsViewportProps) {
   const fitScale = useSharedValue(1);
   const hasInitializedFitScaleRef = useRef(false);
   const [fitInitialized, setFitInitialized] = useState(false);
@@ -552,8 +552,8 @@ const MagnitudeSlotsViewport = React.memo(function MagnitudeSlotsViewport({
     <View
       onLayout={captureAvailableWidth}
       style={[
-        magnitudeViewportStyle,
-        magnitudeAlignStyles[align],
+        reelStepViewportStyle,
+        reelStepAlignStyles[align],
         { opacity: fitInitialized ? 1 : 0 },
       ]}
     >
@@ -983,7 +983,7 @@ export const SlotsRun = React.memo(
     });
     // preserve digit columns with stable numeric lane identities
     const { units, direction, leadLength } = useNumericLanes(visibleValue);
-    const isMagnitudeMode = slotMode === "magnitude";
+    const isReelStepMode = slotMode === "reelStep";
     const initialDigits = useMemo(() => {
       if (!fromValue || fromValue === visibleValue) return undefined;
 
@@ -995,7 +995,7 @@ export const SlotsRun = React.memo(
       const fromTail = fromUnits.slice(resolvedFromLeadLength);
       const fromDigits = fromTail.filter(isAsciiDigit);
       const initialValues: Array<number | undefined> = [];
-      let magnitudeDigitIndex = 0;
+      let reelStepDigitIndex = 0;
 
       for (let index = 0; index < units.length; index += 1) {
         if (!isAsciiDigit(units[index])) {
@@ -1006,8 +1006,8 @@ export const SlotsRun = React.memo(
         const targetTailIndex = index - leadLength;
         const fromIndex =
           fromTail.length - targetTailLength + targetTailIndex;
-        const fromUnit = isMagnitudeMode
-          ? fromDigits[magnitudeDigitIndex++]
+        const fromUnit = isReelStepMode
+          ? fromDigits[reelStepDigitIndex++]
           : fromTail[fromIndex];
         initialValues.push(
           isAsciiDigit(fromUnit) ? Number(fromUnit) : undefined,
@@ -1015,7 +1015,7 @@ export const SlotsRun = React.memo(
       }
 
       return initialValues;
-    }, [fromValue, isMagnitudeMode, leadLength, units, visibleValue]);
+    }, [fromValue, isReelStepMode, leadLength, units, visibleValue]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     // animate digit changes and reflow when the number of lanes changes
@@ -1126,21 +1126,21 @@ export const SlotsRun = React.memo(
       previousStructureSignatureRef.current !== structureSignature;
     previousStructureSignatureRef.current = structureSignature;
 
-    let magnitudeDigitIndex = 0;
+    let reelStepDigitIndex = 0;
     const renderedUnits = units.map((unit, index) => {
       const inLead = index < leadLength;
-      const magnitudeDigitOrdinal =
-        isMagnitudeMode && !inLead && isAsciiDigit(unit)
-          ? magnitudeDigitIndex++
+      const reelStepDigitOrdinal =
+        isReelStepMode && !inLead && isAsciiDigit(unit)
+          ? reelStepDigitIndex++
           : -1;
       const laneKey = inLead
         ? `lead:${index}`
-        : magnitudeDigitOrdinal >= 0
-          ? `slot:magnitude:${magnitudeDigitOrdinal}`
+        : reelStepDigitOrdinal >= 0
+          ? `slot:reel-step:${reelStepDigitOrdinal}`
           : `slot:${units.length - 1 - index}`;
 
       if (
-        isMagnitudeMode &&
+        isReelStepMode &&
         !inLead &&
         (unit === "," || unit === ".")
       ) {
@@ -1182,7 +1182,7 @@ export const SlotsRun = React.memo(
         );
       }
 
-      if (isMagnitudeMode && magnitudeDigitOrdinal > 0) {
+      if (isReelStepMode && reelStepDigitOrdinal > 0) {
         return (
           <SlotRisingDigitLane
             key={laneKey}
@@ -1257,9 +1257,9 @@ export const SlotsRun = React.memo(
       </Text>
     ) : null;
 
-    if (isMagnitudeMode) {
+    if (isReelStepMode) {
       return (
-        <MagnitudeSlotsViewport
+        <ReelStepSlotsViewport
           align={align}
           fitContentWidth={fitContentWidth}
           motionRecipe={motionRecipe}
@@ -1277,7 +1277,7 @@ export const SlotsRun = React.memo(
           >
             {renderedUnits}
           </Animated.View>
-        </MagnitudeSlotsViewport>
+        </ReelStepSlotsViewport>
       );
     }
 

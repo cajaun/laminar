@@ -7,7 +7,7 @@ import {
   editorWords,
   fontSizes,
   fontWeights,
-  magnitudeSlotValues,
+  reelStepValues,
   multiIconValues,
   numberValues,
   numberTickerValues,
@@ -215,6 +215,6 @@ export function useSlotsDemoStore() {
   return useCyclicValueStore(numberValues);
 }
 
-export function useMagnitudeSlotsDemoStore() {
-  return useCyclicValueStore(magnitudeSlotValues);
+export function useReelStepDemoStore() {
+  return useCyclicValueStore(reelStepValues);
 }

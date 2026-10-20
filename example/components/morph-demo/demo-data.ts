@@ -41,7 +41,7 @@ export const transactionStates = [
 export const confirmContinueWords = ["Continue", "Confirm"] as const;
 export const numberValues = ["$1,234", "$12,345", "$1,089", "$980"] as const;
 
-export const magnitudeSlotValues = [
+export const reelStepValues = [
   "$0",
   "$2",
   "$28",
@@ -181,7 +181,7 @@ export const examplePages = [
   { id: "confirmation", label: "Confirmation" },
   { id: "numbers", label: "Numbers" },
   { id: "slots", label: "Slots" },
-  { id: "magnitudeSlots", label: "Magnitude Slots" },
+  { id: "reelStep", label: "Reel Step" },
   { id: "numberTicker", label: "Number Ticker" },
   { id: "numberTickerSlider", label: "Number Ticker Slider" },
 ] as const;
@@ -197,7 +197,7 @@ export const demoTabGroups = [
     pageIds: [
       "numbers",
       "slots",
-      "magnitudeSlots",
+      "reelStep",
       "editor",
       "words",
       "button",

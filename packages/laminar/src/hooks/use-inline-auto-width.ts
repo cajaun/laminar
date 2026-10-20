@@ -138,7 +138,7 @@ export const useInlineAutoWidth = ({
           ? latestMeasuredWidth.width
           : undefined)
       : undefined,
-    // wait for a tracked width before releasing a magnitude slot transition
+    // wait for a tracked width before releasing a reel step transition
     isReady: !enabled || !trackMeasuredWidth || hasCurrentMeasuredWidth,
     shouldMeasure: enabled && cachedWidth === undefined,
   };

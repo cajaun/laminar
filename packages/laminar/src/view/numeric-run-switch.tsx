@@ -17,7 +17,7 @@ const switchStyle = {
   alignSelf: "flex-start",
 } as const;
 
-const magnitudeSwitchStyle = {
+const reelStepSwitchStyle = {
   width: "100%",
 } as const;
 
@@ -82,21 +82,21 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   const slotsFromValue =
     mode === "slots" ? fromValue : lastSlotsFromValue.current;
   const shouldRenderSlots = mode === "slots" || preloadValue !== undefined;
-  const isMagnitudeSlots = mode === "slots" && slotMode === "magnitude";
+  const isReelStepSlots = mode === "slots" && slotMode === "reelStep";
 
   return (
     <View
       style={[
         switchStyle,
-        isMagnitudeSlots ? magnitudeSwitchStyle : undefined,
+        isReelStepSlots ? reelStepSwitchStyle : undefined,
       ]}
     >
       {shouldRenderSlots ? (
         <View
           style={
             mode === "slots"
-              ? isMagnitudeSlots
-                ? magnitudeSwitchStyle
+              ? isReelStepSlots
+                ? reelStepSwitchStyle
                 : undefined
               : hiddenLayerStyle
           }

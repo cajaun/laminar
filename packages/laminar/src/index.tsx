@@ -55,8 +55,8 @@ export const Laminar = React.memo(function Laminar({
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
-    const isMagnitudeSlots = isSlotsVariant && slotMode === "magnitude";
-    const useAutoSizeViewport = autoSize && !isMagnitudeSlots;
+    const isReelStepSlots = isSlotsVariant && slotMode === "reelStep";
+    const useAutoSizeViewport = autoSize && !isReelStepSlots;
     const fractionScale = Number.isFinite(fractionScaleProp)
       ? Math.max(0.1, Math.min(1, fractionScaleProp))
       : 1;
@@ -130,22 +130,22 @@ export const Laminar = React.memo(function Laminar({
     } =
       useInlineAutoWidth({
         enabled:
-          isMagnitudeSlots ||
+          isReelStepSlots ||
           (useAutoSizeViewport && !useLayoutAutoSize),
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
-        trackMeasuredWidth: isMagnitudeSlots,
+        trackMeasuredWidth: isReelStepSlots,
       });
     // measure the normalized units rendered in the visible row
     const measuredValue = React.useMemo(() => {
-      if (!autoSize && !isMagnitudeSlots) {
+      if (!autoSize && !isReelStepSlots) {
         return "";
       }
 
       return splitDisplayUnits(resolvedValue)
         .map(normalizeDisplayUnit)
         .join("");
-    }, [autoSize, isMagnitudeSlots, resolvedValue]);
+    }, [autoSize, isReelStepSlots, resolvedValue]);
     const measuredUnits = React.useMemo(
       () => splitDisplayUnits(measuredValue),
       [measuredValue],
@@ -161,7 +161,7 @@ export const Laminar = React.memo(function Laminar({
         align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
-        fillWidth={isMagnitudeSlots}
+        fillWidth={isReelStepSlots}
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
@@ -222,11 +222,11 @@ export const Laminar = React.memo(function Laminar({
             leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
             ready={
-              isMagnitudeSlots ? isAutoSizeReady : !autoSize || isAutoSizeReady
+              isReelStepSlots ? isAutoSizeReady : !autoSize || isAutoSizeReady
             }
             shadow={shadow}
             slotMode={slotMode}
-            fitContentWidth={isMagnitudeSlots ? measuredWidth : undefined}
+            fitContentWidth={isReelStepSlots ? measuredWidth : undefined}
           />
         ) : isTickerVariant ? (
           <NumericRunSwitch

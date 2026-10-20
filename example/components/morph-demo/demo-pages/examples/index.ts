@@ -1,7 +1,7 @@
 export { ButtonDemoPage } from "./button";
 export { ConfirmationDemoPage } from "./confirmation";
 export { EditorDemoPage } from "./editor";
-export { MagnitudeSlotsDemoPage } from "./magnitude-slots";
+export { ReelStepDemoPage } from "./reel-step";
 export { NumberTickerDemoPage } from "./number-ticker";
 export { NumbersDemoPage } from "./numbers";
 export { SlotsExampleDemoPage } from "./slots";

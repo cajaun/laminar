@@ -13,7 +13,7 @@ import {
   ButtonDemoPage,
   ConfirmationDemoPage,
   EditorDemoPage,
-  MagnitudeSlotsDemoPage,
+  ReelStepDemoPage,
   NumberTickerDemoPage,
   NumbersDemoPage,
   SlotsExampleDemoPage,
@@ -39,7 +39,7 @@ export const demoPageComponents: Record<
   confirmation: ConfirmationDemoPage,
   numbers: NumbersDemoPage,
   slots: SlotsExampleDemoPage,
-  magnitudeSlots: MagnitudeSlotsDemoPage,
+  reelStep: ReelStepDemoPage,
   numberTicker: NumberTickerDemoPage,
   numberTickerSlider: NumberTickerSliderDemoPage,
 };
