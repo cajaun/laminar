@@ -495,6 +495,7 @@ type ReelStepSlotsViewportProps = {
   readonly align: LaminarAlign;
   readonly fitContentWidth?: number;
   readonly motionRecipe: MotionRecipe;
+  readonly animateLayout: boolean;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -503,6 +504,7 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
   align,
   fitContentWidth,
   motionRecipe,
+  animateLayout,
   measurement,
   children,
 }: ReelStepSlotsViewportProps) {
@@ -572,9 +574,7 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
         ]}
       >
         <Animated.View
-          layout={
-            fitInitialized ? motionRecipe.layoutTransition : undefined
-          }
+          layout={animateLayout ? motionRecipe.layoutTransition : undefined}
           style={[rowStyle, fitStyle]}
         >
           {children}
@@ -1280,6 +1280,7 @@ export const SlotsRun = React.memo(
           align={align}
           fitContentWidth={fitContentWidth}
           motionRecipe={motionRecipe}
+          animateLayout={hasAnimated}
           measurement={slotHeightProbe}
         >
           {renderLeading}
