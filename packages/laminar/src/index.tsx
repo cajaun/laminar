@@ -96,9 +96,15 @@ export const Laminar = React.memo(function Laminar({
     // remeasure when text style or leading content changes
     const measurementKey = React.useMemo(() => {
       const flattenedStyle = StyleSheet.flatten(textStyle);
+      // reuse widths for tabular values with the same punctuation layout
+      const measurementValue =
+        isReelStepSlots &&
+        flattenedStyle?.fontVariant?.includes("tabular-nums")
+          ? resolvedValue.replace(/[0-9]/g, "0")
+          : resolvedValue;
 
       return JSON.stringify([
-        resolvedValue,
+        measurementValue,
         flattenedStyle?.fontFamily,
         flattenedStyle?.fontSize,
         flattenedStyle?.fontStyle,
@@ -114,6 +120,7 @@ export const Laminar = React.memo(function Laminar({
       ]);
     }, [
       leadingGap,
+      isReelStepSlots,
       resolvedLeading,
       resolvedLeadingKey,
       resolvedValue,

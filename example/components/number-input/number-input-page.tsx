@@ -1,12 +1,20 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import type { TextStyle } from "react-native";
 import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Laminar } from "react-native-laminar";
-import { DemoPageScroll, PreviewStage } from "@/components/morph-demo/demo-chrome";
+import { PreviewStage } from "@/components/morph-demo/demo-chrome";
 import { useDemoTheme } from "@/components/morph-demo/demo-theme";
 import type { DemoPageProps } from "@/components/morph-demo/demo-pages/types";
 import { useDemoMetrics } from "@/components/morph-demo/use-demo-metrics";
-import { ButtonsGrid } from "./ui";
+import {
+  ButtonsGrid,
+  ContinueButton,
+  RecipientField,
+  SendHeader,
+} from "./ui";
 
 const previewContainerStyle = {
   width: "100%",
@@ -51,27 +59,81 @@ const NumberInputPreview = React.memo(function NumberInputPreview({
   );
 });
 
-function NumberInputPage({ height, width }: DemoPageProps) {
+function NumberInputController({
+  metrics,
+}: {
+  readonly metrics: ReturnType<typeof useDemoMetrics>;
+}) {
   const [input, setInput] = useState("0");
-  const metrics = useDemoMetrics({ height, width, fontSize: 72 });
-  const updateInput = useCallback((value: string) => setInput(value), []);
-  const backspace = useCallback((value: string) => setInput(value), []);
-  const reset = useCallback(() => setInput("0"), []);
+  const inputRef = useRef(input);
+  const updateInput = useCallback((value: string) => {
+    inputRef.current = value;
+    setInput(value);
+  }, []);
+  const appendDigit = useCallback(
+    (digit: number) => {
+      const current = inputRef.current;
+      const nextValue =
+        current === "0" ? String(digit) : `${current}${digit}`;
+      if (nextValue.replace(/\D/g, "").length > 11) {
+        return;
+      }
+      updateInput(nextValue);
+    },
+    [updateInput],
+  );
+  const addDecimal = useCallback(() => {
+    const current = inputRef.current;
+    if (!current.includes(".")) {
+      updateInput(`${current}.`);
+    }
+  }, [updateInput]);
+  const backspace = useCallback(() => {
+    const current = inputRef.current;
+    updateInput(current.length === 1 ? "0" : current.slice(0, -1));
+  }, [updateInput]);
+  const reset = useCallback(() => updateInput("0"), [updateInput]);
 
   return (
     <View style={{ flex: 1 }}>
-      <DemoPageScroll metrics={metrics}>
-        <PreviewStage metrics={metrics}>
-          <NumberInputPreview value={input} />
-        </PreviewStage>
-        <View style={{ flex: 1, minHeight: metrics.controlStackGap }} />
-        <ButtonsGrid
-          input={input}
-          onUpdate={updateInput}
-          onBackspace={backspace}
-          onReset={reset}
-        />
-      </DemoPageScroll>
+      <PreviewStage metrics={metrics} fill>
+        <NumberInputPreview value={input} />
+      </PreviewStage>
+      <ButtonsGrid
+        onDigit={appendDigit}
+        onDecimal={addDecimal}
+        onBackspace={backspace}
+        onReset={reset}
+      />
+    </View>
+  );
+}
+
+function NumberInputPage({ height, width }: DemoPageProps) {
+  const metrics = useDemoMetrics({ height, width, fontSize: 72 });
+  const theme = useDemoTheme();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const close = useCallback(() => router.back(), [router]);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <StatusBar style={theme.isDark ? "light" : "dark"} />
+      <View
+        style={{
+          flex: 1,
+          paddingHorizontal: metrics.horizontalInset,
+          paddingTop: insets.top,
+          paddingBottom: 12,
+        }}
+      >
+        <SendHeader onClose={close} />
+        <View style={{ height: 18 }} />
+        <RecipientField />
+        <NumberInputController metrics={metrics} />
+        <View style={{ height: 16 }} />
+        <ContinueButton />
+      </View>
     </View>
   );
 }

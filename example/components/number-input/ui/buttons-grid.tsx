@@ -20,19 +20,17 @@ const items = [
 ] as const;
 
 type ButtonsGridProps = {
-  readonly input: string;
-  readonly onUpdate: (value: string) => void;
-  readonly onBackspace?: (value: string) => void;
+  readonly onDigit: (digit: number) => void;
+  readonly onDecimal: () => void;
+  readonly onBackspace: () => void;
   readonly onReset?: () => void;
-  readonly onMaxReached?: () => void;
 };
 
 export const ButtonsGrid = React.memo(function ButtonsGrid({
-  input,
+  onDigit,
+  onDecimal,
   onReset,
-  onUpdate,
   onBackspace,
-  onMaxReached,
 }: ButtonsGridProps) {
   const theme = useDemoTheme();
 
@@ -50,25 +48,17 @@ export const ButtonsGrid = React.memo(function ButtonsGrid({
             }}
             onPress={() => {
               if (typeof label === "number") {
-                const nextValue =
-                  input === "0" ? String(label) : `${input}${label}`;
-                if (nextValue.replace(/\D/g, "").length > 11) {
-                  onMaxReached?.();
-                  return;
-                }
-                onUpdate(nextValue);
+                onDigit(label);
                 return;
               }
 
               if (label === ".") {
-                if (!input.includes(".")) {
-                  onUpdate(`${input}.`);
-                }
+                onDecimal();
                 return;
               }
 
               if (label === "backspace") {
-                onBackspace?.(input.length === 1 ? "0" : input.slice(0, -1));
+                onBackspace();
               }
             }}
           >

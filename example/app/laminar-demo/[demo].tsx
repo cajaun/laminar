@@ -16,6 +16,7 @@ export default function LaminarDemoRoute() {
     ? (demo as ExamplePageId)
     : "textIdentity";
   const isNumberTickerSlider = pageId === "numberTickerSlider";
+  const isNumberInput = pageId === "numberInput";
 
   return (
     <>
@@ -24,7 +25,14 @@ export default function LaminarDemoRoute() {
           title: isNumberTickerSlider
             ? ""
             : examplePages.find((page) => page.id === pageId)?.label,
-          headerShown: true,
+          headerShown: isNumberInput ? false : true,
+          ...(isNumberInput
+            ? {
+                headerTransparent: false,
+                headerBackVisible: false,
+                headerShadowVisible: false,
+              }
+            : undefined),
           ...(isNumberTickerSlider
             ? {
                 headerTransparent: false,
