@@ -354,6 +354,7 @@ type SlotSymbolLaneProps = {
   readonly slotHeight?: number;
   readonly textStyle?: StyleProp<TextStyle>;
   readonly className?: string;
+  readonly shadow?: LaminarShadow;
 };
 
 const SlotSymbolLane = React.memo(function SlotSymbolLane({
@@ -366,6 +367,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
   slotHeight,
   textStyle,
   className,
+  shadow = false,
 }: SlotSymbolLaneProps) {
   const current = useSharedValue(animateIn ? 0 : 1);
   const exitTransition = useMemo(
@@ -378,6 +380,12 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
     }),
     [slotHeight],
   );
+  const shadowOptions =
+    shadow !== null && typeof shadow === "object"
+      ? shadow
+      : shadow
+        ? {}
+        : undefined;
 
   useEffect(() => {
     if (slotHeight === undefined || !animateIn) {
@@ -428,6 +436,19 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
     symbol,
     textStyle,
   ]);
+  const shadowedStrip =
+    slotHeight !== undefined && shadowOptions ? (
+      <SlotShadow
+        slotHeight={slotHeight}
+        viewportHeight={slotHeight}
+        color={shadowOptions.color}
+        size={shadowOptions.size ?? slotHeight * 0.1}
+      >
+        {strip!}
+      </SlotShadow>
+    ) : (
+      strip
+    );
 
   return (
     <Animated.View
@@ -457,7 +478,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
           >
             {symbol}
           </Text>
-          {strip}
+          {shadowedStrip}
         </View>
       )}
     </Animated.View>
@@ -1139,6 +1160,7 @@ export const SlotsRun = React.memo(
             slotHeight={slotHeight}
             textStyle={slotTextStyle}
             className={className}
+            shadow={shadow}
           />
         );
       }
