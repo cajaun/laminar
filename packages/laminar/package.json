@@ -57,6 +57,7 @@
     "react-native-reanimated": ">=3"
   },
   "devDependencies": {
+    "@react-native/babel-preset": "^0.86.3",
     "react-native-builder-bob": "*",
     "react-native-reanimated": "4.5.1",
     "react-native-worklets": "0.10.1",

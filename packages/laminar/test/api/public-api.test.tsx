@@ -231,6 +231,7 @@ describe("public Laminar API", () => {
           text="42"
           variant="slots"
           shadow
+          fontSize={16}
           autoSize={false}
         />
       );

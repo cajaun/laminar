@@ -24,6 +24,8 @@ jest.mock("react-native-reanimated", () => {
       bezier: jest.fn(() => easing),
     },
     LinearTransition: layoutTransition,
+    createAnimatedComponent: jest.fn((component: unknown) => component),
+    useAnimatedProps: jest.fn((factory: () => unknown) => factory()),
     useAnimatedStyle: jest.fn((factory: () => unknown) => factory()),
     useSharedValue: jest.fn((value: unknown) =>
       React.useRef({ value }).current

@@ -230,6 +230,7 @@ describe("rendered run contracts", () => {
           value="$1.2"
           motionRecipe={motionRecipe}
           align="center"
+          fontSize={16}
         />
       );
     });
@@ -268,6 +269,33 @@ describe("rendered run contracts", () => {
     );
   });
 
+  test("RUN-ST-009 SlotsRun measures a missing font size before rendering reels", () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    act(() => {
+      renderer = TestRenderer.create(
+        <SlotsRun value="42" motionRecipe={motionRecipe} align="left" />
+      );
+    });
+
+    const probe = renderer.root
+      .findAllByType(Text)
+      .find((node) => typeof node.props.onLayout === "function");
+    expect(probe).toBeDefined();
+
+    const onLayout = probe!.props.onLayout as (event: unknown) => void;
+    const event = { nativeEvent: { layout: { height: 18.2 } } };
+    act(() => {
+      onLayout(event);
+      onLayout(event);
+    });
+
+    expect(
+      renderer.root
+        .findAllByType(Text)
+        .some((node) => StyleSheet.flatten(node.props.style)?.lineHeight === 19),
+    ).toBe(true);
+  });
+
   test("RUN-BVA-002 SlotsRun aligns prefixes and punctuation to the reel frame", () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     act(() => {
@@ -287,8 +315,10 @@ describe("rendered run contracts", () => {
         .find((node) => node.props.children === value);
 
       expect(glyph).toBeDefined();
-      expect(StyleSheet.flatten(glyph!.props.style)).toMatchObject({
+      expect(StyleSheet.flatten(glyph!.parent?.props.style)).toMatchObject({
         height: 48,
+      });
+      expect(StyleSheet.flatten(glyph!.props.style)).toMatchObject({
         lineHeight: 48,
       });
     }
