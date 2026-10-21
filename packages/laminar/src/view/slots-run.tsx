@@ -309,7 +309,7 @@ type SlotTextLaneProps = {
   readonly isLead: boolean;
   readonly isLast: boolean;
   readonly laneSpacing: number;
-  readonly structureChanged: boolean;
+  readonly layoutChanged: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly slotHeight?: number;
   readonly reelTextStyle?: StyleProp<TextStyle>;
@@ -322,7 +322,7 @@ const SlotTextLane = React.memo(function SlotTextLane({
   isLead,
   isLast,
   laneSpacing,
-  structureChanged,
+  layoutChanged,
   motionRecipe,
   slotHeight,
   reelTextStyle,
@@ -330,9 +330,7 @@ const SlotTextLane = React.memo(function SlotTextLane({
 }: SlotTextLaneProps) {
   return (
     <Animated.View
-      layout={
-        structureChanged ? motionRecipe.layoutTransition : undefined
-      }
+      layout={layoutChanged ? motionRecipe.layoutTransition : undefined}
       exiting={!isLead ? motionRecipe.exitTransition : undefined}
       style={{
         ...(slotHeight !== undefined ? { height: slotHeight } : undefined),
@@ -354,6 +352,7 @@ type SlotSymbolLaneProps = {
   readonly symbol: string;
   readonly isLast: boolean;
   readonly laneSpacing: number;
+  readonly layoutChanged: boolean;
   readonly structureChanged: boolean;
   readonly animateIn: boolean;
   readonly motionRecipe: MotionRecipe;
@@ -367,6 +366,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
   symbol,
   isLast,
   laneSpacing,
+  layoutChanged,
   structureChanged,
   animateIn,
   motionRecipe,
@@ -459,7 +459,7 @@ const SlotSymbolLane = React.memo(function SlotSymbolLane({
   return (
     <Animated.View
       collapsable={false}
-      layout={structureChanged ? motionRecipe.layoutTransition : undefined}
+      layout={layoutChanged ? motionRecipe.layoutTransition : undefined}
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
@@ -499,7 +499,6 @@ type ReelStepSlotsViewportProps = {
   readonly align: LaminarAlign;
   readonly fitContentWidth?: number;
   readonly motionRecipe: MotionRecipe;
-  readonly animateLayout: boolean;
   readonly measurement?: React.ReactNode;
   readonly children: React.ReactNode;
 };
@@ -508,20 +507,17 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
   align,
   fitContentWidth,
   motionRecipe,
-  animateLayout,
   measurement,
   children,
 }: ReelStepSlotsViewportProps) {
-  const fitScale = useSharedValue(1);
-  const hasInitializedFitScaleRef = useRef(false);
+  const animatedContentWidth = useSharedValue(0);
+  const hasInitializedFitWidthRef = useRef(false);
+  const previousFitWidthRef = useRef<number | undefined>(undefined);
   const [fitInitialized, setFitInitialized] = useState(false);
   const [availableWidth, setAvailableWidth] = useState<number>();
   const captureAvailableWidth = useCallback(
     (event: LayoutChangeEvent) => {
-      const nextWidth = Math.max(
-        0,
-        Math.floor(event.nativeEvent.layout.width),
-      );
+      const nextWidth = Math.max(0, event.nativeEvent.layout.width);
 
       setAvailableWidth((currentWidth) =>
         currentWidth !== undefined && Math.abs(currentWidth - nextWidth) < 1
@@ -531,35 +527,60 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
     },
     [],
   );
-  const fitScaleTarget =
-    fitContentWidth !== undefined &&
-    availableWidth !== undefined &&
-    availableWidth > 0
-      ? Math.min(1, availableWidth / Math.max(fitContentWidth, 1))
-      : undefined;
-
   useLayoutEffect(() => {
-    if (fitScaleTarget === undefined) {
+    if (
+      fitContentWidth === undefined ||
+      availableWidth === undefined ||
+      availableWidth <= 0
+    ) {
       return;
     }
 
-    if (!hasInitializedFitScaleRef.current) {
-      hasInitializedFitScaleRef.current = true;
-      fitScale.value = fitScaleTarget;
+    if (!hasInitializedFitWidthRef.current) {
+      hasInitializedFitWidthRef.current = true;
+      previousFitWidthRef.current = fitContentWidth;
+      animatedContentWidth.value = fitContentWidth;
       setFitInitialized(true);
       return;
     }
 
-    fitScale.value = withTiming(fitScaleTarget, {
+    if (previousFitWidthRef.current === fitContentWidth) {
+      return;
+    }
+
+    previousFitWidthRef.current = fitContentWidth;
+    animatedContentWidth.value = withTiming(fitContentWidth, {
       duration: motionRecipe.durationMs,
       easing: motionRecipe.easing,
     });
-  }, [fitScale, fitScaleTarget, motionRecipe]);
+  }, [
+    animatedContentWidth,
+    availableWidth,
+    fitContentWidth,
+    motionRecipe.durationMs,
+    motionRecipe.easing,
+  ]);
 
-  const fitStyle = useAnimatedStyle(
-    () => ({ transform: [{ scale: fitScale.value }] }),
-    [fitScale],
-  );
+  // derive the fit scale from the same animated width as the row
+  const fitStyle = useAnimatedStyle(() => {
+    const contentWidth = animatedContentWidth.value;
+    const scale =
+      availableWidth !== undefined && availableWidth > 0 && contentWidth > 0
+        ? Math.min(1, availableWidth / contentWidth)
+        : 1;
+    const scaledWidth = contentWidth * scale;
+    const alignmentOffset =
+      align === "left"
+        ? -(contentWidth - scaledWidth) / 2
+        : align === "right"
+          ? (contentWidth - scaledWidth) / 2
+          : 0;
+
+    return {
+      width: contentWidth,
+      transform: [{ translateX: alignmentOffset }, { scale }],
+    };
+  }, [align, animatedContentWidth, availableWidth]);
 
   return (
     <View
@@ -578,10 +599,7 @@ const ReelStepSlotsViewport = React.memo(function ReelStepSlotsViewport({
           reelStepJustifyStyles[align],
         ]}
       >
-        <Animated.View
-          layout={animateLayout ? motionRecipe.layoutTransition : undefined}
-          style={[rowStyle, fitStyle]}
-        >
+        <Animated.View style={[rowStyle, fitStyle]}>
           {children}
         </Animated.View>
       </View>
@@ -597,6 +615,7 @@ type SlotDigitLaneProps = {
   readonly animateIn: boolean;
   readonly isLast: boolean;
   readonly laneSpacing: number;
+  readonly layoutChanged: boolean;
   readonly structureChanged: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly slotHeight?: number;
@@ -613,6 +632,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
   animateIn,
   isLast,
   laneSpacing,
+  layoutChanged,
   structureChanged,
   motionRecipe,
   slotHeight,
@@ -728,9 +748,7 @@ const SlotDigitLane = React.memo(function SlotDigitLane({
 
   return (
     <Animated.View
-      layout={
-        structureChanged ? motionRecipe.layoutTransition : undefined
-      }
+      layout={layoutChanged ? motionRecipe.layoutTransition : undefined}
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
@@ -765,6 +783,7 @@ type SlotRisingDigitLaneProps = {
   readonly animateIn: boolean;
   readonly isLast: boolean;
   readonly laneSpacing: number;
+  readonly layoutChanged: boolean;
   readonly structureChanged: boolean;
   readonly motionRecipe: MotionRecipe;
   readonly slotHeight?: number;
@@ -780,6 +799,7 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
   animateIn,
   isLast,
   laneSpacing,
+  layoutChanged,
   structureChanged,
   motionRecipe,
   slotHeight,
@@ -898,7 +918,7 @@ const SlotRisingDigitLane = React.memo(function SlotRisingDigitLane({
 
   return (
     <Animated.View
-      layout={structureChanged ? motionRecipe.layoutTransition : undefined}
+      layout={layoutChanged ? motionRecipe.layoutTransition : undefined}
       entering={
         structureChanged ? motionRecipe.enterTransition : undefined
       }
@@ -1137,7 +1157,8 @@ export const SlotsRun = React.memo(
       };
     }, [slotHeight, slotTextStyle]);
 
-    if (visibleValue !== lastValueRef.current || isLeadingChange) {
+    const valueChanged = visibleValue !== lastValueRef.current;
+    if (valueChanged || isLeadingChange) {
       hasAnimatedRef.current = true;
       lastValueRef.current = visibleValue;
     }
@@ -1146,6 +1167,10 @@ export const SlotsRun = React.memo(
     const structureChanged =
       hasAnimated &&
       previousStructureSignatureRef.current !== structureSignature;
+    // animate lane widths when reel step glyphs change
+    const layoutChanged = isReelStepMode
+      ? hasAnimated && (valueChanged || isLeadingChange)
+      : structureChanged;
     previousStructureSignatureRef.current = structureSignature;
 
     let reelStepDigitIndex = 0;
@@ -1176,6 +1201,7 @@ export const SlotsRun = React.memo(
             symbol={unit}
             isLast={index === units.length - 1}
             laneSpacing={laneSpacing}
+            layoutChanged={layoutChanged}
             structureChanged={structureChanged}
             animateIn={hasAnimated}
             motionRecipe={motionRecipe}
@@ -1195,7 +1221,7 @@ export const SlotsRun = React.memo(
             isLead={inLead}
             isLast={index === units.length - 1}
             laneSpacing={laneSpacing}
-            structureChanged={structureChanged}
+            layoutChanged={layoutChanged}
             motionRecipe={motionRecipe}
             slotHeight={slotHeight}
             reelTextStyle={reelTextStyle}
@@ -1213,6 +1239,7 @@ export const SlotsRun = React.memo(
             animateIn={hasAnimated}
             isLast={index === units.length - 1}
             laneSpacing={laneSpacing}
+            layoutChanged={layoutChanged}
             structureChanged={structureChanged}
             motionRecipe={motionRecipe}
             slotHeight={slotHeight}
@@ -1233,6 +1260,7 @@ export const SlotsRun = React.memo(
           animateIn={hasAnimated}
           isLast={index === units.length - 1}
           laneSpacing={laneSpacing}
+          layoutChanged={layoutChanged}
           structureChanged={structureChanged}
           motionRecipe={motionRecipe}
           slotHeight={slotHeight}
@@ -1285,12 +1313,13 @@ export const SlotsRun = React.memo(
           align={align}
           fitContentWidth={fitContentWidth}
           motionRecipe={motionRecipe}
-          animateLayout={hasAnimated}
           measurement={slotHeightProbe}
         >
           {renderLeading}
           <Animated.View
-            layout={isLeadingChange ? motionRecipe.layoutTransition : undefined}
+            layout={
+              layoutChanged ? motionRecipe.layoutTransition : undefined
+            }
             style={rowStyle}
           >
             {renderedUnits}
