@@ -17,7 +17,7 @@ export type MorphAnimationPresetName =
 export type MorphContentVariant = "text" | "number" | "slots";
 // numeric renderers share the laminar shell and choose their own value motion
 export type MorphNumberMode = "morph" | "ticker" | "slots";
-export type SlotMode = "standard" | "reelStep";
+export type SlotMode = "standard" | "reelStep" | "input";
 export type LaminarAlign = "left" | "center" | "right";
 
 // text keys keep leading content paired with the displayed value
@@ -79,6 +79,10 @@ export type MorphingTextProps = {
   readonly numberMode?: MorphNumberMode;
   // scale the decimal separator and fraction glyphs in ticker mode
   readonly fractionScale?: number;
+  // classify numeric input separators with the supplied locale
+  readonly locale?: string;
+  // provide the caret offset in utf16 code units of the rendered text
+  readonly caretIndex?: number;
   readonly animatedText?: LaminarAnimatedText;
   // start slot handoffs from the last value shown by the numeric renderer
   readonly fromValue?: string;

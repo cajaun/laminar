@@ -176,7 +176,8 @@ Use `slots` when each digit should roll through a reel.
 />
 ```
 
-ASCII digits receive slot reels. Prefixes and punctuation render as text.
+ASCII digits receive slot reels. In the standard mode, prefixes and
+punctuation render as text.
 Laminar derives reel height from `lineHeight`, then `fontSize`, with a
 12-point floor.
 
@@ -185,11 +186,22 @@ formatted values that grow from the right: the leading digit rolls through a
 full reel, following digits and separators move by one slot, and the row shifts
 left and scales down to fit its container.
 
+Set `slotMode="input"` for formatted values updated by input edits. It
+matches decimal separators as pivots, rematches grouping separators when the
+integer gains or loses digits, and uses the supplied locale to recognize
+separators such as French narrow spaces. Without a locale, a unique final
+comma or period is treated as the decimal; pass a locale for ambiguous values
+such as `1,234`.
+Pass `caretIndex` as the UTF-16 offset in the rendered string when edits can
+happen away from the end.
+
 ```tsx
 <Laminar
   text={value}
   variant="slots"
-  slotMode="reelStep"
+  slotMode="input"
+  locale="en-US"
+  caretIndex={value.length}
   align="center"
   containerStyle={{ width: "100%" }}
   fontSize={72}
@@ -262,7 +274,9 @@ icon replacement transition:
 | --- | --- | --- | --- |
 | `text` | `string \| number` | required | Value Laminar renders |
 | `variant` | `"text" \| "number" \| "slots"` | `"text"` | Reconciliation and animation mode |
-| `slotMode` | `"standard" \| "reelStep"` | `"standard"` | Slot layout for `variant="slots"` or `numberMode="slots"`; `reelStep` uses a full reel for the leading digit and one-slot motion for following digits and separators |
+| `slotMode` | `"standard" \| "reelStep" \| "input"` | `"standard"` | Slot layout and matching; `reelStep` uses a full reel for the leading digit, while `input` matches edited formatted input by glyph role |
+| `locale` | `string` | `undefined` | Identifies decimal and grouping separators in `slotMode="input"`; pass it when punctuation could be ambiguous |
+| `caretIndex` | `number` | `undefined` | UTF-16 caret offset in the rendered string for edits in `slotMode="input"` |
 | `numberMode` | `"morph" \| "ticker" \| "slots"` | `"morph"` | Renderer used by `variant="number"`; `ticker` uses crisp in-place digit flow, and `slots` uses slot reels |
 | `fractionScale` | `number` | `1` | In ticker mode, scales the decimal separator and fractional digits relative to the main digits |
 | `animatedText` | `LaminarAnimatedText` | `undefined` | In ticker mode, selects among preformatted `values` with a shared, zero-based `index` |

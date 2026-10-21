@@ -17,7 +17,7 @@ const switchStyle = {
   alignSelf: "flex-start",
 } as const;
 
-const reelStepSwitchStyle = {
+const fullWidthSlotStyle = {
   width: "100%",
 } as const;
 
@@ -47,6 +47,8 @@ type NumericRunSwitchProps = {
   readonly ready?: boolean;
   readonly shadow?: LaminarShadow;
   readonly slotMode?: SlotMode;
+  readonly locale?: string;
+  readonly caretIndex?: number;
   readonly fitContentWidth?: number;
 };
 
@@ -70,6 +72,8 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   ready = true,
   shadow = false,
   slotMode = "standard",
+  locale,
+  caretIndex,
   fitContentWidth,
 }: Readonly<NumericRunSwitchProps>) {
   const lastSlotsFromValue = React.useRef(fromValue);
@@ -82,21 +86,22 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
   const slotsFromValue =
     mode === "slots" ? fromValue : lastSlotsFromValue.current;
   const shouldRenderSlots = mode === "slots" || preloadValue !== undefined;
-  const isReelStepSlots = mode === "slots" && slotMode === "reelStep";
+  const usesFullWidthSlotLayout =
+    mode === "slots" && (slotMode === "reelStep" || slotMode === "input");
 
   return (
     <View
       style={[
         switchStyle,
-        isReelStepSlots ? reelStepSwitchStyle : undefined,
+        usesFullWidthSlotLayout ? fullWidthSlotStyle : undefined,
       ]}
     >
       {shouldRenderSlots ? (
         <View
           style={
             mode === "slots"
-              ? isReelStepSlots
-                ? reelStepSwitchStyle
+              ? usesFullWidthSlotLayout
+                ? fullWidthSlotStyle
                 : undefined
               : hiddenLayerStyle
           }
@@ -115,6 +120,8 @@ export const NumericRunSwitch = React.memo(function NumericRunSwitch({
             ready={ready}
             shadow={shadow}
             slotMode={slotMode}
+            locale={locale}
+            caretIndex={caretIndex}
             fitContentWidth={fitContentWidth}
           />
         </View>

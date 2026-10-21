@@ -24,6 +24,8 @@ export const Laminar = React.memo(function Laminar({
     fractionScale: fractionScaleProp = 1,
     align = "left",
     slotMode = "standard",
+    locale,
+    caretIndex,
     className,
     leading,
     leadingKey,
@@ -55,8 +57,9 @@ export const Laminar = React.memo(function Laminar({
     const isSlotsVariant =
       variant === "slots" || (variant === "number" && numberMode === "slots");
     const isTickerVariant = variant === "number" && numberMode === "ticker";
-    const isReelStepSlots = isSlotsVariant && slotMode === "reelStep";
-    const useAutoSizeViewport = autoSize && !isReelStepSlots;
+    const tracksSlotContentWidth =
+      isSlotsVariant && (slotMode === "reelStep" || slotMode === "input");
+    const useAutoSizeViewport = autoSize && !tracksSlotContentWidth;
     const fractionScale = Number.isFinite(fractionScaleProp)
       ? Math.max(0.1, Math.min(1, fractionScaleProp))
       : 1;
@@ -98,7 +101,7 @@ export const Laminar = React.memo(function Laminar({
       const flattenedStyle = StyleSheet.flatten(textStyle);
       // reuse widths for tabular values with the same punctuation layout
       const measurementValue =
-        isReelStepSlots &&
+        tracksSlotContentWidth &&
         flattenedStyle?.fontVariant?.includes("tabular-nums")
           ? resolvedValue.replace(/[0-9]/g, "0")
           : resolvedValue;
@@ -120,7 +123,7 @@ export const Laminar = React.memo(function Laminar({
       ]);
     }, [
       leadingGap,
-      isReelStepSlots,
+      tracksSlotContentWidth,
       resolvedLeading,
       resolvedLeadingKey,
       resolvedValue,
@@ -137,22 +140,22 @@ export const Laminar = React.memo(function Laminar({
     } =
       useInlineAutoWidth({
         enabled:
-          isReelStepSlots ||
+          tracksSlotContentWidth ||
           (useAutoSizeViewport && !useLayoutAutoSize),
         driveToWidth: motionRecipe.driveNumber,
         measurementKey,
-        trackMeasuredWidth: isReelStepSlots,
+          trackMeasuredWidth: tracksSlotContentWidth,
       });
     // measure the normalized units rendered in the visible row
     const measuredValue = React.useMemo(() => {
-      if (!autoSize && !isReelStepSlots) {
+      if (!autoSize && !tracksSlotContentWidth) {
         return "";
       }
 
       return splitDisplayUnits(resolvedValue)
         .map(normalizeDisplayUnit)
         .join("");
-    }, [autoSize, isReelStepSlots, resolvedValue]);
+    }, [autoSize, tracksSlotContentWidth, resolvedValue]);
     const measuredUnits = React.useMemo(
       () => splitDisplayUnits(measuredValue),
       [measuredValue],
@@ -168,7 +171,7 @@ export const Laminar = React.memo(function Laminar({
         align={align}
         containerStyle={containerStyle}
         animatedWidthStyle={animatedWidthStyle}
-        fillWidth={isReelStepSlots}
+        fillWidth={tracksSlotContentWidth}
         autoSizeLayoutTransition={
           useLayoutAutoSize ? motionRecipe.layoutTransition : undefined
         }
@@ -229,11 +232,13 @@ export const Laminar = React.memo(function Laminar({
             leadingKey={resolvedLeadingKey}
             leadingGap={leadingGap}
             ready={
-              isReelStepSlots ? isAutoSizeReady : !autoSize || isAutoSizeReady
+              tracksSlotContentWidth ? isAutoSizeReady : !autoSize || isAutoSizeReady
             }
             shadow={shadow}
             slotMode={slotMode}
-            fitContentWidth={isReelStepSlots ? measuredWidth : undefined}
+            locale={locale}
+            caretIndex={caretIndex}
+            fitContentWidth={tracksSlotContentWidth ? measuredWidth : undefined}
           />
         ) : isTickerVariant ? (
           <NumericRunSwitch

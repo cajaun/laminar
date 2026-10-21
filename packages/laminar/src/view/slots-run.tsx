@@ -23,6 +23,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { useLeadingAnimation } from "../hooks/use-leading-animation";
+import { useInputLanes } from "../hooks/use-input-lanes";
 import { useNumericLanes } from "../hooks/use-numeric-lanes";
 import { isAsciiDigit, splitDisplayUnits } from "../model/display-units";
 import type {
@@ -965,6 +966,8 @@ type SlotsRunProps = {
   readonly ready?: boolean;
   readonly shadow?: LaminarShadow;
   readonly slotMode?: SlotMode;
+  readonly locale?: string;
+  readonly caretIndex?: number;
   readonly fitContentWidth?: number;
 };
 
@@ -984,6 +987,8 @@ export const SlotsRun = React.memo(
     ready = true,
     shadow = false,
     slotMode = "standard",
+    locale,
+    caretIndex,
     fitContentWidth,
   }: Readonly<SlotsRunProps>) => {
     const hasDisplayedRef = useRef(false);
@@ -1023,9 +1028,23 @@ export const SlotsRun = React.memo(
       leadingGap: visibleLeadingGap,
       motionRecipe,
     });
-    // preserve digit columns with stable numeric lane identities
-    const { units, direction, leadLength } = useNumericLanes(visibleValue);
-    const isReelStepMode = slotMode === "reelStep";
+    const isInputMode = slotMode === "input";
+    const numericLanes = useNumericLanes(visibleValue);
+    const inputLanes = useInputLanes(
+      visibleValue,
+      numericLanes.units,
+      locale,
+      caretIndex,
+      isInputMode,
+    );
+    const units = isInputMode ? inputLanes.units : numericLanes.units;
+    const inputGlyphs = isInputMode ? inputLanes.glyphs : undefined;
+    const direction = numericLanes.direction;
+    const leadLength = isInputMode
+      ? inputGlyphs?.findIndex((glyph) => glyph.role === "body") ?? 0
+      : numericLanes.leadLength;
+    const usesReelStepMotion =
+      slotMode === "reelStep" || slotMode === "input";
     const initialDigits = useMemo(() => {
       if (!fromValue || fromValue === visibleValue) return undefined;
 
@@ -1048,7 +1067,7 @@ export const SlotsRun = React.memo(
         const targetTailIndex = index - leadLength;
         const fromIndex =
           fromTail.length - targetTailLength + targetTailIndex;
-        const fromUnit = isReelStepMode
+        const fromUnit = usesReelStepMotion
           ? fromDigits[reelStepDigitIndex++]
           : fromTail[fromIndex];
         initialValues.push(
@@ -1057,16 +1076,22 @@ export const SlotsRun = React.memo(
       }
 
       return initialValues;
-    }, [fromValue, isReelStepMode, leadLength, units, visibleValue]);
+    }, [fromValue, usesReelStepMotion, leadLength, units, visibleValue]);
     const lastValueRef = useRef(visibleValue);
     const hasAnimatedRef = useRef(false);
     // animate digit changes and reflow when the number of lanes changes
     const structureSignature = useMemo(
       () =>
         units
-          .map((unit) => (isAsciiDigit(unit) ? "digit" : unit))
+          .map((unit, index) => {
+            if (isInputMode) {
+              const glyph = inputGlyphs?.[index];
+              return `${glyph?.role ?? "body"}:${glyph?.kind ?? "text"}:${unit}`;
+            }
+            return isAsciiDigit(unit) ? "digit" : unit;
+          })
           .join("\u0000"),
-      [units],
+      [inputGlyphs, isInputMode, units],
     );
     const previousStructureSignatureRef = useRef(structureSignature);
     // measure the native text line when callers omit font size
@@ -1168,28 +1193,40 @@ export const SlotsRun = React.memo(
       hasAnimated &&
       previousStructureSignatureRef.current !== structureSignature;
     // animate lane widths when reel step glyphs change
-    const layoutChanged = isReelStepMode
+    const layoutChanged = usesReelStepMotion
       ? hasAnimated && (valueChanged || isLeadingChange)
       : structureChanged;
     previousStructureSignatureRef.current = structureSignature;
 
     let reelStepDigitIndex = 0;
     const renderedUnits = units.map((unit, index) => {
-      const inLead = index < leadLength;
+      const inputGlyph = inputGlyphs?.[index];
+      const inLead = inputGlyph
+        ? inputGlyph.role === "prefix"
+        : index < leadLength;
+      const isDigitUnit = inputGlyph
+        ? inputGlyph.kind === "digit"
+        : isAsciiDigit(unit);
       const reelStepDigitOrdinal =
-        isReelStepMode && !inLead && isAsciiDigit(unit)
+        usesReelStepMotion && isDigitUnit
           ? reelStepDigitIndex++
           : -1;
-      const laneKey = inLead
-        ? `lead:${index}`
-        : reelStepDigitOrdinal >= 0
-          ? `slot:reel-step:${reelStepDigitOrdinal}`
-          : `slot:${units.length - 1 - index}`;
+      const laneKey = isInputMode
+        ? `slot:input:${inputLanes.laneKeys[index]}`
+        : inLead
+          ? `lead:${index}`
+          : reelStepDigitOrdinal >= 0
+            ? `slot:reel-step:${reelStepDigitOrdinal}`
+            : `slot:${units.length - 1 - index}`;
+      const isInputSeparator =
+        inputGlyph?.kind === "group" || inputGlyph?.kind === "decimal";
 
       if (
-        isReelStepMode &&
+        usesReelStepMotion &&
         !inLead &&
-        (unit === "," || unit === ".")
+        (isInputMode
+          ? isInputSeparator
+          : unit === "," || unit === ".")
       ) {
         const digitsToLeft = units
           .slice(0, index)
@@ -1197,7 +1234,7 @@ export const SlotsRun = React.memo(
 
         return (
           <SlotSymbolLane
-            key={`slot:separator:${unit}:${digitsToLeft}`}
+            key={isInputMode ? laneKey : `slot:separator:${unit}:${digitsToLeft}`}
             symbol={unit}
             isLast={index === units.length - 1}
             laneSpacing={laneSpacing}
@@ -1213,7 +1250,7 @@ export const SlotsRun = React.memo(
         );
       }
 
-      if (inLead || !isAsciiDigit(unit)) {
+      if (inLead || !isDigitUnit) {
         return (
           <SlotTextLane
             key={laneKey}
@@ -1230,7 +1267,7 @@ export const SlotsRun = React.memo(
         );
       }
 
-      if (isReelStepMode && reelStepDigitOrdinal > 0) {
+      if (usesReelStepMotion && reelStepDigitOrdinal > 0) {
         return (
           <SlotRisingDigitLane
             key={laneKey}
@@ -1307,7 +1344,7 @@ export const SlotsRun = React.memo(
       </Text>
     ) : null;
 
-    if (isReelStepMode) {
+    if (usesReelStepMotion) {
       return (
         <ReelStepSlotsViewport
           align={align}

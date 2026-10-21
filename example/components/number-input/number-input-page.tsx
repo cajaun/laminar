@@ -47,7 +47,9 @@ const NumberInputPreview = React.memo(function NumberInputPreview({
     <Laminar
       text={formattedValue}
       variant="slots"
-      slotMode="reelStep"
+      slotMode="input"
+      locale="en-US"
+      caretIndex={formattedValue.length}
       animationPreset="smooth"
       shadow
       fontSize={72}

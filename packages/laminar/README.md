@@ -76,12 +76,19 @@ export default function Counter() {
 ### Slots
 
 Use `variant="slots"` when each digit should roll through a vertical reel.
-Prefixes and separators remain ordinary text content.
+In standard mode, prefixes and separators remain ordinary text content.
 
 The default `slotMode="standard"` keeps the current right-aligned place-value
 behavior. Set `slotMode="reelStep"` for a full reel roll on the leading digit
 and one-slot motion for following digits and separators. Growing values shift
 left and scale down to fit their container.
+
+Set `slotMode="input"` for formatted values updated by input edits. It treats
+the decimal as a pivot, rematches grouping separators when the integer gains or
+loses digits, and recognizes locale-specific separators. Without a locale, a
+unique final comma or period is treated as the decimal; pass one for ambiguous
+values such as `1,234`. Pass `caretIndex` as the UTF-16 offset in the rendered
+string when edits can happen away from the end.
 
 ```tsx
 import React, { useState } from "react";
@@ -112,7 +119,8 @@ export default function SlotCounter() {
 <Laminar
   text="$288,888"
   variant="slots"
-  slotMode="reelStep"
+  slotMode="input"
+  locale="en-US"
   align="center"
   containerStyle={{ width: "100%" }}
   fontSize={72}
@@ -308,7 +316,9 @@ type LaminarProps = MorphingTextProps;
 | ------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `text`              | Required                                    | The value to display. Numbers are converted to strings internally.                 |
 | `variant`           | `"text"`                                    | `"text"` uses LCS glyph reconciliation. `"number"` uses right-aligned digit lanes. `"slots"` rolls digits through slot columns using the same lanes. |
-| `slotMode`          | `"standard"`                                | With `variant="slots"` or `numberMode="slots"`, `"reelStep"` uses a full reel for the leading digit and one-slot motion for following digits and separators. |
+| `slotMode`          | `"standard"`                                | With `variant="slots"` or `numberMode="slots"`, `"reelStep"` keeps the full-reel/step motion, while `"input"` matches edited formatted input by glyph role. |
+| `locale`            | Undefined                                   | Identifies decimal and grouping separators in `slotMode="input"`; pass it when punctuation could be ambiguous. |
+| `caretIndex`        | Undefined                                   | UTF-16 caret offset in the rendered string for edits in `slotMode="input"`. |
 | `numberMode`        | `"morph"`                                   | With `variant="number"`, selects digit morphing, the in-place `"ticker"`, or slot reels with `"slots"`. |
 | `fractionScale`     | `1`                                          | In ticker mode, scales the decimal separator and fractional digits relative to the main digits. |
 | `animatedText`      | Undefined                                   | In ticker mode, selects preformatted values with a shared, zero-based index. |
